@@ -63,41 +63,131 @@ const KebabButton: React.FC = () => (
   </button>
 );
 
-const MyNoteCard: React.FC<{ note: MyNote }> = ({ note }) => (
+const BaseNoteCard: React.FC<{
+  title: string;
+  description: string;
+  meta: string;
+  showKebab?: boolean;
+}> = ({ title, description, meta, showKebab = true }) => (
   <div className="relative w-full box-border h-[124px] bg-[rgba(217,200,239,0.03)] rounded-[12px] px-[25px] shadow-lg">
-    <KebabButton />
-    <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{note.title}</h3>
-    <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">
-      {note.description}
-    </p>
+    {showKebab && <KebabButton />}
+    <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{title}</h3>
+    <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">{description}</p>
     <div className="mt-3 inline-flex items-center rounded-[6px] bg-[rgba(69,74,85,0.32)] text-[#9CA3AF] text-[12px] px-3 py-1">
-      {note.date}
+      {meta}
     </div>
   </div>
 );
 
-const LikedNoteCard: React.FC<{ note: LikedNote }> = ({ note }) => (
-  <div className="relative w-full box-border h-[124px] bg-[rgba(217,200,239,0.03)] rounded-[12px] px-[25px] shadow-lg">
-    <KebabButton />
-    <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{note.title}</h3>
-    <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">
-      {note.description}
-    </p>
-    <div className="mt-3 inline-flex items-center rounded-[6px] bg-[rgba(69,74,85,0.32)] text-[#9CA3AF] text-[12px] px-3 py-1">
-      {note.author}
-    </div>
+const SelectableCard: React.FC<{
+  title: string;
+  description: string;
+  meta: string;
+  selected: boolean;
+  onToggle: () => void;
+}> = ({ title, description, meta, selected, onToggle }) => (
+  <div
+    className={[
+      'relative w-full box-border h-[140px] mt-[12px] rounded-[12px] px-[25px] shadow-lg transition-all',
+      selected
+        ? 'bg-[#D9C8EF]/10 border-2 border-[#6F4ACD]'
+        : 'bg-[rgba(217,200,239,0.03)] border border-transparent hover:bg-[#D9C8EF]/10',
+    ].join(' ')}
+  >
+    <label className="block w-full h-full cursor-pointer">
+      <input
+        type="checkbox"
+        className="sr-only"
+        checked={selected}
+        onChange={onToggle}
+        aria-label={`${title} 선택`}
+      />
+
+      {/* 체크 배지 */}
+      <span
+        className={[
+          'absolute left-[10px] top-3 w-[22px] h-[22px] rounded-[4px] border-[#DADDE9] flex items-center justify-center',
+          'ring-2 transition-all',
+          selected
+            ? 'bg-[#6F4ACD] ring-[#6F4ACD] scale-100'
+            : 'bg-[#2B3240] ring-[#3A4152] scale-95',
+        ].join(' ')}
+        aria-hidden
+      >
+        {selected && (
+          <svg
+            className="w-[12px] h-[12px] text-white"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        )}
+      </span>
+
+      <div className="pl-7 ml-[15px]">
+        <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{title}</h3>
+        <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">
+          {description}
+        </p>
+        <div className="mt-3 inline-flex items-center rounded-[6px] bg-[rgba(69,74,85,0.32)] text-[#9CA3AF] text-[12px] px-3 py-1">
+          {meta}
+        </div>
+      </div>
+    </label>
   </div>
 );
+
 
 const ChattingUserNote: React.FC = () => {
+  const navigate = useNavigate();
+
+  // 모드: 기본 보기 vs 병합 선택
+  const [mode, setMode] = useState<'browse' | 'merge-select'>('browse');
+
+  // 생성하기 바텀시트 열림 상태 & 선택
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | 'write' | 'merge'>(null);
-  const navigate = useNavigate();
+
+  // 병합 선택(최대 2개) - 키는 'my:1', 'liked:2'
+  const [selectedForMerge, setSelectedForMerge] = useState<string[]>([]);
 
   const optionBase =
     'w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors focus:outline-none focus:ring-2 focus:ring-white/20';
   const selectedStyle = 'bg-[#6F4ACD]/20 border-2 border-[#6F4ACD]';
   const unselectedStyle = 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10';
+
+  const makeKey = (kind: 'my' | 'liked', id: number) => `${kind}:${id}`;
+  const isSelected = (kind: 'my' | 'liked', id: number) => selectedForMerge.includes(makeKey(kind, id));
+
+  const toggleSelect = (kind: 'my' | 'liked', id: number) => {
+    const key = makeKey(kind, id);
+    if (selectedForMerge.includes(key)) {
+      setSelectedForMerge((prev) => prev.filter((k) => k !== key));
+      return;
+    }
+    if (selectedForMerge.length >= 2) return;
+    setSelectedForMerge((prev) => [...prev, key]);
+  };
+
+  const enterMergeSelect = () => {
+    setSelectedOption('merge');
+    setIsBottomSheetOpen(false);
+    setMode('merge-select');
+    setSelectedForMerge([]);
+  };
+
+  const exitMergeSelect = () => {
+    setMode('browse');
+    setSelectedForMerge([]);
+    setSelectedOption(null);
+  };
 
   const handleSelectWrite = () => {
     setSelectedOption('write');
@@ -105,67 +195,142 @@ const ChattingUserNote: React.FC = () => {
     navigate('/UserNoteWrite');
   };
 
+  const handleConfirmMerge = () => {
+
+    navigate('/UserNoteWrite', { state: { mergeFrom: selectedForMerge } });
+  };
+
+  const HeaderBrowse = (
+    <header className="flex-shrink-0 flex items-center h-[34px] mt-[24px] px-[20px]">
+      <button className="p-2 ml-[4px] bg-[#141924] border-none" aria-label="뒤로가기">
+        <ArrowLeftIcon className="w-[20px] h-[20px] text-[#FFF]" />
+      </button>
+      <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트</h1>
+    </header>
+  );
+
+  const HeaderMerge = (
+    <header className="flex-shrink-0 px-[20px] pt-[24px] bg-[#222A39]">
+      <div className="flex items-center">
+        <button
+          onClick={exitMergeSelect}
+          className="mt-[5px] w-[35px] h-[35px] text-[#FFF] bg-[#222A39] border-none"
+          aria-label="닫기"
+          title="닫기"
+        >
+          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트 병합</h1>
+      </div>
+      <hr className="border-t border-[#DFE1EA]/40 my-4 opacity-60" />
+      <p className="text-[11px] text-[#DFE1EA]/60 mt-3 ml-[70px]">
+        병합할 두 개의 유저노트를 선택해주세요
+      </p>
+    </header>
+  );
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
-        <header className="flex-shrink-0 flex items-center h-[34px] mt-[24px] px-[20px]">
-          <button className="p-2 ml-[4px] bg-[#141924] border-none" aria-label="뒤로가기">
-            <ArrowLeftIcon className="w-[20px] h-[20px] text-[#FFF]" />
-          </button>
-          <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트</h1>
-        </header>
+        {mode === 'merge-select' ? HeaderMerge : HeaderBrowse}
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <div className="w-[335px] mx-auto pt-4 pb-24 space-y-6">
             <section className="mt-[25px]">
               <SectionTitle>내가 만든 유저노트</SectionTitle>
               <div className="space-y-3">
-                {MY_NOTES.map((n) => (
-                  <MyNoteCard key={n.id} note={n} />
-                ))}
+                {mode === 'merge-select'
+                  ? MY_NOTES.map((n) => (
+                    <SelectableCard
+                      key={`my:${n.id}`}
+                      title={n.title}
+                      description={n.description}
+                      meta={n.date}
+                      selected={isSelected('my', n.id)}
+                      onToggle={() => toggleSelect('my', n.id)}
+                    />
+                  ))
+                  : MY_NOTES.map((n) => (
+                    <BaseNoteCard key={`my:${n.id}`} title={n.title} description={n.description} meta={n.date} />
+                  ))}
               </div>
             </section>
 
             <section className="mt-[45px]">
-              <SectionTitle>좋아한 유저노트</SectionTitle>
+              <SectionTitle>좋아요한 유저노트</SectionTitle>
               <div className="space-y-3">
-                {LIKED_NOTES.map((n) => (
-                  <LikedNoteCard key={n.id} note={n} />
-                ))}
+                {mode === 'merge-select'
+                  ? LIKED_NOTES.map((n) => (
+                    <SelectableCard
+                      key={`liked:${n.id}`}
+                      title={n.title}
+                      description={n.description}
+                      meta={n.author}
+                      selected={isSelected('liked', n.id)}
+                      onToggle={() => toggleSelect('liked', n.id)}
+                    />
+                  ))
+                  : LIKED_NOTES.map((n) => (
+                    <BaseNoteCard
+                      key={`liked:${n.id}`}
+                      title={n.title}
+                      description={n.description}
+                      meta={n.author}
+                    />
+                  ))}
               </div>
             </section>
           </div>
         </main>
 
-        <footer className="pointer-events-none">
-          <div className="pointer-events-auto mb-[15px]">
-            <div className="w-[335px] mx-auto py-3 flex gap-3">
-              <button
-                className="flex-1 h-[52px] mr-[10px] border-none rounded-[12px] bg-[#222A39] text-[#FFF] font-semibold"
-                type="button"
-                onClick={() => setIsBottomSheetOpen(true)}
-              >
-                생성하기
-              </button>
-              <button
-                className={`flex-1 h-[52px] rounded-[12px] border-none font-semibold ${selectedOption
-                  ? 'bg-[#6F4ACD] text-white'
-                  : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed'
-                  }`}
-                type="button"
-                disabled={!selectedOption}
-              >
-                적용하기
-              </button>
+        {mode === 'merge-select' ? (
+          <footer className="pointer-events-none">
+            <div className="pointer-events-auto mb-[15px]">
+              <div className="w-[335px] mx-auto py-3">
+                <button
+                  className={[
+                    'w-full h-[52px] rounded-[12px] font-semibold border-none',
+                    selectedForMerge.length === 2
+                      ? 'bg-[#6F4ACD] text-[#FFF]'
+                      : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed',
+                  ].join(' ')}
+                  type="button"
+                  disabled={selectedForMerge.length !== 2}
+                  onClick={handleConfirmMerge}
+                >
+                  병합하기
+                </button>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        ) : (
+          <footer className="pointer-events-none">
+            <div className="pointer-events-auto mb-[15px]">
+              <div className="w-[335px] mx-auto py-3 flex gap-3">
+                <button
+                  className="flex-1 h-[52px] mr-[10px] border-none rounded-[12px] bg-[#222A39] text-[#FFF] font-semibold"
+                  type="button"
+                  onClick={() => setIsBottomSheetOpen(true)}
+                >
+                  생성하기
+                </button>
+                <button
+                  className="flex-1 h-[52px] rounded-[12px] border-none font-semibold bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed"
+                  type="button"
+                  disabled
+                >
+                  적용하기
+                </button>
+              </div>
+            </div>
+          </footer>
+        )}
 
         <>
           <div
-            className={`absolute inset-0 z-40 bg-black/50 transition-opacity duration-300 ${isBottomSheetOpen
-              ? 'opacity-100 visible pointer-events-auto'
-              : 'opacity-0 invisible pointer-events-none'
+            className={`absolute inset-0 z-40 bg-black/50 transition-opacity duration-300 ${isBottomSheetOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'
               }`}
             onClick={() => setIsBottomSheetOpen(false)}
           />
@@ -221,7 +386,7 @@ const ChattingUserNote: React.FC = () => {
                   aria-checked={selectedOption === 'merge'}
                   className={`${optionBase} mt-[10px] ${selectedOption === 'merge' ? selectedStyle : unselectedStyle
                     }`}
-                  onClick={() => setSelectedOption('merge')}
+                  onClick={enterMergeSelect}
                 >
                   <div className="w-[25px] h-10 bg-gray-600 flex items-center justify-center text-[#FFF]">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

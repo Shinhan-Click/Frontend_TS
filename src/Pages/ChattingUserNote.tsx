@@ -54,22 +54,25 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   <h2 className="text-[16px] font-bold text-[#FFF] mb-3">{children}</h2>
 );
 
+/** 케밥 버튼: 선택 토글 방지 위해 이벤트 전파 중단 */
 const KebabButton: React.FC = () => (
   <button
     aria-label="더보기"
     className="absolute top-3 mt-[6px] ml-[270px] flex items-center justify-center bg-[rgba(217,200,239,0.03)]/10 border-none"
+    onClick={(e) => e.stopPropagation()}
   >
     <MoreVerticalIcon className="w-[20px] h-[20px] text-[#FFF]" />
   </button>
 );
 
+/** 기본 카드(비선택 상태) */
 const BaseNoteCard: React.FC<{
   title: string;
   description: string;
   meta: string;
   showKebab?: boolean;
 }> = ({ title, description, meta, showKebab = true }) => (
-  <div className="relative w-full box-border h-[124px] bg-[rgba(217,200,239,0.03)] rounded-[12px] px-[25px] shadow-lg">
+  <div className="relative w-full box-border h-[140px] bg-[rgba(217,200,239,0.03)] rounded-[12px] px-[25px] shadow-lg">
     {showKebab && <KebabButton />}
     <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{title}</h3>
     <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">{description}</p>
@@ -79,6 +82,34 @@ const BaseNoteCard: React.FC<{
   </div>
 );
 
+/** 기본 모드(단일 선택) 카드: 디자인 유지, 체크 아이콘/박스 없음 */
+const SingleSelectableCard: React.FC<{
+  title: string;
+  description: string;
+  meta: string;
+  selected: boolean;
+  onToggle: () => void;
+}> = ({ title, description, meta, selected, onToggle }) => (
+  <button
+    type="button"
+    onClick={onToggle}
+    className={[
+      'relative w-full box-border h-[140px] rounded-[12px] mt-[12px] px-[25px] shadow-lg text-left transition-all',
+      selected
+        ? 'bg-[#6F4ACD]/10 border-2 border-[#6F4ACD]'
+        : 'bg-[rgba(217,200,239,0.03)] border border-transparent hover:bg-[#D9C8EF]/10',
+    ].join(' ')}
+  >
+    <KebabButton />
+    <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{title}</h3>
+    <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">{description}</p>
+    <div className="mt-3 inline-flex items-center rounded-[6px] bg-[rgba(69,74,85,0.32)] text-[#9CA3AF] text-[12px] px-3 py-1">
+      {meta}
+    </div>
+  </button>
+);
+
+/** 병합 모드(다중 선택 최대 2) 카드: 체크 박스/배지 포함 */
 const SelectableCard: React.FC<{
   title: string;
   description: string;
@@ -93,57 +124,35 @@ const SelectableCard: React.FC<{
         ? 'bg-[#D9C8EF]/10 border-2 border-[#6F4ACD]'
         : 'bg-[rgba(217,200,239,0.03)] border border-transparent hover:bg-[#D9C8EF]/10',
     ].join(' ')}
+    onClick={onToggle}
+    role="button"
+    aria-pressed={selected}
   >
-    <label className="block w-full h-full cursor-pointer">
-      <input
-        type="checkbox"
-        className="sr-only"
-        checked={selected}
-        onChange={onToggle}
-        aria-label={`${title} 선택`}
-      />
+    {/* 체크 배지 (사각형) */}
+    <span
+      className={[
+        'absolute left-[10px] top-[16px] w-[22px] h-[22px] rounded-[4px] border-[#DADDE9] flex items-center justify-center',
+        'ring-2 transition-all',
+        selected ? 'bg-[#6F4ACD] ring-[#6F4ACD] scale-100' : 'bg-[#2B3240] ring-[#3A4152] scale-95',
+      ].join(' ')}
+      aria-hidden
+    >
+      {selected && (
+        <svg className="w-[12px] h-[12px] text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      )}
+    </span>
 
-      {/* 체크 배지 */}
-      <span
-        className={[
-          'absolute left-[10px] top-3 w-[22px] h-[22px] rounded-[4px] border-[#DADDE9] flex items-center justify-center',
-          'ring-2 transition-all',
-          selected
-            ? 'bg-[#6F4ACD] ring-[#6F4ACD] scale-100'
-            : 'bg-[#2B3240] ring-[#3A4152] scale-95',
-        ].join(' ')}
-        aria-hidden
-      >
-        {selected && (
-          <svg
-            className="w-[12px] h-[12px] text-white"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        )}
-      </span>
-
-      <div className="pl-7 ml-[15px]">
-        <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{title}</h3>
-        <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">
-          {description}
-        </p>
-        <div className="mt-3 inline-flex items-center rounded-[6px] bg-[rgba(69,74,85,0.32)] text-[#9CA3AF] text-[12px] px-3 py-1">
-          {meta}
-        </div>
+    <div className="pl-7 ml-[15px]">
+      <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{title}</h3>
+      <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">{description}</p>
+      <div className="mt-3 inline-flex items-center rounded-[6px] bg-[rgba(69,74,85,0.32)] text-[#9CA3AF] text-[12px] px-3 py-1">
+        {meta}
       </div>
-    </label>
+    </div>
   </div>
 );
-
 
 const ChattingUserNote: React.FC = () => {
   const navigate = useNavigate();
@@ -151,11 +160,14 @@ const ChattingUserNote: React.FC = () => {
   // 모드: 기본 보기 vs 병합 선택
   const [mode, setMode] = useState<'browse' | 'merge-select'>('browse');
 
-  // 생성하기 바텀시트 열림 상태 & 선택
+  // 기본 모드 선택(단일): key 또는 null
+  const [selectedApply, setSelectedApply] = useState<string | null>(null);
+
+  // 생성하기 바텀시트
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | 'write' | 'merge'>(null);
 
-  // 병합 선택(최대 2개) - 키는 'my:1', 'liked:2'
+  // 병합 모드 선택(최대 2)
   const [selectedForMerge, setSelectedForMerge] = useState<string[]>([]);
 
   const optionBase =
@@ -164,8 +176,9 @@ const ChattingUserNote: React.FC = () => {
   const unselectedStyle = 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10';
 
   const makeKey = (kind: 'my' | 'liked', id: number) => `${kind}:${id}`;
-  const isSelected = (kind: 'my' | 'liked', id: number) => selectedForMerge.includes(makeKey(kind, id));
 
+  // --- 병합 모드 helpers ---
+  const isSelected = (kind: 'my' | 'liked', id: number) => selectedForMerge.includes(makeKey(kind, id));
   const toggleSelect = (kind: 'my' | 'liked', id: number) => {
     const key = makeKey(kind, id);
     if (selectedForMerge.includes(key)) {
@@ -174,6 +187,13 @@ const ChattingUserNote: React.FC = () => {
     }
     if (selectedForMerge.length >= 2) return;
     setSelectedForMerge((prev) => [...prev, key]);
+  };
+
+  // --- 기본 모드 helpers ---
+  const isApplySelected = (kind: 'my' | 'liked', id: number) => selectedApply === makeKey(kind, id);
+  const toggleApply = (kind: 'my' | 'liked', id: number) => {
+    const key = makeKey(kind, id);
+    setSelectedApply((prev) => (prev === key ? null : key)); // 다시 클릭하면 해제
   };
 
   const enterMergeSelect = () => {
@@ -196,8 +216,12 @@ const ChattingUserNote: React.FC = () => {
   };
 
   const handleConfirmMerge = () => {
-
     navigate('/UserNoteWrite', { state: { mergeFrom: selectedForMerge } });
+  };
+
+  const handleApply = () => {
+    if (!selectedApply) return;
+    navigate('/UserNoteWrite', { state: { applyFrom: selectedApply } });
   };
 
   const HeaderBrowse = (
@@ -225,9 +249,7 @@ const ChattingUserNote: React.FC = () => {
         <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트 병합</h1>
       </div>
       <hr className="border-t border-[#DFE1EA]/40 my-4 opacity-60" />
-      <p className="text-[11px] text-[#DFE1EA]/60 mt-3 ml-[70px]">
-        병합할 두 개의 유저노트를 선택해주세요
-      </p>
+      <p className="text-[11px] text-[#DFE1EA]/60 mt-3 ml-[70px]">병합할 두 개의 유저노트를 선택해주세요</p>
     </header>
   );
 
@@ -253,7 +275,14 @@ const ChattingUserNote: React.FC = () => {
                     />
                   ))
                   : MY_NOTES.map((n) => (
-                    <BaseNoteCard key={`my:${n.id}`} title={n.title} description={n.description} meta={n.date} />
+                    <SingleSelectableCard
+                      key={`my:${n.id}`}
+                      title={n.title}
+                      description={n.description}
+                      meta={n.date}
+                      selected={isApplySelected('my', n.id)}
+                      onToggle={() => toggleApply('my', n.id)}
+                    />
                   ))}
               </div>
             </section>
@@ -273,11 +302,13 @@ const ChattingUserNote: React.FC = () => {
                     />
                   ))
                   : LIKED_NOTES.map((n) => (
-                    <BaseNoteCard
+                    <SingleSelectableCard
                       key={`liked:${n.id}`}
                       title={n.title}
                       description={n.description}
                       meta={n.author}
+                      selected={isApplySelected('liked', n.id)}
+                      onToggle={() => toggleApply('liked', n.id)}
                     />
                   ))}
               </div>
@@ -317,9 +348,13 @@ const ChattingUserNote: React.FC = () => {
                   생성하기
                 </button>
                 <button
-                  className="flex-1 h-[52px] rounded-[12px] border-none font-semibold bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed"
+                  className={[
+                    'flex-1 h-[52px] rounded-[12px] border-none font-semibold',
+                    selectedApply ? 'bg-[#6F4ACD] ] text-[#FFF]' : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed',
+                  ].join(' ')}
                   type="button"
-                  disabled
+                  disabled={!selectedApply}
+                  onClick={handleApply}
                 >
                   적용하기
                 </button>

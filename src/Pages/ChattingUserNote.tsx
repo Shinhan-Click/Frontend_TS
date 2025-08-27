@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeftIcon, MoreVerticalIcon } from '../components/icons';
+import { useNavigate } from 'react-router-dom';
 
 type MyNote = {
   id: number;
@@ -91,11 +92,18 @@ const LikedNoteCard: React.FC<{ note: LikedNote }> = ({ note }) => (
 const ChattingUserNote: React.FC = () => {
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | 'write' | 'merge'>(null);
+  const navigate = useNavigate();
 
   const optionBase =
     'w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors focus:outline-none focus:ring-2 focus:ring-white/20';
   const selectedStyle = 'bg-[#6F4ACD]/20 border-2 border-[#6F4ACD]';
   const unselectedStyle = 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10';
+
+  const handleSelectWrite = () => {
+    setSelectedOption('write');
+    setIsBottomSheetOpen(false);
+    navigate('/UserNoteWrite');
+  };
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
@@ -142,7 +150,7 @@ const ChattingUserNote: React.FC = () => {
               <button
                 className={`flex-1 h-[52px] rounded-[12px] border-none font-semibold ${selectedOption
                   ? 'bg-[#6F4ACD] text-white'
-                  : 'bg-[#6F4ACD] text-white opacity-70 cursor-not-allowed'
+                  : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed'
                   }`}
                 type="button"
                 disabled={!selectedOption}
@@ -189,7 +197,7 @@ const ChattingUserNote: React.FC = () => {
                   role="radio"
                   aria-checked={selectedOption === 'write'}
                   className={`${optionBase} ${selectedOption === 'write' ? selectedStyle : unselectedStyle}`}
-                  onClick={() => setSelectedOption('write')}
+                  onClick={handleSelectWrite}
                 >
                   <div className="w-[25px] h-10 bg-gray-600 flex items-center justify-center text-[#FFF]">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

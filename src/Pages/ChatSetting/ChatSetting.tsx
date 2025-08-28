@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import './ChatSetting.css';
 import { InputWithCounter } from '../../components/ChatSettingcomponents/InputWithCounter';
 import { RadioGroup } from '../../components/ChatSettingcomponents/RadioGroup';
@@ -27,6 +27,22 @@ type PersonaDetail = {
   name: string;
   gender: 'MALE' | 'FEMALE' | string;
   persona: string; // 소개
+};
+
+// 유저노트 응답 타입 - 실제 API 구조에 맞게 수정
+type UserNotesResult = {
+  myNotes: Array<{
+    userNoteId: number;
+    title: string;
+    description: string;
+    createdAt: string;
+  }>;
+  likedNotes: Array<{
+    userNoteId: number;
+    title: string;
+    description: string;
+    author: string;
+  }>;
 };
 
 const ChatSetting: React.FC = () => {
@@ -64,6 +80,7 @@ const ChatSetting: React.FC = () => {
   const [userNote, setUserNote] = useState('');
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [notesLoading, setNotesLoading] = useState(false);
   const effectivePersona = personaChoice === 'custom' ? personaText : personaChoice;
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
@@ -111,7 +128,6 @@ const ChatSetting: React.FC = () => {
       setIntroduction('');
       setPersonaText('');
       setUserNote('');
-      console.log('직접 입력 모드 - 폼 초기화 완료');
       return;
     }
     
@@ -119,59 +135,69 @@ const ChatSetting: React.FC = () => {
 
     // 선택된 페르소나 정보 불러오기
     try {
-      console.log(`페르소나 ${value} 상세 정보 요청 중...`);
-      
       const res = await fetch(`${API_BASE_URL}/persona/${value}`, {
         credentials: 'include',
       });
-      
-      if (!res.ok) {
-        console.error('페르소나 상세 API 실패:', res.status);
-        return;
-      }
+      if (!res.ok) return;
       
       const data: ApiResponse<PersonaDetail> = await res.json();
-      console.log('페르소나 상세 데이터:', data);
-      
-      if (!data.isSuccess || !data.result) {
-        console.warn('페르소나 상세 데이터가 유효하지 않음');
-        return;
-      }
+      if (!data.isSuccess || !data.result) return;
 
       const persona = data.result;
-      
       // 폼에 데이터 자동 반영
       setName(persona.name || '');
       setGender(mapGender(persona.gender));
       setIntroduction(persona.persona || '');
-      
-      console.log('페르소나 정보 폼에 반영 완료:', {
-        name: persona.name,
-        gender: persona.gender,
-        persona: persona.persona
-      });
-      
-    } catch (error) {
-      console.error('페르소나 상세 정보 로딩 실패:', error);
+    } catch {
+      // 무시
     }
   };
+
+  // 유저노트 불러오기 → 분기 (API 구조에 맞게 수정)
+  const handleOpenUserNotes = useCallback(async () => {
+    setNotesLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/usernote/my-usernotes`, {
+        method: 'GET',
+        headers: { accept: '*/*' },
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        // 실패 시에도 이동하지 않고 바텀시트로 안내
+        setSheetOpen(true);
+        return;
+      }
+      const data: ApiResponse<UserNotesResult> = await res.json();
+      const result = data?.result ?? { myNotes: [], likedNotes: [] };
+      const hasNotes =
+        (result.myNotes?.length ?? 0) > 0 ||
+        (result.likedNotes?.length ?? 0) > 0;
+
+      if (hasNotes) {
+        navigate('/ChattingUserNote');
+      } else {
+        setSheetOpen(true);
+      }
+    } catch {
+      setSheetOpen(true);
+    } finally {
+      setNotesLoading(false);
+    }
+  }, [API_BASE_URL, navigate]);
 
   const handleSubmit = () => {
     if (personaChoice === 'custom' && !personaText.trim()) {
       alert('페르소나를 입력해주세요.');
       return;
     }
-    
     if (!name.trim()) {
       alert('이름을 입력해주세요.');
       return;
     }
-    
     if (!introduction.trim()) {
       alert('소개를 입력해주세요.');
       return;
     }
-    
     console.log('채팅 설정 완료:', { 
       characterId, 
       effectivePersona, 
@@ -205,7 +231,7 @@ const ChatSetting: React.FC = () => {
         {/* 헤더 */}
         <header className="cs-titlebar">
           <div className="cs-titlerow">
-            <button className="cs-backbtn" aria-label="뒤로가기">
+            <button className="cs-backbtn" aria-label="뒤로가기" onClick={() => navigate(-1)}>
               <ArrowLeftIcon className="cs-backicon" />
             </button>
             <h1 className="cs-title">채팅 설정</h1>
@@ -294,8 +320,13 @@ const ChatSetting: React.FC = () => {
                   <h2 className="cs-label">유저노트</h2>
                   <p className="cs-help">유저노트를 이용해서<br /> 더 다양한 대화를 나눌 수 있어요!</p>
                 </div>
-                <button className="cs-btn" type="button" onClick={() => setSheetOpen(true)}>
-                  불러오기
+                <button
+                  className="cs-btn"
+                  type="button"
+                  onClick={handleOpenUserNotes}
+                  disabled={notesLoading}
+                >
+                  {notesLoading ? '불러오는 중...' : '불러오기'}
                 </button>
               </div>
             </div>
@@ -320,6 +351,7 @@ const ChatSetting: React.FC = () => {
           </button>
         </footer>
 
+        {/* 바텀시트: 비어있을 때만 노출 */}
         <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="유저노트">
           <div className="sheet-card">
             <div className="sheet-icon" aria-hidden>🗒️</div>
@@ -328,8 +360,15 @@ const ChatSetting: React.FC = () => {
               <li>유저노트를 적용하면 새로운 세계관에서 대화할 수 있어요</li>
               <li>인기 유저노트를 둘러보고 마음에 드는 유저노트를 적용해보세요</li>
             </ul>
-            <button className="sheet-cta" type="button">
-              유저노트 둘러보기
+            <button
+              className="sheet-cta"
+              type="button"
+              onClick={() => {
+                setSheetOpen(false);
+                navigate('/UserNoteWrite');
+              }}
+            >
+              유저노트 작성하기
             </button>
           </div>
         </BottomSheet>

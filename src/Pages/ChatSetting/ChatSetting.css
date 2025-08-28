@@ -553,3 +553,14 @@
 .sheet-cta:hover {
     background: #5c3bb4;
 }
+
+/* 바텀시트 내부 스크롤 컨테이너 스크롤바 숨김 (크로스브라우저) */
+.no-scrollbar {
+  -ms-overflow-style: none;      /* IE, Edge */
+  scrollbar-width: none;         /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;                 /* Chrome/Safari/Opera */
+}

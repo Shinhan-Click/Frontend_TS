@@ -1,19 +1,80 @@
 import React, { useState } from "react";
 import { ArrowLeftIcon } from "../components/icons";
+import { useNavigate } from "react-router-dom";
 
 const MAX_TITLE = 20;
 const MAX_BODY = 500;
 
+type ApiResponse<T> = {
+    isSuccess: boolean;
+    code: string;
+    message: string;
+    result: T;
+};
+
 const UserNoteWrite: React.FC = () => {
+    const navigate = useNavigate();
     const [title, setTitle] = useState("");
     const [body, setBody] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+    const handleSubmit = async () => {
+        if (!title.trim()) {
+            return;
+        }
+
+        if (!body.trim()) {
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        const requestData = {
+            title: title.trim(),
+            prompt: body.trim()
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/usernote/private`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': '*/*',
+                },
+                credentials: 'include',
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`서버 오류 (${response.status}): 저장에 실패했습니다.`);
+            }
+
+            const data: ApiResponse<any> = await response.json();
+
+            if (data.isSuccess) {
+                navigate(-1);
+            } else {
+                throw new Error(data.message || '저장에 실패했습니다.');
+            }
+        } catch (error) {
+            // 에러 처리는 하지만 알림은 표시하지 않음
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#FFF] flex items-center justify-center">
             <div className="w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
 
                 <header className="flex-shrink-0 h-[34px] mt-[25px] flex items-center px-[20.5px]">
-                    <button className="bg-transparent border-none outline-none p-0 m-0 cursor-pointer" aria-label="뒤로가기">
+                    <button
+                        className="bg-transparent border-none outline-none p-0 m-0 cursor-pointer"
+                        aria-label="뒤로가기"
+                        onClick={() => navigate(-1)}
+                    >
                         <ArrowLeftIcon className="w-[24px] h-[24px] text-[#FFF]" />
                     </button>
                     <h1 className="ml-[10px] text-[18px] font-bold text-[#FFF]">유저노트 작성</h1>
@@ -34,7 +95,7 @@ const UserNoteWrite: React.FC = () => {
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="제목을 입력해주세요"
-                                    className="w-full h-[45px] bg-[#283143] text-[#FFF] placeholder-gray-500 border border-[rgba(100,116,139,0.4)] rounded-[6px] px-4 py-3 outline-none focus:border-[#6F4ACD] focus:ring-2 focus:ring-[#6F4ACD]/40"
+                                    className="w-full h-[45px] bg-[#283143] text-gray-200 placeholder-gray-500 border border-[rgba(100,116,139,0.4)] rounded-[6px] px-4 py-3 outline-none focus:border-[#6F4ACD] focus:ring-2 focus:ring-[#6F4ACD]/40"
                                 />
 
                                 <div className="mt-1.5 text-right text-xs text-[#FFF]">
@@ -57,7 +118,7 @@ const UserNoteWrite: React.FC = () => {
                                     placeholder={
                                         "캐릭터가 반드시 기억해 줬으면 하는 내용을 적어주세요 (ex. 중요한 설정, 현재 상황, 제한되어야 하는 상황 등)"
                                     }
-                                    className="w-full h-[300px] bg-[#283143] text-[#FFF] placeholder-gray-500 border border-[rgba(100,116,139,0.4)] rounded-[6px] px-4 py-3 outline-none resize-none focus:border-[#6F4ACD] focus:ring-2 focus:ring-[#6F4ACD]/40"
+                                    className="w-full h-[300px] bg-[#283143] text-gray-200 placeholder-gray-500 border border-[rgba(100,116,139,0.4)] rounded-[6px] px-4 py-3 outline-none resize-none focus:border-[#6F4ACD] focus:ring-2 focus:ring-[#6F4ACD]/40"
                                 />
 
                                 <div className="mt-1.5 text-right text-xs text-[#FFF]">
@@ -72,9 +133,14 @@ const UserNoteWrite: React.FC = () => {
                 <footer className="flex-shrink-0 px-4 pb-4">
                     <button
                         type="button"
-                        className="w-[360px] h-[52px] ml-[8px] mb-[8px] rounded-[12px] border-none bg-[#6F4ACD] text-[#FFF] font-semibold text-[16px]"
+                        className={`w-[360px] h-[52px] ml-[8px] mb-[8px] rounded-[12px] border-none font-semibold text-[16px] ${isSubmitting || !title.trim() || !body.trim()
+                                ? 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed'
+                                : 'bg-[#6F4ACD] text-[#FFF] hover:bg-[#5A3A9E]'
+                            }`}
+                        onClick={handleSubmit}
+                        disabled={isSubmitting || !title.trim() || !body.trim()}
                     >
-                        저장하기
+                        {isSubmitting ? '저장 중...' : '저장하기'}
                     </button>
                 </footer>
             </div>

@@ -7,6 +7,10 @@ import type { Character, Story, UserNote } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+// .env 에서 서버 절대 URL을 반드시 지정하세요.
+// 예) VITE_API_BASE_URL=http://localhost:8080
+const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
+
 type CardItem = { id: string; image: string; title: string; description: string; author: string };
 
 type SimpleUser = {
@@ -54,7 +58,7 @@ const transformUserNoteToCard = (userNotes: UserNote[]): CardItem[] => {
 const extractMessage = (description: string): string => {
   const quoteMatch = description.match(/"([^"]+)"/);
   if (quoteMatch) return quoteMatch[1];
-  const firstLine = description.split('\n')[0];
+  const firstLine = description.split('\n')[0] ?? '';
   return firstLine.length > 50 ? firstLine.substring(0, 47) + '...' : firstLine;
 };
 
@@ -70,15 +74,14 @@ const extractDescription = (description: string): string => {
         !line.startsWith('*') &&
         line.length > 10,
     );
-  const firstContent = lines[0] || description.split('\n')[0];
+  const firstContent = lines[0] || description.split('\n')[0] || '';
   return firstContent.length > 100 ? firstContent.substring(0, 97) + '...' : firstContent;
 };
 
 // 캐릭터 API 호출
 const fetchCharacters = async (): Promise<SimpleUser[]> => {
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-    const response = await fetch(`${API_BASE_URL}/character/all`);
+    const response = await fetch(`${API_BASE}/character/all`, { credentials: 'include' });
     if (!response.ok) throw new Error('캐릭터 API 호출 실패');
     const data: ApiResponse<Character[]> = await response.json();
     return data.isSuccess ? transformCharacterToUser(data.result) : [];
@@ -91,8 +94,7 @@ const fetchCharacters = async (): Promise<SimpleUser[]> => {
 // 소설 API 호출
 const fetchStories = async (): Promise<CardItem[]> => {
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-    const response = await fetch(`${API_BASE_URL}/story/all`);
+    const response = await fetch(`${API_BASE}/story/all`, { credentials: 'include' });
     if (!response.ok) throw new Error('소설 API 호출 실패');
     const data: ApiResponse<Story[]> = await response.json();
     return data.isSuccess ? transformStoryToCard(data.result) : [];
@@ -105,8 +107,7 @@ const fetchStories = async (): Promise<CardItem[]> => {
 // 유저노트 API 호출
 const fetchUserNotes = async (): Promise<CardItem[]> => {
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-    const response = await fetch(`${API_BASE_URL}/usernote/all`);
+    const response = await fetch(`${API_BASE}/usernote/all`, { credentials: 'include' });
     if (!response.ok) throw new Error('유저노트 API 호출 실패');
     const data: ApiResponse<UserNote[]> = await response.json();
     return data.isSuccess ? transformUserNoteToCard(data.result) : [];
@@ -129,55 +130,48 @@ const Home: React.FC = () => {
 
   const navigate = useNavigate();
 
-  // 로그인 처리
-  const handleLogin = async () => {
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-      const response = await fetch(`${API_BASE_URL}/member/kakao/login-url`, {
-        credentials: 'include',
-      });
-      const data: ApiResponse<string> = await response.json();
-      if (data.isSuccess) {
-        window.location.href = data.result; // 카카오 인증 페이지로 이동
-      }
-    } catch (error) {
-      console.error('로그인 처리 실패:', error);
+  // 로그인 처리 - 서버가 302로 카카오로 이동
+  const handleLogin = () => {
+    if (!API_BASE) {
+      alert('VITE_API_BASE_URL이 설정되지 않았습니다.');
+      return;
     }
+    window.location.href = `${API_BASE}/member/kakao/login`;
   };
 
   // 캐릭터 패널 버튼 → ChatSetting으로 이동
   const goToChatSetting = () => {
-  const selected = topUsers.find((u) => u.id === activeCharacterId);
-  if (!selected) return;
-  // URL: /ChatSetting?characterId=ID  (+ state로 캐릭터 정보도 같이 넘김)
-  navigate(`/ChatSetting?characterId=${encodeURIComponent(selected.id)}`, {
-    state: { character: selected },
-  });
-};
+    const selected = topUsers.find((u) => u.id === activeCharacterId);
+    if (!selected) return;
+    navigate(`/ChatSetting?characterId=${encodeURIComponent(selected.id)}`, {
+      state: { character: selected },
+    });
+  };
+
+  // 로그아웃 처리
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE}/member/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      await logout();
+    } catch (e) {
+      console.error('로그아웃 실패:', e);
+    }
+  };
 
   // 인증 버튼 렌더링
   const renderAuthButton = () => {
     if (isLoggedIn) {
       return (
-        <button
-          className="login-btn"
-          onClick={async () => {
-            try {
-              const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-              await fetch(`${API_BASE_URL}/member/logout`, {
-                method: 'POST',
-                credentials: 'include',
-              });
-              logout();
-            } catch (e) {
-              console.error(e);
-            }
-          }}
-        >
+        <button className="login-btn" onClick={handleLogout}>
           로그아웃
         </button>
       );
     }
+
     return (
       <button className="login-btn" onClick={handleLogin}>
         로그인 하기
@@ -187,7 +181,8 @@ const Home: React.FC = () => {
 
   // 초기 데이터 로드
   useEffect(() => {
-    const loadData = async () => {
+    let mounted = true;
+    (async () => {
       setIsLoading(true);
       try {
         const [charactersData, novelsData, userNotesData] = await Promise.all([
@@ -195,16 +190,19 @@ const Home: React.FC = () => {
           fetchStories(),
           fetchUserNotes(),
         ]);
+        if (!mounted) return;
         setTopUsers(charactersData);
         setNovels(novelsData);
         setUserNotes(userNotesData);
       } catch (error) {
         console.error('데이터 로딩 중 오류:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
+    })();
+    return () => {
+      mounted = false;
     };
-    loadData();
   }, []);
 
   const handleClick = (index: number): void => {
@@ -341,7 +339,7 @@ const Home: React.FC = () => {
                   ))}
                 </div>
                 <button className="primary-btn" onClick={goToChatSetting}>
-                    무슨 일인지 알아보러 가기
+                  무슨 일인지 알아보러 가기
                 </button>
               </div>
             )}

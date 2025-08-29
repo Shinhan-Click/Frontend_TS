@@ -1,54 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, MoreVerticalIcon } from '../components/icons';
 import { useNavigate } from 'react-router-dom';
 
 type MyNote = {
-  id: number;
+  userNoteId: number;
   title: string;
   description: string;
-  date: string;
+  createdAt: string;
 };
 
 type LikedNote = {
-  id: number;
+  userNoteId: number;
   title: string;
   description: string;
   author: string;
 };
 
-const MY_NOTES: MyNote[] = [
-  {
-    id: 1,
-    title: '불도저 고백',
-    description:
-      '고백이라고 외치면 발동. {{user}}이 {{char}}의 손목을 거칠게 붙잡아 벽에 밀어붙인다. 숨이 가빠져지자 {...}',
-    date: '2025-08-25',
-  },
-];
+type ApiResponse<T> = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: T;
+};
 
-const LIKED_NOTES: LikedNote[] = [
-  {
-    id: 1,
-    title: '금단의 기숙사',
-    description:
-      '남학생들만 있는 남자 기숙사에 모든 친목 행위는 규칙 위반! 발각 시 기숙사에서 퇴출됩니다. 긴장감 속 사랑...',
-    author: '@Mischievous_Fox',
-  },
-  {
-    id: 2,
-    title: '사이버펑크 네오 서울',
-    description:
-      '2077년, 네오 서울. 당신은 불법 개조 시술을 받은 사이보그가 되어 도시의 어두운 이면에 맞서 싸웁니다.',
-    author: '@whif_official',
-  },
-  {
-    id: 3,
-    title: '로맨틱 코미디 톤',
-    description:
-      '로맨틱 코미디 톤 기반의 규칙 모음. 대화가 과장되거나 왜곡되지 않게 도와주고, 캐릭터 감정과 사건 전개가...',
-    author: '@floea',
-  },
-];
+type UserNotesResult = {
+  myNotes: MyNote[];
+  likedNotes: LikedNote[];
+};
 
 const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <h2 className="text-[16px] font-bold text-[#FFF] mb-3">{children}</h2>
@@ -153,6 +131,11 @@ const SelectableCard: React.FC<{
 const ChattingUserNote: React.FC = () => {
   const navigate = useNavigate();
 
+  // API 데이터 상태
+  const [myNotes, setMyNotes] = useState<MyNote[]>([]);
+  const [likedNotes, setLikedNotes] = useState<LikedNote[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [mode, setMode] = useState<'browse' | 'merge-select'>('browse');
 
   const [selectedApply, setSelectedApply] = useState<string | null>(null);
@@ -161,6 +144,41 @@ const ChattingUserNote: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<null | 'write' | 'merge'>(null);
 
   const [selectedForMerge, setSelectedForMerge] = useState<string[]>([]);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+  // 데이터 로드
+  useEffect(() => {
+    const loadUserNotes = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/usernote/my-usernotes`, {
+          method: 'GET',
+          headers: { accept: '*/*' },
+          credentials: 'include',
+        });
+
+        if (!res.ok) {
+          throw new Error('API 호출 실패');
+        }
+
+        const data: ApiResponse<UserNotesResult> = await res.json();
+
+        if (data.isSuccess && data.result) {
+          setMyNotes(data.result.myNotes || []);
+          setLikedNotes(data.result.likedNotes || []);
+        }
+      } catch (error) {
+        console.error('유저노트 로드 실패:', error);
+        // 에러 발생 시 빈 배열로 설정
+        setMyNotes([]);
+        setLikedNotes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserNotes();
+  }, [API_BASE_URL]);
 
   const optionBase =
     'w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors focus:outline-none focus:ring-2 focus:ring-white/20';
@@ -216,7 +234,11 @@ const ChattingUserNote: React.FC = () => {
 
   const HeaderBrowse = (
     <header className="flex-shrink-0 flex items-center h-[34px] mt-[24px] px-[20px]">
-      <button className="p-2 ml-[4px] bg-[#141924] border-none" aria-label="뒤로가기">
+      <button
+        className="p-2 ml-[4px] bg-[#141924] border-none"
+        aria-label="뒤로가기"
+        onClick={() => navigate(-1)}
+      >
         <ArrowLeftIcon className="w-[20px] h-[20px] text-[#FFF]" />
       </button>
       <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트</h1>
@@ -243,6 +265,17 @@ const ChattingUserNote: React.FC = () => {
     </header>
   );
 
+  // 로딩 중일 때
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex items-center justify-center">
+          <div className="text-[#FFF] text-[16px]">로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
@@ -250,59 +283,73 @@ const ChattingUserNote: React.FC = () => {
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <div className="w-[335px] mx-auto pt-4 pb-24 space-y-6">
-            <section className="mt-[25px]">
-              <SectionTitle>내가 만든 유저노트</SectionTitle>
-              <div className="space-y-3">
-                {mode === 'merge-select'
-                  ? MY_NOTES.map((n) => (
-                    <SelectableCard
-                      key={`my:${n.id}`}
-                      title={n.title}
-                      description={n.description}
-                      meta={n.date}
-                      selected={isSelected('my', n.id)}
-                      onToggle={() => toggleSelect('my', n.id)}
-                    />
-                  ))
-                  : MY_NOTES.map((n) => (
-                    <SingleSelectableCard
-                      key={`my:${n.id}`}
-                      title={n.title}
-                      description={n.description}
-                      meta={n.date}
-                      selected={isApplySelected('my', n.id)}
-                      onToggle={() => toggleApply('my', n.id)}
-                    />
-                  ))}
-              </div>
-            </section>
+            {myNotes.length > 0 && (
+              <section className="mt-[25px]">
+                <SectionTitle>내가 만든 유저노트</SectionTitle>
+                <div className="space-y-3">
+                  {mode === 'merge-select'
+                    ? myNotes.map((note) => (
+                      <SelectableCard
+                        key={`my:${note.userNoteId}`}
+                        title={note.title}
+                        description={note.description}
+                        meta={note.createdAt}
+                        selected={isSelected('my', note.userNoteId)}
+                        onToggle={() => toggleSelect('my', note.userNoteId)}
+                      />
+                    ))
+                    : myNotes.map((note) => (
+                      <SingleSelectableCard
+                        key={`my:${note.userNoteId}`}
+                        title={note.title}
+                        description={note.description}
+                        meta={note.createdAt}
+                        selected={isApplySelected('my', note.userNoteId)}
+                        onToggle={() => toggleApply('my', note.userNoteId)}
+                      />
+                    ))}
+                </div>
+              </section>
+            )}
 
-            <section className="mt-[45px]">
-              <SectionTitle>좋아요한 유저노트</SectionTitle>
-              <div className="space-y-3">
-                {mode === 'merge-select'
-                  ? LIKED_NOTES.map((n) => (
-                    <SelectableCard
-                      key={`liked:${n.id}`}
-                      title={n.title}
-                      description={n.description}
-                      meta={n.author}
-                      selected={isSelected('liked', n.id)}
-                      onToggle={() => toggleSelect('liked', n.id)}
-                    />
-                  ))
-                  : LIKED_NOTES.map((n) => (
-                    <SingleSelectableCard
-                      key={`liked:${n.id}`}
-                      title={n.title}
-                      description={n.description}
-                      meta={n.author}
-                      selected={isApplySelected('liked', n.id)}
-                      onToggle={() => toggleApply('liked', n.id)}
-                    />
-                  ))}
+            {likedNotes.length > 0 && (
+              <section className="mt-[45px]">
+                <SectionTitle>좋아요한 유저노트</SectionTitle>
+                <div className="space-y-3">
+                  {mode === 'merge-select'
+                    ? likedNotes.map((note) => (
+                      <SelectableCard
+                        key={`liked:${note.userNoteId}`}
+                        title={note.title}
+                        description={note.description}
+                        meta={`@${note.author}`}
+                        selected={isSelected('liked', note.userNoteId)}
+                        onToggle={() => toggleSelect('liked', note.userNoteId)}
+                      />
+                    ))
+                    : likedNotes.map((note) => (
+                      <SingleSelectableCard
+                        key={`liked:${note.userNoteId}`}
+                        title={note.title}
+                        description={note.description}
+                        meta={`@${note.author}`}
+                        selected={isApplySelected('liked', note.userNoteId)}
+                        onToggle={() => toggleApply('liked', note.userNoteId)}
+                      />
+                    ))}
+                </div>
+              </section>
+            )}
+
+            {/* 데이터가 없는 경우 */}
+            {myNotes.length === 0 && likedNotes.length === 0 && (
+              <div className="flex items-center justify-center h-[400px]">
+                <div className="text-center">
+                  <div className="text-[#9CA3AF] text-[16px] mb-2">저장한 유저노트가 없어요</div>
+                  <div className="text-[#9CA3AF] text-[14px]">새로운 유저노트를 만들어보세요</div>
+                </div>
               </div>
-            </section>
+            )}
           </div>
         </main>
 
@@ -340,7 +387,7 @@ const ChattingUserNote: React.FC = () => {
                 <button
                   className={[
                     'flex-1 h-[52px] rounded-[12px] border-none font-semibold',
-                    selectedApply ? 'bg-[#6F4ACD] ] text-[#FFF]' : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed',
+                    selectedApply ? 'bg-[#6F4ACD] text-[#FFF]' : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed',
                   ].join(' ')}
                   type="button"
                   disabled={!selectedApply}

@@ -34,7 +34,7 @@ const UserNoteWrite: React.FC = () => {
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="제목을 입력해주세요"
-                                    className="w-full h-[45px] bg-[#283143] text-gray-200 placeholder-gray-500 border border-[rgba(100,116,139,0.4)] rounded-[6px] px-4 py-3 outline-none focus:border-[#6F4ACD] focus:ring-2 focus:ring-[#6F4ACD]/40"
+                                    className="w-full h-[45px] bg-[#283143] text-[#FFF] placeholder-gray-500 border border-[rgba(100,116,139,0.4)] rounded-[6px] px-4 py-3 outline-none focus:border-[#6F4ACD] focus:ring-2 focus:ring-[#6F4ACD]/40"
                                 />
 
                                 <div className="mt-1.5 text-right text-xs text-[#FFF]">
@@ -57,7 +57,7 @@ const UserNoteWrite: React.FC = () => {
                                     placeholder={
                                         "캐릭터가 반드시 기억해 줬으면 하는 내용을 적어주세요 (ex. 중요한 설정, 현재 상황, 제한되어야 하는 상황 등)"
                                     }
-                                    className="w-full h-[300px] bg-[#283143] text-gray-200 placeholder-gray-500 border border-[rgba(100,116,139,0.4)] rounded-[6px] px-4 py-3 outline-none resize-none focus:border-[#6F4ACD] focus:ring-2 focus:ring-[#6F4ACD]/40"
+                                    className="w-full h-[300px] bg-[#283143] text-[#FFF] placeholder-gray-500 border border-[rgba(100,116,139,0.4)] rounded-[6px] px-4 py-3 outline-none resize-none focus:border-[#6F4ACD] focus:ring-2 focus:ring-[#6F4ACD]/40"
                                 />
 
                                 <div className="mt-1.5 text-right text-xs text-[#FFF]">

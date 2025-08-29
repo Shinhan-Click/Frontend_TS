@@ -5,7 +5,7 @@ import { RadioGroup } from '../../components/ChatSettingcomponents/RadioGroup';
 import { ArrowLeftIcon } from '../../components/icons';
 import PersonaDropdown from '../../components/ChatSettingcomponents/PersonaDropdown';
 import BottomSheet from '../../components/ChatSettingcomponents/BottomSheet';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const GENDER_OPTIONS = [
@@ -48,6 +48,7 @@ type UserNotesResult = {
 const ChatSetting: React.FC = () => {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // 로그인 체크 - 로그인하지 않은 경우 홈으로 리다이렉트
   useEffect(() => {
@@ -57,6 +58,16 @@ const ChatSetting: React.FC = () => {
       return;
     }
   }, [isLoggedIn, navigate]);
+
+  // 컴포넌트 마운트 시 location state 확인하여 선택된 유저노트가 있으면 설정
+  useEffect(() => {
+    const state = location?.state as any;
+    if (state?.selectedUserNote) {
+      setSelectedUserNote(state.selectedUserNote);
+      // state 정리
+      window.history.replaceState({}, document.title);
+    }
+  }, []);
 
   // characterId 저장만
   const [params] = useSearchParams();
@@ -78,6 +89,14 @@ const ChatSetting: React.FC = () => {
   const [gender, setGender] = useState<'male' | 'female' | 'none'>('male');
   const [introduction, setIntroduction] = useState('');
   const [userNote, setUserNote] = useState('');
+
+  // 선택된 유저노트 상태 추가
+  const [selectedUserNote, setSelectedUserNote] = useState<{
+    title: string;
+    description: string;
+    type: 'my' | 'liked';
+    author?: string;
+  } | null>(null);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
@@ -114,17 +133,13 @@ const ChatSetting: React.FC = () => {
     return 'none';
   };
 
-  // 직접 입력 모드인지 확인
-  const isCustomMode = personaChoice === 'custom';
-
   // 페르소나 선택 처리
   const handlePersonaChange = async (value: string) => {
     setPersonaChoice(value);
     
     if (value === 'custom') {
-      // 직접 입력으로 변경 시 폼 초기화
+      // 직접 입력으로 변경 시 이름과 소개만 초기화 (성별은 유지)
       setName('');
-      setGender('male');
       setIntroduction('');
       setPersonaText('');
       setUserNote('');
@@ -144,7 +159,7 @@ const ChatSetting: React.FC = () => {
       if (!data.isSuccess || !data.result) return;
 
       const persona = data.result;
-      // 폼에 데이터 자동 반영
+      // 폼에 데이터 자동 반영 (사용자가 수정 가능)
       setName(persona.name || '');
       setGender(mapGender(persona.gender));
       setIntroduction(persona.persona || '');
@@ -256,16 +271,12 @@ const ChatSetting: React.FC = () => {
             </div>
 
             {/* 이름 */}
-            <div className="cs-field" style={{ opacity: isCustomMode ? 1 : 0.6 }}>
+            <div className="cs-field">
               <InputWithCounter
                 id="name"
                 label="이름"
                 value={name}
-                onChange={(e) => {
-                  if (isCustomMode) {
-                    setName(e.target.value);
-                  }
-                }}
+                onChange={(e) => setName(e.target.value)}
                 maxLength={20}
                 placeholder="20자 이내로 입력해주세요"
                 required
@@ -274,36 +285,23 @@ const ChatSetting: React.FC = () => {
 
             {/* 성별 */}
             <div className="cs-field">
-              <div style={{ 
-                pointerEvents: isCustomMode ? 'auto' : 'none', 
-                opacity: isCustomMode ? 1 : 0.6 
-              }}>
-                <RadioGroup
-                  label="성별"
-                  name="gender"
-                  options={GENDER_OPTIONS}
-                  selectedValue={gender}
-                  onChange={(v) => {
-                    if (isCustomMode) {
-                      setGender(v as 'male' | 'female' | 'none');
-                    }
-                  }}
-                  required
-                />
-              </div>
+              <RadioGroup
+                label="성별"
+                name="gender"
+                options={GENDER_OPTIONS}
+                selectedValue={gender}
+                onChange={(v) => setGender(v as 'male' | 'female' | 'none')}
+                required
+              />
             </div>
 
             {/* 소개 */}
-            <div className="cs-field" style={{ opacity: isCustomMode ? 1 : 0.6 }}>
+            <div className="cs-field">
               <InputWithCounter
                 id="introduction"
                 label="소개"
                 value={introduction}
-                onChange={(e) => {
-                  if (isCustomMode) {
-                    setIntroduction(e.target.value);
-                  }
-                }}
+                onChange={(e) => setIntroduction(e.target.value)}
                 maxLength={350}
                 placeholder="캐릭터가 기억해 줬으면 하는 내용을 적어주세요"
                 required
@@ -330,6 +328,102 @@ const ChatSetting: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            {/* 선택된 유저노트 표시 */}
+            {selectedUserNote && (
+              <div style={{
+                backgroundColor: 'rgba(30, 37, 50, 0.8)',
+                border: '1px solid rgba(40, 49, 67, 0.5)',
+                borderRadius: '8px',
+                padding: '12px',
+                marginTop: '8px',
+                position: 'relative',
+                fontSize: '12px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <h3 style={{ 
+                    color: '#fff', 
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    margin: 0,
+                    lineHeight: '1.2'
+                  }}>
+                    유저노트
+                  </h3>
+                  <button 
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#9CA3AF',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      padding: '0',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '2px',
+                      marginLeft: '8px',
+                      flexShrink: 0
+                    }}
+                    onClick={() => setSelectedUserNote(null)}
+                    aria-label="유저노트 제거"
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2a3441'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div style={{
+                  backgroundColor: 'rgba(40, 49, 67, 0.3)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  marginBottom: '8px'
+                }}>
+                  <div style={{
+                    color: '#8B94A8',
+                    fontSize: '11px',
+                    marginBottom: '6px'
+                  }}>
+                    {selectedUserNote.type === 'liked' && selectedUserNote.author 
+                      ? `@${selectedUserNote.author}` 
+                      : '내가 만든 노트'
+                    }
+                  </div>
+                  <div style={{ 
+                    color: '#E0E6ED', 
+                    fontSize: '12px', 
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    lineHeight: '1.3'
+                  }}>
+                    {selectedUserNote.title}
+                  </div>
+                  <div style={{ 
+                    color: '#B0B8C4', 
+                    fontSize: '11px', 
+                    lineHeight: '1.4',
+                    margin: 0,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 8,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    maxHeight: '140px',
+                    whiteSpace: 'pre-line'
+                  }}>
+                    {selectedUserNote.description}
+                  </div>
+                </div>
+                <div style={{
+                  textAlign: 'right',
+                  color: '#6B7280',
+                  fontSize: '10px'
+                }}>
+                  {selectedUserNote.description.length}/500
+                </div>
+              </div>
+            )}
 
             <div style={{ height: 8 }} />
           </div>

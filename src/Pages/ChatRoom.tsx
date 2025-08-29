@@ -1,9 +1,107 @@
-// src/pages/ChatRoom.tsx
-import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeftIcon } from "../components/icons";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { ArrowLeftIcon, UserIcon, NoteIcon, EditIcon, HistoryIcon, TrashIcon } from "../components/icons";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { MdFormatQuote } from "react-icons/md";
 
+// ======================
+// BottomSheet Helper 컴포넌트
+// ======================
+interface IconButtonProps {
+    icon: React.ReactNode;
+    label: string;
+}
+const IconButton: React.FC<IconButtonProps> = ({ icon, label }) => (
+    <div className="flex flex-col items-center justify-start gap-2 cursor-pointer group">
+        <div className="w-16 h-16 rounded-full bg-[#6A5AF9] flex items-center justify-center transition-transform group-hover:scale-105">
+            {icon}
+        </div>
+        <span className="text-sm text-slate-300 font-medium">{label}</span>
+    </div>
+);
+
+interface ActionItemProps {
+    icon: React.ReactNode;
+    label: string;
+    isDestructive?: boolean;
+}
+const ActionItem: React.FC<ActionItemProps> = ({ icon, label, isDestructive }) => (
+    <button
+        className={`bg-[#222A39] border-none flex items-center gap-4 text-lg p-3 rounded-lg hover:bg-slate-700/50 w-full text-left transition-colors`}
+    >
+        {icon}
+        <span
+            className={`font-medium ${isDestructive ? "text-[#F24C4C]" : "text-[#FFF]"
+                }`}
+        >
+            {label}
+        </span>
+    </button>
+);
+
+
+interface BottomSheetProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose }) => {
+    const handleEscape = useCallback(
+        (event: KeyboardEvent) => {
+            if (event.key === "Escape") onClose();
+        },
+        [onClose]
+    );
+
+    useEffect(() => {
+        if (!isOpen) return;
+        document.addEventListener("keydown", handleEscape);
+        return () => document.removeEventListener("keydown", handleEscape);
+    }, [isOpen, handleEscape]);
+
+    return (
+        <>
+            {/* 오버레이 */}
+            <div
+                className={`absolute inset-0 bg-black/60 z-40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                    }`}
+                onClick={onClose}
+            />
+
+            {/* 시트 */}
+            <div
+                className={`p-[10px] w-[355px] absolute inset-x-0 mt-[610px] z-50 bg-[#222A39] text-[#FFF] rounded-[20px] pt-3 pb-6 px-4 shadow-2xl transition-transform duration-300 ease-in-out transform ${isOpen ? "translate-y-0" : "translate-y-full"
+                    }`}
+            >
+                <hr className="border-[2px] border-[#E5E5EB] rounded-[10px] w-[40px]" />
+                <div className="w-[375px] h-[30px] bg-slate-500 rounded-full mx-auto mb-5" />
+                <h2 className="text-[18px] -mt-[15px] mb-[30px] font-bold text-[#FFF] px-2">채팅방 설정</h2>
+
+                <div className="grid grid-cols-3 gap-4 text-center text-[15px] mb-6">
+                    <IconButton icon={<UserIcon className="w-[38px] h-[38px] text-[#FFF]" />} label="유저 페르소나" />
+                    <IconButton icon={<NoteIcon className="w-[38px] h-[38px] text-[#FFF]" />} label="유저 노트" />
+                    <IconButton icon={<EditIcon className="w-[38px] h-[38px] text-[#FFF]" />} label="AI 모델 변경" />
+                </div>
+
+                <hr className="border-[1px] border-[#3B4966] w-[320px] mt-[15px] mb-[15px]" />
+
+                <div className="flex flex-col gap-[10px] h-[100px]">
+                    <ActionItem
+                        icon={<HistoryIcon className="w-[30px] h-[30px] text-[#FFF]" />}
+                        label="이전 대화 보기"
+                    />
+                    <ActionItem
+                        icon={<TrashIcon className="w-[30px] h-[30px] text-[#F24C4C]" />}
+                        label="이 채팅방 삭제하기"
+                        isDestructive
+                    />
+                </div>
+            </div>
+        </>
+    );
+};
+
+// ======================
+// ChatRoom 본문
+// ======================
 type Role = "ai" | "user" | "narration";
 type Message = {
     id: string;
@@ -26,7 +124,10 @@ const ChatRoom: React.FC = () => {
     const [input, setInput] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // 따옴표 감지 ( " ", “ ”, 「 」, 『 』 )
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const toggleSheet = () => setIsSheetOpen((v) => !v);
+    const closeSheet = () => setIsSheetOpen(false);
+
     const extractQuoted = (raw: string) => {
         const t = raw.trim();
         const pairs: Array<[string, string]> = [
@@ -73,7 +174,6 @@ const ChatRoom: React.FC = () => {
         return curr === prev ? "mt-[5px]" : "mt-5";
     };
 
-    // 따옴표 자동 입력
     const insertQuotes = () => {
         const el = inputRef.current;
         if (!el) return;
@@ -94,7 +194,7 @@ const ChatRoom: React.FC = () => {
         <div className="min-h-screen bg-white flex items-center justify-center pointer-events-auto">
             <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
 
-                {/* Header */}
+                {/* HEADER */}
                 <header className="absolute top-0 left-0 right-0 z-[60] mt-[5px] w-[335px] h-[58px] px-[20px] flex items-center justify-between bg-[#141924]">
                     <div className="flex items-center">
                         <button
@@ -108,18 +208,17 @@ const ChatRoom: React.FC = () => {
                     </div>
 
                     <button
-                        className="w-[38px] h-[38px] p-2 rounded bg-[#222A39] text-[#FFF] border-none transition"
+                        className="w-[38px] h-[38px] p-2 rounded bg-[#141924] text-[#FFF] border-none transition"
                         aria-label="채팅방 설정"
-                        onClick={() => alert("설정 버튼")}
+                        onClick={toggleSheet}
                     >
                         <AdjustmentsHorizontalIcon className="w-6 h-6" />
                     </button>
                 </header>
 
-                {/* Scroll Area */}
-                <main className="relative z-0 flex-1 overflow-y-auto overflow-x-hidden pt-[58px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {/* MAIN */}
+                <main className="relative z-0 flex-1 overflow-y-auto overflow-x-hidden pt-[58px] [&::-webkit-scrollbar]:hidden">
                     <div className="w-[335px] mx-auto pt-3 pb-4">
-                        {/* 안내 배지 */}
                         <div className="w-full h-[60px] flex justify-center items-center mt-[12px] mb-[12px]">
                             <span className="w-[290px] h-[34px] flex justify-center items-center text-[12px] rounded-[55px] bg-[#283143] text-[#DFE1EA]/70">
                                 메시지는 캐릭터 특성에 따라 자동 생성됩니다
@@ -171,7 +270,7 @@ const ChatRoom: React.FC = () => {
                     </div>
                 </main>
 
-                {/* Footer */}
+                {/* FOOTER */}
                 <footer className="z-40 pointer-events-auto bg-[#141924] mb-[25px]">
                     <form
                         onSubmit={(e) => {
@@ -181,7 +280,6 @@ const ChatRoom: React.FC = () => {
                         className="w-[335px] mx-auto py-3 flex items-center gap-2"
                     >
                         <div className="flex items-center flex-1 gap-[5px]">
-
                             <button
                                 type="button"
                                 onClick={insertQuotes}
@@ -194,12 +292,9 @@ const ChatRoom: React.FC = () => {
                                 <input
                                     ref={inputRef}
                                     type="text"
-                                    name="message"
-                                    aria-label="메시지 입력"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    className="w-full h-[44px] rounded-[30px] bg-[#222A39] text-[#FFF]
-                  placeholder:text-[#BFC6D4]/60 pl-4 pr-12 outline-none border-none"
+                                    className="w-full h-[44px] rounded-[30px] bg-[#222A39] text-[#FFF] placeholder:text-[#BFC6D4]/60 pl-4 pr-12 outline-none border-none"
                                     placeholder="“ ” 사이에 대사 지문을 넣어보세요"
                                     autoComplete="off"
                                 />
@@ -208,7 +303,7 @@ const ChatRoom: React.FC = () => {
                                     disabled={!input.trim()}
                                     className={[
                                         "absolute right-[3px] top-1/2 -translate-y-1/2 w-[40px] h-[40px] rounded-full flex items-center justify-center text-[#FFF]",
-                                        input.trim() ? "bg-[#404D68] text-[#FFF]" : "bg-[#404D68] text-white/70 opacity-70 cursor-not-allowed",
+                                        input.trim() ? "bg-[#404D68]" : "bg-[#404D68] text-white/70 opacity-70 cursor-not-allowed",
                                     ].join(" ")}
                                     aria-label="전송"
                                 >
@@ -221,6 +316,9 @@ const ChatRoom: React.FC = () => {
                         </div>
                     </form>
                 </footer>
+
+                {/* 바텀시트 */}
+                <BottomSheet isOpen={isSheetOpen} onClose={closeSheet} />
             </div>
         </div>
     );

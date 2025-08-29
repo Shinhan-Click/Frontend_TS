@@ -54,7 +54,6 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   <h2 className="text-[16px] font-bold text-[#FFF] mb-3">{children}</h2>
 );
 
-/** 케밥 버튼: 선택 토글 방지 위해 이벤트 전파 중단 */
 const KebabButton: React.FC = () => (
   <button
     aria-label="더보기"
@@ -65,7 +64,6 @@ const KebabButton: React.FC = () => (
   </button>
 );
 
-/** 기본 카드(비선택 상태) */
 const BaseNoteCard: React.FC<{
   title: string;
   description: string;
@@ -82,7 +80,6 @@ const BaseNoteCard: React.FC<{
   </div>
 );
 
-/** 기본 모드(단일 선택) 카드: 디자인 유지, 체크 아이콘/박스 없음 */
 const SingleSelectableCard: React.FC<{
   title: string;
   description: string;
@@ -109,7 +106,6 @@ const SingleSelectableCard: React.FC<{
   </button>
 );
 
-/** 병합 모드(다중 선택 최대 2) 카드: 체크 박스/배지 포함 */
 const SelectableCard: React.FC<{
   title: string;
   description: string;
@@ -128,7 +124,7 @@ const SelectableCard: React.FC<{
     role="button"
     aria-pressed={selected}
   >
-    {/* 체크 배지 (사각형) */}
+
     <span
       className={[
         'absolute left-[10px] top-[16px] w-[22px] h-[22px] rounded-[4px] border-[#DADDE9] flex items-center justify-center',
@@ -157,17 +153,13 @@ const SelectableCard: React.FC<{
 const ChattingUserNote: React.FC = () => {
   const navigate = useNavigate();
 
-  // 모드: 기본 보기 vs 병합 선택
   const [mode, setMode] = useState<'browse' | 'merge-select'>('browse');
 
-  // 기본 모드 선택(단일): key 또는 null
   const [selectedApply, setSelectedApply] = useState<string | null>(null);
 
-  // 생성하기 바텀시트
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | 'write' | 'merge'>(null);
 
-  // 병합 모드 선택(최대 2)
   const [selectedForMerge, setSelectedForMerge] = useState<string[]>([]);
 
   const optionBase =
@@ -177,7 +169,6 @@ const ChattingUserNote: React.FC = () => {
 
   const makeKey = (kind: 'my' | 'liked', id: number) => `${kind}:${id}`;
 
-  // --- 병합 모드 helpers ---
   const isSelected = (kind: 'my' | 'liked', id: number) => selectedForMerge.includes(makeKey(kind, id));
   const toggleSelect = (kind: 'my' | 'liked', id: number) => {
     const key = makeKey(kind, id);
@@ -189,11 +180,10 @@ const ChattingUserNote: React.FC = () => {
     setSelectedForMerge((prev) => [...prev, key]);
   };
 
-  // --- 기본 모드 helpers ---
   const isApplySelected = (kind: 'my' | 'liked', id: number) => selectedApply === makeKey(kind, id);
   const toggleApply = (kind: 'my' | 'liked', id: number) => {
     const key = makeKey(kind, id);
-    setSelectedApply((prev) => (prev === key ? null : key)); // 다시 클릭하면 해제
+    setSelectedApply((prev) => (prev === key ? null : key));
   };
 
   const enterMergeSelect = () => {

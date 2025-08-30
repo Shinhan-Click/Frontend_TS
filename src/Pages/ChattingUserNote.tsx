@@ -268,7 +268,22 @@ const ChattingUserNote: React.FC = () => {
 
   const handleApply = () => {
     if (!selectedApply) return;
-    navigate('/UserNoteWrite', { state: { applyFrom: selectedApply } });
+    
+    // 선택된 유저노트의 description만 찾기
+    const [kind, idStr] = selectedApply.split(':');
+    const id = parseInt(idStr);
+    
+    let description = '';
+    if (kind === 'my') {
+      const selectedNote = myNotes.find(note => note.userNoteId === id);
+      description = selectedNote?.description || '';
+    } else if (kind === 'liked') {
+      const selectedNote = likedNotes.find(note => note.userNoteId === id);
+      description = selectedNote?.description || '';
+    }
+    
+    // ChatSetting으로 이동하면서 description만 전달
+    navigate('/ChatSetting', { state: { selectedUserNoteDescription: description } });
   };
 
   const HeaderBrowse = (

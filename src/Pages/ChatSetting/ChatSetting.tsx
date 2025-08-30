@@ -8,7 +8,7 @@ import BottomSheet from '../../components/ChatSettingcomponents/BottomSheet';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const API_BASE = '/api';
+const API_BASE = '/api'; // 프록시 사용
 
 const GENDER_OPTIONS = [
   { id: 'male', label: '남성' },
@@ -25,11 +25,14 @@ type UserNotesResult = {
   likedNotes: Array<{ userNoteId: number; title: string; description: string; author: string }>;
 };
 
+type LocationState = { selectedUserNoteDescription?: string } | null;
+
 const ChatSetting: React.FC = () => {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 로그인 가드
   useEffect(() => {
     if (!isLoggedIn) {
       alert('로그인이 필요합니다.');
@@ -37,41 +40,41 @@ const ChatSetting: React.FC = () => {
     }
   }, [isLoggedIn, navigate]);
 
+  // UserNoteWrite/ChattingUserNote에서 넘어온 description 적용
+  const [userNote, setUserNote] = useState('');
   useEffect(() => {
-    const state = location?.state as any;
-    if (state?.selectedUserNote) {
-      setSelectedUserNote(state.selectedUserNote);
+    const state = (location?.state as LocationState) || null;
+    if (state?.selectedUserNoteDescription) {
+      setUserNote(state.selectedUserNoteDescription);
+      // 뒤로가기로 재적용 방지
       window.history.replaceState({}, document.title);
     }
   }, [location?.state]);
 
+  // URL 파라미터 characterId
   const [params] = useSearchParams();
   const [characterId, setCharacterId] = useState<string>('');
   useEffect(() => {
     setCharacterId(params.get('characterId') ?? '');
   }, [params]);
 
+  // 페르소나/폼 상태
   const [personaChoice, setPersonaChoice] = useState<string>('custom');
   const [personaText, setPersonaText] = useState<string>('');
-  const [personaOptions, setPersonaOptions] = useState<{ id: string; label: string }[]>([{ id: 'custom', label: '직접 입력' }]);
+  const [personaOptions, setPersonaOptions] = useState<{ id: string; label: string }[]>([
+    { id: 'custom', label: '직접 입력' },
+  ]);
 
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'none'>('male');
   const [introduction, setIntroduction] = useState('');
-  const [userNote, setUserNote] = useState('');
-
-  const [selectedUserNote, setSelectedUserNote] = useState<{
-    title: string;
-    description: string;
-    type: 'my' | 'liked';
-    author?: string;
-  } | null>(null);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
+
   const effectivePersona = personaChoice === 'custom' ? personaText : personaChoice;
 
-  // 페르소나 목록
+  // 페르소나 목록 로드
   useEffect(() => {
     if (!isLoggedIn) return;
     (async () => {
@@ -88,7 +91,8 @@ const ChatSetting: React.FC = () => {
     })();
   }, [isLoggedIn]);
 
-  const mapGender = (g?: string): 'male' | 'female' | 'none' => (g === 'MALE' ? 'male' : g === 'FEMALE' ? 'female' : 'none');
+  const mapGender = (g?: string): 'male' | 'female' | 'none' =>
+    g === 'MALE' ? 'male' : g === 'FEMALE' ? 'female' : 'none';
 
   const handlePersonaChange = async (value: string) => {
     setPersonaChoice(value);
@@ -96,7 +100,8 @@ const ChatSetting: React.FC = () => {
       setName('');
       setIntroduction('');
       setPersonaText('');
-      setUserNote('');
+      // userNote는 유지 (원하는 경우 비우려면 아래 주석 해제)
+      // setUserNote('');
       return;
     }
     if (!value) return;
@@ -114,6 +119,7 @@ const ChatSetting: React.FC = () => {
     }
   };
 
+  // 유저노트 목록 열기 → 있으면 선택 화면으로, 없으면 바텀시트
   const handleOpenUserNotes = useCallback(async () => {
     setNotesLoading(true);
     try {
@@ -128,7 +134,8 @@ const ChatSetting: React.FC = () => {
       }
       const data: ApiResponse<UserNotesResult> = await res.json();
       const result = data?.result ?? { myNotes: [], likedNotes: [] };
-      const hasNotes = (result.myNotes?.length ?? 0) > 0 || (result.likedNotes?.length ?? 0) > 0;
+      const hasNotes =
+        (result.myNotes?.length ?? 0) > 0 || (result.likedNotes?.length ?? 0) > 0;
       if (hasNotes) navigate('/ChattingUserNote');
       else setSheetOpen(true);
     } catch {
@@ -151,13 +158,30 @@ const ChatSetting: React.FC = () => {
       alert('소개를 입력해주세요.');
       return;
     }
-    console.log('채팅 설정 완료:', { characterId, effectivePersona, name, gender, introduction, userNote });
+    // 필요한 곳으로 전달/저장 처리
+    console.log('채팅 설정 완료:', {
+      characterId,
+      effectivePersona,
+      name,
+      gender,
+      introduction,
+      userNote,
+    });
   };
 
   if (!isLoggedIn) {
     return (
       <div className="cs-root">
-        <div className="cs-app" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontSize: '16px' }}>
+        <div
+          className="cs-app"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            fontSize: '16px',
+          }}
+        >
           로그인 중...
         </div>
       </div>
@@ -230,11 +254,14 @@ const ChatSetting: React.FC = () => {
             </div>
 
             <hr className="border-t border-[#283143] my-4" />
+
             <div className="cs-field">
               <div className="cs-field-head">
                 <div>
                   <h2 className="cs-label">유저노트</h2>
-                  <p className="cs-help">유저노트를 이용해서<br /> 더 다양한 대화를 나눌 수 있어요!</p>
+                  <p className="cs-help">
+                    유저노트를 이용해서<br />더 다양한 대화를 나눌 수 있어요!
+                  </p>
                 </div>
                 <button className="cs-btn" type="button" onClick={handleOpenUserNotes} disabled={notesLoading}>
                   {notesLoading ? '불러오는 중...' : '불러오기'}
@@ -242,74 +269,28 @@ const ChatSetting: React.FC = () => {
               </div>
             </div>
 
-            {selectedUserNote && (
-              <div
-                style={{
-                  backgroundColor: '#1e2532',
-                  border: '1px solid #283143',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  marginTop: '12px',
-                  position: 'relative',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: 'normal', margin: 0, lineHeight: '1.3' }}>
-                    {selectedUserNote.title}
-                  </h3>
-                  <button
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#9CA3AF',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      padding: 0,
-                      width: '24px',
-                      height: '24px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '4px',
-                      marginLeft: '8px',
-                      flexShrink: 0,
-                    }}
-                    onClick={() => setSelectedUserNote(null)}
-                    aria-label="유저노트 제거"
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2a3441')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                  >
-                    ×
-                  </button>
-                </div>
-                <p
-                  style={{
-                    color: 'rgba(223, 225, 234, 0.61)',
-                    fontSize: '13px',
-                    lineHeight: '1.4',
-                    margin: '0 0 12px 0',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 6,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    maxHeight: '120px',
-                  }}
-                >
-                  {selectedUserNote.description}
-                </p>
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(69, 74, 85, 0.32)',
-                    color: '#9CA3AF',
-                    fontSize: '12px',
-                    padding: '4px 12px',
-                    borderRadius: '6px',
-                  }}
-                >
-                  {selectedUserNote.type === 'liked' && selectedUserNote.author ? `@${selectedUserNote.author}` : '내가 만든 노트'}
-                </div>
+            {/* 유저노트가 적용된 경우 편집 가능 */}
+            {userNote && (
+              <div style={{ marginTop: '2px' }}>
+                <InputWithCounter
+                  id="userNote"
+                  value={userNote}
+                  onChange={(e) => setUserNote(e.target.value)}
+                  maxLength={500}
+                  placeholder="유저노트 내용을 편집하세요..."
+                  isTextarea
+                  rows={20}
+                />
+                <style>{`
+                  #userNote {
+                    height: 380px !important;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                  }
+                  #userNote::-webkit-scrollbar {
+                    display: none;
+                  }
+                `}</style>
               </div>
             )}
 

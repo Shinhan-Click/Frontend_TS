@@ -11,6 +11,7 @@ import ChattingUserNote from './Pages/ChattingUserNote';
 import ChatRoom from './Pages/ChatRoom';
 import UserNoteSelectPriorityBeforeMerging from './Pages/UserNoteSelectPriorityBeforeMerging';
 import UserNoteMergeResult from './Pages/UserNoteMergeResult';
+import UserNoteMergeLoading from './Pages/UserNoteMergeLoading';
 
 const App: React.FC = () => {
   return (
@@ -29,6 +30,7 @@ const App: React.FC = () => {
 
           <Route path="/UserNoteSelectPriorityBeforeMerging" element={<UserNoteSelectPriorityBeforeMerging />} />
           <Route path="/UserNoteMergeResult" element={<UserNoteMergeResult />} />
+          <Route path="/UserNoteMergeLoading" element={<UserNoteMergeLoading />} />
         </Routes>
       </Router>
     </AuthProvider>

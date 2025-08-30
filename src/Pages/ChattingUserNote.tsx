@@ -35,8 +35,9 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const KebabButton: React.FC = () => (
   <button
     aria-label="더보기"
-    className="absolute top-3 mt-[6px] ml-[270px] flex items-center justify-center bg([rgba(217,200,239,0.03)]/10) border-none"
+    className="absolute top-3 mt-[6px] ml-[270px] flex items-center justify-center border-none"
     onClick={(e) => e.stopPropagation()}
+    style={{ background: 'none' }}
   >
     <MoreVerticalIcon className="w-[20px] h-[20px] text-[#FFF]" />
   </button>
@@ -148,7 +149,7 @@ const ChattingUserNote: React.FC = () => {
 
   const [selectedForMerge, setSelectedForMerge] = useState<string[]>([]);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+  const API_BASE = '/api';
 
   // 초기 진입 시 state 사용 후 히스토리 상태 정리(선택)
   useEffect(() => {
@@ -160,22 +161,54 @@ const ChattingUserNote: React.FC = () => {
   useEffect(() => {
     const loadUserNotes = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/usernote/my-usernotes`, {
+        const res = await fetch(`${API_BASE}/usernote/my-usernotes`, {
           method: 'GET',
-          headers: { accept: '*/*' },
+          headers: { 
+            accept: '*/*',
+            'Cache-Control': 'no-cache'
+          },
           credentials: 'include',
         });
 
-        if (!res.ok) throw new Error('API 호출 실패');
+        if (!res.ok) {
+          if (res.status === 500) {
+            throw new Error('서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+          } else if (res.status === 401) {
+            throw new Error('로그인이 필요합니다.');
+          }
+          const errorText = await res.text();
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        // Content-Type 확인
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const responseText = await res.text();
+          throw new Error('서버에서 JSON이 아닌 응답을 받았습니다');
+        }
 
         const data: ApiResponse<UserNotesResult> = await res.json();
 
         if (data.isSuccess && data.result) {
           setMyNotes(data.result.myNotes || []);
           setLikedNotes(data.result.likedNotes || []);
+        } else {
+          throw new Error(data.message || 'API 응답이 실패했습니다');
         }
       } catch (error) {
-        console.error('유저노트 로드 실패:', error);
+        // 에러 타입에 따른 처리
+        if (error instanceof SyntaxError && error.message.includes('JSON')) {
+          alert('서버에서 잘못된 응답을 받았습니다. 페이지를 새로고침해주세요.');
+        } else if (error instanceof Error && error.message.includes('서버 내부 오류')) {
+          alert(error.message);
+        } else if (error instanceof Error && (error.message.includes('401') || error.message.includes('로그인이 필요합니다'))) {
+          alert('로그인이 필요합니다.');
+          navigate('/login');
+          return;
+        } else {
+          alert('유저노트를 불러오는데 실패했습니다.');
+        }
+        
         setMyNotes([]);
         setLikedNotes([]);
       } finally {
@@ -184,7 +217,7 @@ const ChattingUserNote: React.FC = () => {
     };
 
     loadUserNotes();
-  }, [API_BASE_URL]);
+  }, [API_BASE, navigate]);
 
   const optionBase =
     'w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors focus:outline-none focus:ring-2 focus:ring-white/20';

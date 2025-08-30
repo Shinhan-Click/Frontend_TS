@@ -9,6 +9,7 @@ import UserNoteWrite from './Pages/UserNoteWrite';
 import LikeUserNote from './Pages/LikeUserNote';
 import ChattingUserNote from './Pages/ChattingUserNote';
 import ChatRoom from './Pages/ChatRoom';
+import UserNoteSelectPriorityBeforeMerging from './Pages/UserNoteSelectPriorityBeforeMerging';
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const App: React.FC = () => {
           <Route path="/LikeUserNote" element={<LikeUserNote />} />
           <Route path="/ChattingUserNote" element={<ChattingUserNote />} />
 
+          <Route path="/UserNoteSelectPriorityBeforeMerging" element={<UserNoteSelectPriorityBeforeMerging />} />
           <Route path="/ChatRoom" element={<ChatRoom />} />
         </Routes>
       </Router>

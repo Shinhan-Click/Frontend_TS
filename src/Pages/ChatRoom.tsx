@@ -3,9 +3,6 @@ import { ArrowLeftIcon, UserIcon, NoteIcon, EditIcon, HistoryIcon, TrashIcon } f
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { MdFormatQuote } from "react-icons/md";
 
-// ======================
-// BottomSheet Helper 컴포넌트
-// ======================
 interface IconButtonProps {
     icon: React.ReactNode;
     label: string;
@@ -59,14 +56,12 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose }) => {
 
     return (
         <>
-            {/* 오버레이 */}
             <div
                 className={`absolute inset-0 bg-black/60 z-40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                     }`}
                 onClick={onClose}
             />
 
-            {/* 시트 */}
             <div
                 className={`p-[10px] w-[355px] absolute inset-x-0 mt-[610px] z-50 bg-[#222A39] text-[#FFF] rounded-[20px] pt-3 pb-6 px-4 shadow-2xl transition-transform duration-300 ease-in-out transform ${isOpen ? "translate-y-0" : "translate-y-full"
                     }`}
@@ -99,9 +94,6 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose }) => {
     );
 };
 
-// ======================
-// ChatRoom 본문
-// ======================
 type Role = "ai" | "user" | "narration";
 type Message = {
     id: string;
@@ -194,7 +186,6 @@ const ChatRoom: React.FC = () => {
         <div className="min-h-screen bg-white flex items-center justify-center pointer-events-auto">
             <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
 
-                {/* HEADER */}
                 <header className="absolute top-0 left-0 right-0 z-[60] mt-[5px] w-[335px] h-[58px] px-[20px] flex items-center justify-between bg-[#141924]">
                     <div className="flex items-center">
                         <button
@@ -216,7 +207,6 @@ const ChatRoom: React.FC = () => {
                     </button>
                 </header>
 
-                {/* MAIN */}
                 <main className="relative z-0 flex-1 overflow-y-auto overflow-x-hidden pt-[58px] [&::-webkit-scrollbar]:hidden">
                     <div className="w-[335px] mx-auto pt-3 pb-4">
                         <div className="w-full h-[60px] flex justify-center items-center mt-[12px] mb-[12px]">
@@ -270,7 +260,6 @@ const ChatRoom: React.FC = () => {
                     </div>
                 </main>
 
-                {/* FOOTER */}
                 <footer className="z-40 pointer-events-auto bg-[#141924] mb-[25px]">
                     <form
                         onSubmit={(e) => {
@@ -317,7 +306,6 @@ const ChatRoom: React.FC = () => {
                     </form>
                 </footer>
 
-                {/* 바텀시트 */}
                 <BottomSheet isOpen={isSheetOpen} onClose={closeSheet} />
             </div>
         </div>

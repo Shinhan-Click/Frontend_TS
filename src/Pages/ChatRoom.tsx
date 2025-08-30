@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { ArrowLeftIcon, UserIcon, NoteIcon, EditIcon, HistoryIcon, TrashIcon } from "../components/icons";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { MdFormatQuote } from "react-icons/md";
+import { useParams } from "react-router-dom";
 
 interface IconButtonProps {
     icon: React.ReactNode;
@@ -23,18 +24,16 @@ interface ActionItemProps {
 }
 const ActionItem: React.FC<ActionItemProps> = ({ icon, label, isDestructive }) => (
     <button
-        className={`bg-[#222A39] border-none flex items-center gap-4 text-lg p-3 rounded-lg hover:bg-slate-700/50 w-full text-left transition-colors`}
+        className="bg-[#222A39] border-none flex items-center gap-4 text-lg p-3 rounded-lg hover:bg-slate-700/50 w-full text-left transition-colors"
     >
         {icon}
         <span
-            className={`font-medium ${isDestructive ? "text-[#F24C4C]" : "text-[#FFF]"
-                }`}
+            className={`font-medium ${isDestructive ? "text-[#F24C4C]" : "text-[#FFF]"}`}
         >
             {label}
         </span>
     </button>
 );
-
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -57,14 +56,12 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose }) => {
     return (
         <>
             <div
-                className={`absolute inset-0 bg-black/60 z-40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-                    }`}
+                className={`absolute inset-0 bg-black/60 z-40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
                 onClick={onClose}
             />
 
             <div
-                className={`p-[10px] w-[355px] absolute inset-x-0 mt-[610px] z-50 bg-[#222A39] text-[#FFF] rounded-[20px] pt-3 pb-6 px-4 shadow-2xl transition-transform duration-300 ease-in-out transform ${isOpen ? "translate-y-0" : "translate-y-full"
-                    }`}
+                className={`p-[10px] w-[355px] absolute inset-x-0 mt-[610px] z-50 bg-[#222A39] text-[#FFF] rounded-[20px] pt-3 pb-6 px-4 shadow-2xl transition-transform duration-300 ease-in-out transform ${isOpen ? "translate-y-0" : "translate-y-full"}`}
             >
                 <hr className="border-[2px] border-[#E5E5EB] rounded-[10px] w-[40px]" />
                 <div className="w-[375px] h-[30px] bg-slate-500 rounded-full mx-auto mb-5" />
@@ -103,16 +100,34 @@ type Message = {
     avatarUrl?: string;
 };
 
-const DUMMY: Message[] = [
-    { id: "n1", role: "narration", text: "메시지는 캐릭터 특성에 따라 자동 생성됩니다" },
-    { id: "a1", role: "ai", name: "하이도혁", avatarUrl: "https://i.pravatar.cc/48?img=12", text: "저.. 안녕, 어디가는 길이야?" },
-    { id: "a2", role: "ai", name: "하이도혁", avatarUrl: "https://i.pravatar.cc/48?img=12", text: "그냥 물어본 거야.\n의미부여하지 말아줘." },
-    { id: "u1", role: "user", text: "나도 그냥 물어본 거거든?" },
-    { id: "n2", role: "narration", text: "하이도혁은 총총거리며 그 자리를 떴다..." },
-];
+type ApiResponse<T> = {
+    isSuccess: boolean;
+    code: string;
+    message: string;
+    result: T;
+};
+
+type ChatInfo = {
+    characterName: string;
+    characterImageUrl: string;
+    personaName: string;
+};
+
+type ChatLogItem = {
+    role: "USER" | "ASSISTANT";
+    content: string;
+};
+
+type ChatLogResult = {
+    chatLog: ChatLogItem[];
+};
+
+const API_BASE = "/api";
 
 const ChatRoom: React.FC = () => {
-    const [messages, setMessages] = useState<Message[]>(DUMMY);
+    const { chatId = "" } = useParams<{ chatId: string }>();
+    
+    const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -120,11 +135,225 @@ const ChatRoom: React.FC = () => {
     const toggleSheet = () => setIsSheetOpen((v) => !v);
     const closeSheet = () => setIsSheetOpen(false);
 
+    const [characterName, setCharacterName] = useState("캐릭터");
+    const [characterImageUrl, setCharacterImageUrl] = useState("");
+    const [personaName, setPersonaName] = useState("");
+
+    const splitLines = (s: string) =>
+        (s ?? "")
+            .split(/\r?\n/)
+            .map((v) => v.trim())
+            .filter(Boolean);
+
+    const parseMessageContent = (content: string, role: "USER" | "ASSISTANT"): Message[] => {
+        // \n 문자열을 실제 개행으로 변환하고, 여러 개행을 정리
+        const cleanContent = content.replace(/\\n/g, '\n').replace(/\n+/g, '\n');
+        const lines = cleanContent.split('\n');
+        const messages: Message[] = [];
+        
+        console.log("Parsing content with", lines.length, "lines");
+        console.log("Character info:", { characterName, characterImageUrl, personaName });
+        
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            
+            console.log("Processing line:", `"${trimmed}"`);
+            
+            // USER 메시지인 경우 따옴표 관계없이 user role로 처리
+            if (role === "USER") {
+                const replacedLine = trimmed.replace(/\{\{user\}\}/g, personaName || "사용자");
+                messages.push({
+                    id: crypto.randomUUID(),
+                    role: "user",
+                    text: replacedLine
+                });
+                console.log("Added user message:", replacedLine);
+                continue;
+            }
+            
+            // ASSISTANT 메시지인 경우 기존 파싱 로직 적용
+            // 복합 패턴 처리: "대화"지문 형태
+            const complexPattern = /^(\\?"[^"]*\\?"|"[^"]*")(.+)$/;
+            const complexMatch = trimmed.match(complexPattern);
+            
+            if (complexMatch) {
+                // "대화"지문 패턴인 경우 분리해서 처리
+                const dialoguePart = complexMatch[1];
+                const narrationPart = complexMatch[2];
+                
+                // 대화 부분 처리
+                let dialogue = dialoguePart;
+                if (dialoguePart.startsWith('\\"') && dialoguePart.endsWith('\\"')) {
+                    dialogue = dialoguePart.slice(2, -2);
+                } else if (dialoguePart.startsWith('"') && dialoguePart.endsWith('"')) {
+                    dialogue = dialoguePart.slice(1, -1);
+                }
+                dialogue = dialogue.replace(/\{\{user\}\}/g, personaName || "사용자");
+                
+                messages.push({
+                    id: crypto.randomUUID(),
+                    role: "ai",
+                    text: dialogue,
+                    name: characterName,
+                    avatarUrl: characterImageUrl
+                });
+                
+                // 지문 부분 처리
+                const narration = narrationPart.trim().replace(/\{\{user\}\}/g, personaName || "사용자");
+                if (narration) {
+                    messages.push({
+                        id: crypto.randomUUID(),
+                        role: "narration",
+                        text: narration
+                    });
+                }
+                
+                console.log("Found complex pattern - dialogue:", dialogue, "narration:", narration);
+            } else {
+                // 기존 단순 패턴 처리
+                const isEscapedQuote = trimmed.startsWith('\\"') && trimmed.endsWith('\\"');
+                const isNormalQuote = trimmed.startsWith('"') && trimmed.endsWith('"');
+                const isSmartQuote = trimmed.startsWith('"') && trimmed.endsWith('"');
+                
+                if (isEscapedQuote || isNormalQuote || isSmartQuote) {
+                    let dialogue = trimmed;
+                    
+                    if (isEscapedQuote) {
+                        dialogue = trimmed.slice(2, -2);
+                    } else if (isNormalQuote) {
+                        dialogue = trimmed.slice(1, -1);
+                    } else if (isSmartQuote) {
+                        dialogue = trimmed.slice(1, -1);
+                    }
+                    
+                    dialogue = dialogue.replace(/\{\{user\}\}/g, personaName || "사용자");
+                    
+                    console.log("Found dialogue:", dialogue);
+                    messages.push({
+                        id: crypto.randomUUID(),
+                        role: "ai",
+                        text: dialogue,
+                        name: characterName,
+                        avatarUrl: characterImageUrl
+                    });
+                } else {
+                    const replacedLine = trimmed.replace(/\{\{user\}\}/g, personaName || "사용자");
+                    console.log("Adding as narration:", replacedLine);
+                    messages.push({
+                        id: crypto.randomUUID(),
+                        role: "narration",
+                        text: replacedLine
+                    });
+                }
+            }
+        }
+        
+        console.log("Total messages parsed:", messages.length);
+        return messages;
+    };
+
+    // "..."로 감싸진 대화인지 확인
+    const isQuotedDialogue = (text: string): boolean => {
+        const trimmed = text.trim();
+        // 모든 종류의 따옴표 패턴 확인 (ASCII, 유니코드, 한국어)
+        return /^["""""''`'′″‛‚„‟].*["""""''`'′″‛‚„‟]$/.test(trimmed);
+    };
+
+    // "..."에서 내용 추출
+    const extractQuotedText = (text: string): string => {
+        const trimmed = text.trim();
+        // 모든 종류의 따옴표에서 내용 추출
+        const match = trimmed.match(/^["""""''`'′″‛‚„‟](.*?)["""""''`'′″‛‚„‟]$/);
+        return match ? match[1] : trimmed;
+    };
+
+    // '...'로 감싸진 생각이나 문서인지 확인
+    const isSingleQuotedThought = (text: string): boolean => {
+        return /^'.*'$/.test(text.trim());
+    };
+
+    // [...]로 감싸진 시간/장소 정보인지 확인
+    const isTimestampOrSetting = (text: string): boolean => {
+        return /^\[.*\]/.test(text.trim());
+    };
+
+    // 서술 문장인지 확인 (동작, 상황 묘사 등)
+    const isNarrativeDescription = (text: string): boolean => {
+        // 한국어 서술 패턴: ~다, ~었다, ~했다, ~있다, ~된다 등으로 끝남
+        return /[다였었했있된됐쳤렸았놨뤘갔났왔]\.?$/.test(text.trim());
+    };
+
+    // 캐릭터 정보 가져오기
+    useEffect(() => {
+        let aborted = false;
+        (async () => {
+            try {
+                console.log("Fetching character info for chatId:", chatId);
+                const res = await fetch(`${API_BASE}/chat/${chatId}/info`, {
+                    headers: { accept: "*/*" },
+                    credentials: "include",
+                });
+                console.log("Character info response status:", res.status);
+                if (!res.ok) {
+                    console.error("Character info fetch failed:", res.status, res.statusText);
+                    return;
+                }
+                const data: ApiResponse<ChatInfo> = await res.json();
+                console.log("Character info data:", data);
+                if (!data?.isSuccess || !data.result) {
+                    console.error("Character info API returned error:", data);
+                    return;
+                }
+                if (!aborted) {
+                    console.log("Setting character info:", data.result);
+                    setCharacterName(data.result.characterName || "캐릭터");
+                    setCharacterImageUrl(data.result.characterImageUrl || "");
+                    setPersonaName(data.result.personaName || "");
+                }
+            } catch (error) {
+                console.error("Failed to fetch character info:", error);
+            }
+        })();
+        return () => { aborted = true; };
+    }, [chatId]);
+
+    // 채팅 로그 가져오기 - 캐릭터 정보가 로드된 후에만 실행
+    useEffect(() => {
+        if (!characterName) return; // 캐릭터 정보가 없으면 대기
+        
+        let aborted = false;
+        (async () => {
+            try {
+                console.log("Fetching chat log for chatId:", chatId);
+                const res = await fetch(`${API_BASE}/chat/${chatId}`, {
+                    method: "GET",
+                    headers: { accept: "*/*" },
+                    credentials: "include",
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data: ApiResponse<ChatLogResult> = await res.json();
+                if (!data?.isSuccess || !data.result) return;
+
+                const flat: Message[] = [];
+                for (const item of data.result.chatLog || []) {
+                    const parsedMessages = parseMessageContent(item.content || "", item.role);
+                    flat.push(...parsedMessages);
+                }
+                if (!aborted) setMessages(flat);
+            } catch (error) {
+                console.error("Failed to fetch chat log:", error);
+                if (!aborted) setMessages([]);
+            }
+        })();
+        return () => { aborted = true; };
+    }, [chatId, characterName, characterImageUrl, personaName]); // 의존성에 캐릭터 정보 추가
+
     const extractQuoted = (raw: string) => {
         const t = raw.trim();
         const pairs: Array<[string, string]> = [
             ['"', '"'],
-            ['“', '”'],
+            ['"', '"'],
             ['「', '」'],
             ['『', '』'],
         ];
@@ -137,26 +366,66 @@ const ChatRoom: React.FC = () => {
         return null;
     };
 
-    const send = () => {
+    const send = async () => {
         const raw = input;
         const t = raw.trim();
         if (!t) return;
 
         const quoted = extractQuoted(raw);
-        if (quoted !== null) {
-            if (!quoted) return;
-            setMessages((prev) => [
-                ...prev,
-                { id: crypto.randomUUID(), role: "narration", text: quoted },
-            ]);
-        } else {
-            setMessages((prev) => [
-                ...prev,
-                { id: crypto.randomUUID(), role: "user", text: t },
-            ]);
-        }
+        const pieces = splitLines(quoted ?? t);
+        
+        // 사용자 메시지 즉시 UI에 추가
+        setMessages((prev) => [
+            ...prev,
+            ...pieces.map((text) => ({
+                id: crypto.randomUUID(),
+                role: quoted !== null ? ("narration" as const) : ("user" as const),
+                text,
+            })),
+        ]);
+        
         setInput("");
         requestAnimationFrame(() => inputRef.current?.focus());
+
+        // API 호출해서 AI 응답 받기
+        try {
+            console.log("Sending message:", { content: t });
+            const response = await fetch(`${API_BASE}/chat/${chatId}/message`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "accept": "*/*"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    content: t
+                })
+            });
+
+            console.log("Response status:", response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("API Error Response:", errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const data: ApiResponse<{ response: string }> = await response.json();
+            
+            if (data.isSuccess && data.result?.response) {
+                // AI 응답을 파싱해서 메시지로 변환
+                const aiMessages = parseMessageContent(data.result.response, "ASSISTANT");
+                setMessages((prev) => [...prev, ...aiMessages]);
+            }
+        } catch (error) {
+            console.error("Failed to send message:", error);
+            // 에러 메시지 표시
+            setMessages((prev) => [...prev, {
+                id: crypto.randomUUID(),
+                role: "narration",
+                text: "메시지 전송에 실패했습니다. 다시 시도해주세요."
+            }]);
+        }
     };
 
     const getMarginTop = (curr: Role, prev?: Role) => {
@@ -173,7 +442,7 @@ const ChatRoom: React.FC = () => {
         const end = el.selectionEnd ?? input.length;
         const before = input.slice(0, start);
         const after = input.slice(end);
-        const next = `${before}“”${after}`;
+        const next = `${before}""${after}`;
         setInput(next);
         requestAnimationFrame(() => {
             inputRef.current?.focus();
@@ -186,7 +455,7 @@ const ChatRoom: React.FC = () => {
         <div className="min-h-screen bg-white flex items-center justify-center pointer-events-auto">
             <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
 
-                <header className="absolute top-0 left-0 right-0 z-[60] mt-[5px] w-[335px] h-[58px] px-[20px] flex items-center justify-between bg-[#141924]">
+                <header className="absolute top-0 left-0 right-0 z-50 mt-[5px] w-[335px] h-[58px] px-[20px] flex items-center justify-between bg-[#141924]">
                     <div className="flex items-center">
                         <button
                             className="w-[35px] h-[35px] p-2 ml-[4px] bg-[#141924] text-[#FFF] border-none"
@@ -195,7 +464,7 @@ const ChatRoom: React.FC = () => {
                         >
                             <ArrowLeftIcon className="w-[20px] h-[20px] text-[#FFF]" />
                         </button>
-                        <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">하도혁</h1>
+                        <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">{characterName}</h1>
                     </div>
 
                     <button
@@ -207,7 +476,7 @@ const ChatRoom: React.FC = () => {
                     </button>
                 </header>
 
-                <main className="relative z-0 flex-1 overflow-y-auto overflow-x-hidden pt-[58px] [&::-webkit-scrollbar]:hidden">
+                <main className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden pt-[58px] bg-[#141924] [&::-webkit-scrollbar]:hidden">
                     <div className="w-[335px] mx-auto pt-3 pb-4">
                         <div className="w-full h-[60px] flex justify-center items-center mt-[12px] mb-[12px]">
                             <span className="w-[290px] h-[34px] flex justify-center items-center text-[12px] rounded-[55px] bg-[#283143] text-[#DFE1EA]/70">
@@ -215,52 +484,58 @@ const ChatRoom: React.FC = () => {
                             </span>
                         </div>
 
-                        {messages
-                            .filter((m) => !(m.role === "narration" && m.id === "n1"))
-                            .map((m, i, arr) => {
-                                const prev = arr[i - 1];
-                                const mt = getMarginTop(m.role, prev?.role);
+                        {messages.map((m, i, arr) => {
+                            const prev = arr[i - 1];
+                            const mt = getMarginTop(m.role, prev?.role);
 
-                                if (m.role === "narration") {
-                                    return (
-                                        <p key={m.id} className={`${mt} text-[14px] leading-7 text-[#C7CBD6]/70 whitespace-pre-wrap`}>
-                                            {m.text}
-                                        </p>
-                                    );
-                                }
-
-                                if (m.role === "ai") {
-                                    return (
-                                        <div key={m.id} className={`${mt} flex items-start gap-2`}>
-                                            <div className="shrink-0 w-8 h-8 rounded-full overflow-hidden bg-[#222A39]">
-                                                {m.avatarUrl && (
-                                                    <img src={m.avatarUrl} alt={m.name ?? "ai"} className="w-full h-full object-cover" />
-                                                )}
-                                            </div>
-                                            <div className="max-w-[78%]">
-                                                {m.name && <div className="text-[12px] font-medium text-[#FFF] mb-[6px]">{m.name}</div>}
-                                                <div className="px-[10px] py-[4px] bg-[#283143] shadow rounded-[10px] rounded-tl-none">
-                                                    <p className="text-[14px] leading-[18px] text-[#E6EAF3] whitespace-pre-wrap">{m.text}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                }
-
+                            if (m.role === "narration") {
                                 return (
-                                    <div key={m.id} className={`${mt} flex justify-end`}>
+                                    <p key={m.id} className={`${mt} text-[14px] leading-6 text-[#C7CBD6]/70 whitespace-pre-wrap`}>
+                                        {m.text}
+                                    </p>
+                                );
+                            }
+
+                            if (m.role === "ai") {
+                                return (
+                                    <div key={m.id} className={`${mt} flex items-start gap-2`}>
+                                        <div className="flex-shrink-0 w-[32px] h-[32px] rounded-full overflow-hidden bg-[#222A39]">
+                                            {(m.avatarUrl || characterImageUrl) && (
+                                                <img
+                                                    src={m.avatarUrl ?? characterImageUrl}
+                                                    alt={m.name ?? characterName}
+                                                    className="w-[32px] h-[32px] object-cover"
+                                                />
+                                            )}
+                                        </div>
                                         <div className="max-w-[78%]">
-                                            <div className="px-[10px] py-[6px] bg-[#6F4ACD] text-[#FFF] shadow rounded-[10px] rounded-tr-none">
-                                                <div className="text-[14px] leading-[18px] whitespace-pre-wrap">{m.text}</div>
+                                            {(m.name || characterName) && (
+                                                <div className="text-[12px] font-medium text-[#FFF] mb-[6px]">
+                                                    {m.name ?? characterName}
+                                                </div>
+                                            )}
+                                            <div className="px-[10px] py-[4px] bg-[#283143] shadow rounded-[10px] rounded-tl-none">
+                                                <p className="text-[14px] leading-[18px] text-[#E6EAF3] whitespace-pre-wrap">{m.text}</p>
                                             </div>
                                         </div>
                                     </div>
                                 );
-                            })}
+                            }
+
+                            return (
+                                <div key={m.id} className={`${mt} flex justify-end`}>
+                                    <div className="max-w-[78%]">
+                                        <div className="px-[10px] py-[6px] bg-[#6F4ACD] text-[#FFF] shadow rounded-[10px] rounded-tr-none">
+                                            <div className="text-[14px] leading-[18px] whitespace-pre-wrap">{m.text}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </main>
 
-                <footer className="z-40 pointer-events-auto bg-[#141924] mb-[25px]">
+                <footer className="relative z-40 pointer-events-auto bg-[#141924] mb-[25px]">
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -284,7 +559,7 @@ const ChatRoom: React.FC = () => {
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     className="w-full h-[44px] rounded-[30px] bg-[#222A39] text-[#FFF] placeholder:text-[#BFC6D4]/60 pl-4 pr-12 outline-none border-none"
-                                    placeholder="“ ” 사이에 대사 지문을 넣어보세요"
+                                    placeholder="&quot; &quot; 사이에 대사 지문을 넣어보세요"
                                     autoComplete="off"
                                 />
                                 <button
@@ -296,7 +571,7 @@ const ChatRoom: React.FC = () => {
                                     ].join(" ")}
                                     aria-label="전송"
                                 >
-                                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2}>
                                         <path d="M22 2L11 13" />
                                         <path d="M22 2l-7 20-4-9-9-4 20-7z" />
                                     </svg>

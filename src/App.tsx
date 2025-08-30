@@ -26,11 +26,11 @@ const App: React.FC = () => {
           <Route path="/LikeUserNote" element={<LikeUserNote />} />
           <Route path="/ChattingUserNote" element={<ChattingUserNote />} />
 
-          <Route path="/ChatRoom" element={<ChatRoom />} />
+          <Route path="/ChatRoom/:chatId" element={<ChatRoom />} />
 
           <Route path="/UserNoteSelectPriorityBeforeMerging" element={<UserNoteSelectPriorityBeforeMerging />} />
           <Route path="/UserNoteMergeResult" element={<UserNoteMergeResult />} />
-          <Route path="/UserNoteMergeLoading" element={<UserNoteMergeLoading />} /> {/*병합하기 페이지에서 선택된게 있을 경우 해당 페이지 이동하게 해야 됨.*/}
+          <Route path="/UserNoteMergeLoading" element={<UserNoteMergeLoading />} />
         </Routes>
       </Router>
     </AuthProvider>

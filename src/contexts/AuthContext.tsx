@@ -22,8 +22,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// 서버 절대 URL (예: http://localhost:8080 또는 http://52.78.132.85:8080)
-const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
+// 프록시를 사용하므로 /api로 변경
+const API_BASE = '/api';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -37,10 +37,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isSessionChecking, setIsSessionChecking] = useState<boolean>(true);
 
-  // 세션 체크: 항상 서버 절대 URL 사용 + JSON 가드
+  // 세션 체크: 프록시를 통해 서버와 통신
   const checkSession = async (): Promise<boolean> => {
     try {
-      if (!API_BASE) throw new Error("VITE_API_BASE_URL is missing");
       console.log("세션 체크 시작...");
 
       const res = await fetch(`${API_BASE}/member/me`, {
@@ -116,7 +115,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     console.log("로그아웃 처리 시작...");
     try {
-      if (!API_BASE) throw new Error("VITE_API_BASE_URL is missing");
       await fetch(`${API_BASE}/member/logout`, {
         method: "POST",
         credentials: "include",

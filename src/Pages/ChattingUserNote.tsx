@@ -1,14 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, MoreVerticalIcon } from '../components/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-type MyNote = { userNoteId: number; title: string; description: string; createdAt: string };
-type LikedNote = { userNoteId: number; title: string; description: string; author: string };
+type MyNote = {
+  userNoteId: number;
+  title: string;
+  description: string;
+  createdAt: string;
+};
 
-type ApiResponse<T> = { isSuccess: boolean; code: string; message: string; result: T };
-type UserNotesResult = { myNotes: MyNote[]; likedNotes: LikedNote[] };
+type LikedNote = {
+  userNoteId: number;
+  title: string;
+  description: string;
+  author: string;
+};
 
-const API_BASE = '/api';
+type ApiResponse<T> = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: T;
+};
+
+type UserNotesResult = {
+  myNotes: MyNote[];
+  likedNotes: LikedNote[];
+};
 
 const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <h2 className="text-[16px] font-bold text-[#FFF] mb-3">{children}</h2>
@@ -17,11 +35,27 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const KebabButton: React.FC = () => (
   <button
     aria-label="더보기"
-    className="absolute top-3 mt-[6px] ml-[270px] flex items-center justify-center bg-[rgba(217,200,239,0.03)]/10 border-none"
+    className="absolute top-3 mt-[6px] ml-[270px] flex items-center justify-center bg([rgba(217,200,239,0.03)]/10) border-none"
     onClick={(e) => e.stopPropagation()}
   >
     <MoreVerticalIcon className="w-[20px] h-[20px] text-[#FFF]" />
   </button>
+);
+
+const BaseNoteCard: React.FC<{
+  title: string;
+  description: string;
+  meta: string;
+  showKebab?: boolean;
+}> = ({ title, description, meta, showKebab = true }) => (
+  <div className="relative w-full box-border h-[140px] bg-[rgba(217,200,239,0.03)] rounded-[12px] px-[25px] shadow-lg">
+    {showKebab && <KebabButton />}
+    <h3 className="text-[#FFF] font-normal text-[15px] mb-1">{title}</h3>
+    <p className="text-[13px] text-[rgba(223,225,234,0.61)] leading-snug line-clamp-2">{description}</p>
+    <div className="mt-3 inline-flex items-center rounded-[6px] bg-[rgba(69,74,85,0.32)] text-[#9CA3AF] text-[12px] px-3 py-1">
+      {meta}
+    </div>
+  </div>
 );
 
 const SingleSelectableCard: React.FC<{
@@ -36,7 +70,9 @@ const SingleSelectableCard: React.FC<{
     onClick={onToggle}
     className={[
       'relative w-full box-border h-[140px] rounded-[12px] mt-[12px] px-[25px] shadow-lg text-left transition-all',
-      selected ? 'bg-[#6F4ACD]/10 border-2 border-[#6F4ACD]' : 'bg-[rgba(217,200,239,0.03)] border border-transparent hover:bg-[#D9C8EF]/10',
+      selected
+        ? 'bg-[#6F4ACD]/10 border-2 border-[#6F4ACD]'
+        : 'bg-[rgba(217,200,239,0.03)] border border-transparent hover:bg-[#D9C8EF]/10',
     ].join(' ')}
   >
     <KebabButton />
@@ -58,7 +94,9 @@ const SelectableCard: React.FC<{
   <div
     className={[
       'relative w-full box-border h-[140px] mt-[12px] rounded-[12px] px-[25px] shadow-lg transition-all',
-      selected ? 'bg-[#D9C8EF]/10 border-2 border-[#6F4ACD]' : 'bg-[rgba(217,200,239,0.03)] border border-transparent hover:bg-[#D9C8EF]/10',
+      selected
+        ? 'bg-[#D9C8EF]/10 border-2 border-[#6F4ACD]'
+        : 'bg-[rgba(217,200,239,0.03)] border border-transparent hover:bg-[#D9C8EF]/10',
     ].join(' ')}
     onClick={onToggle}
     role="button"
@@ -91,40 +129,62 @@ const SelectableCard: React.FC<{
 
 const ChattingUserNote: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  //location.state에서 초기 모드 읽기
+  const initialMode: 'browse' | 'merge-select' =
+    (location.state as any)?.mode === 'merge-select' ? 'merge-select' : 'browse';
 
   const [myNotes, setMyNotes] = useState<MyNote[]>([]);
   const [likedNotes, setLikedNotes] = useState<LikedNote[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [mode, setMode] = useState<'browse' | 'merge-select'>('browse');
+  const [mode, setMode] = useState<'browse' | 'merge-select'>(initialMode);
+
   const [selectedApply, setSelectedApply] = useState<string | null>(null);
+
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | 'write' | 'merge'>(null);
+
   const [selectedForMerge, setSelectedForMerge] = useState<string[]>([]);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+
+  // 초기 진입 시 state 사용 후 히스토리 상태 정리(선택)
+  useEffect(() => {
+    if ((location.state as any)?.mode) {
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const loadUserNotes = async () => {
       try {
-        const res = await fetch(`${API_BASE}/usernote/my-usernotes`, {
+        const res = await fetch(`${API_BASE_URL}/usernote/my-usernotes`, {
           method: 'GET',
           headers: { accept: '*/*' },
           credentials: 'include',
         });
-        if (!res.ok) throw new Error('API 실패');
+
+        if (!res.ok) throw new Error('API 호출 실패');
+
         const data: ApiResponse<UserNotesResult> = await res.json();
+
         if (data.isSuccess && data.result) {
           setMyNotes(data.result.myNotes || []);
           setLikedNotes(data.result.likedNotes || []);
         }
-      } catch {
+      } catch (error) {
+        console.error('유저노트 로드 실패:', error);
         setMyNotes([]);
         setLikedNotes([]);
       } finally {
         setLoading(false);
       }
     };
+
     loadUserNotes();
-  }, []);
+  }, [API_BASE_URL]);
 
   const optionBase =
     'w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors focus:outline-none focus:ring-2 focus:ring-white/20';
@@ -132,6 +192,7 @@ const ChattingUserNote: React.FC = () => {
   const unselectedStyle = 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10';
 
   const makeKey = (kind: 'my' | 'liked', id: number) => `${kind}:${id}`;
+
   const isSelected = (kind: 'my' | 'liked', id: number) => selectedForMerge.includes(makeKey(kind, id));
   const toggleSelect = (kind: 'my' | 'liked', id: number) => {
     const key = makeKey(kind, id);
@@ -179,7 +240,11 @@ const ChattingUserNote: React.FC = () => {
 
   const HeaderBrowse = (
     <header className="flex-shrink-0 flex items-center h-[34px] mt-[24px] px-[20px]">
-      <button className="p-2 ml-[4px] bg-[#141924] border-none" aria-label="뒤로가기" onClick={() => navigate(-1)}>
+      <button
+        className="p-2 ml-[4px] bg-[#141924] border-none"
+        aria-label="뒤로가기"
+        onClick={() => navigate(-1)}
+      >
         <ArrowLeftIcon className="w-[20px] h-[20px] text-[#FFF]" />
       </button>
       <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트</h1>
@@ -189,7 +254,12 @@ const ChattingUserNote: React.FC = () => {
   const HeaderMerge = (
     <header className="flex-shrink-0 px-[20px] pt-[24px] bg-[#222A39]">
       <div className="flex items-center">
-        <button onClick={exitMergeSelect} className="mt-[5px] w-[35px] h-[35px] text-[#FFF] bg-[#222A39] border-none" aria-label="닫기" title="닫기">
+        <button
+          onClick={exitMergeSelect}
+          className="mt-[5px] w-[35px] h-[35px] text-[#FFF] bg-[#222A39] border-none"
+          aria-label="닫기"
+          title="닫기"
+        >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -224,25 +294,25 @@ const ChattingUserNote: React.FC = () => {
                 <div className="space-y-3">
                   {mode === 'merge-select'
                     ? myNotes.map((note) => (
-                        <SelectableCard
-                          key={`my:${note.userNoteId}`}
-                          title={note.title}
-                          description={note.description}
-                          meta={note.createdAt}
-                          selected={isSelected('my', note.userNoteId)}
-                          onToggle={() => toggleSelect('my', note.userNoteId)}
-                        />
-                      ))
+                      <SelectableCard
+                        key={`my:${note.userNoteId}`}
+                        title={note.title}
+                        description={note.description}
+                        meta={note.createdAt}
+                        selected={isSelected('my', note.userNoteId)}
+                        onToggle={() => toggleSelect('my', note.userNoteId)}
+                      />
+                    ))
                     : myNotes.map((note) => (
-                        <SingleSelectableCard
-                          key={`my:${note.userNoteId}`}
-                          title={note.title}
-                          description={note.description}
-                          meta={note.createdAt}
-                          selected={isApplySelected('my', note.userNoteId)}
-                          onToggle={() => toggleApply('my', note.userNoteId)}
-                        />
-                      ))}
+                      <SingleSelectableCard
+                        key={`my:${note.userNoteId}`}
+                        title={note.title}
+                        description={note.description}
+                        meta={note.createdAt}
+                        selected={isApplySelected('my', note.userNoteId)}
+                        onToggle={() => toggleApply('my', note.userNoteId)}
+                      />
+                    ))}
                 </div>
               </section>
             )}
@@ -253,25 +323,25 @@ const ChattingUserNote: React.FC = () => {
                 <div className="space-y-3">
                   {mode === 'merge-select'
                     ? likedNotes.map((note) => (
-                        <SelectableCard
-                          key={`liked:${note.userNoteId}`}
-                          title={note.title}
-                          description={note.description}
-                          meta={`@${note.author}`}
-                          selected={isSelected('liked', note.userNoteId)}
-                          onToggle={() => toggleSelect('liked', note.userNoteId)}
-                        />
-                      ))
+                      <SelectableCard
+                        key={`liked:${note.userNoteId}`}
+                        title={note.title}
+                        description={note.description}
+                        meta={`@${note.author}`}
+                        selected={isSelected('liked', note.userNoteId)}
+                        onToggle={() => toggleSelect('liked', note.userNoteId)}
+                      />
+                    ))
                     : likedNotes.map((note) => (
-                        <SingleSelectableCard
-                          key={`liked:${note.userNoteId}`}
-                          title={note.title}
-                          description={note.description}
-                          meta={`@${note.author}`}
-                          selected={isApplySelected('liked', note.userNoteId)}
-                          onToggle={() => toggleApply('liked', note.userNoteId)}
-                        />
-                      ))}
+                      <SingleSelectableCard
+                        key={`liked:${note.userNoteId}`}
+                        title={note.title}
+                        description={note.description}
+                        meta={`@${note.author}`}
+                        selected={isApplySelected('liked', note.userNoteId)}
+                        onToggle={() => toggleApply('liked', note.userNoteId)}
+                      />
+                    ))}
                 </div>
               </section>
             )}
@@ -294,7 +364,9 @@ const ChattingUserNote: React.FC = () => {
                 <button
                   className={[
                     'w-full h-[52px] rounded-[12px] font-semibold border-none',
-                    selectedForMerge.length === 2 ? 'bg-[#6F4ACD] text-[#FFF]' : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed',
+                    selectedForMerge.length === 2
+                      ? 'bg-[#6F4ACD] text-[#FFF]'
+                      : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed',
                   ].join(' ')}
                   type="button"
                   disabled={selectedForMerge.length !== 2}
@@ -334,14 +406,16 @@ const ChattingUserNote: React.FC = () => {
 
         <>
           <div
-            className={`absolute inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
-              isBottomSheetOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'
-            }`}
+            className={`absolute inset-0 z-40 bg-black/50 transition-opacity duration-300 ${isBottomSheetOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'
+              }`}
             onClick={() => setIsBottomSheetOpen(false)}
           />
           <div
             className="absolute left-0 right-0 z-50 w-full transition-transform duration-300 ease-out will-change-transform"
-            style={{ bottom: 0, transform: isBottomSheetOpen ? 'translateY(0)' : 'translateY(100%)' }}
+            style={{
+              bottom: 0,
+              transform: isBottomSheetOpen ? 'translateY(0)' : 'translateY(100%)',
+            }}
           >
             <div className="bg-[#1E2532] h-[244px] rounded-t-[20px] shadow-2xl">
               <div className="w-12 h-1 bg-gray-400 rounded-full mx-auto mt-3 mb-4" />
@@ -368,7 +442,12 @@ const ChattingUserNote: React.FC = () => {
                 >
                   <div className="w-[25px] h-10 bg-gray-600 flex items-center justify-center text-[#FFF]">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
                     </svg>
                   </div>
                   <div className="flex-1 text-left">
@@ -386,7 +465,12 @@ const ChattingUserNote: React.FC = () => {
                 >
                   <div className="w-[25px] h-10 bg-gray-600 flex items-center justify-center text-[#FFF]">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2z"
+                      />
                     </svg>
                   </div>
                   <div className="flex-1 text-left">

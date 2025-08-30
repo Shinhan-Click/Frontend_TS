@@ -174,7 +174,7 @@ const UserNoteDetail: React.FC = () => {
                             >
                                 <div ref={scrollerRef} className="mt-3 overflow-x-auto no-scrollbar cursor-grab">
                                     <div className="flex gap-4 pr-2 mt-[15px]">
-                                        <div className="p-[10px] w-[320px] mr-[15px] flex-shrink-0 rounded-[10px] border border-[#3A4254] bg-[#141924] p-5">
+                                        <div className="p-[7px] w-[320px] mr-[15px] flex-shrink-0 rounded-[10px] border border-[#3A4254] bg-[#141924]">
 
                                             <div className="mt-[10px] mb-3 flex justify-end">
                                                 <span className="w-[100px] h-[30px] flex items-center justify-center text-[13px] rounded-[8px] bg-[#6F4ACD] text-white">

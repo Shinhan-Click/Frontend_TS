@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 type NoteOption = {
     id: string;
@@ -27,25 +27,57 @@ const OPTIONS: NoteOption[] = [
     },
 ];
 
+const TRANSITION_MS = 300;
+
 const UserNoteSelectPriorityBeforeMerging: React.FC<Props> = ({
     onClose,
     onConfirm,
 }) => {
+    const navigate = useNavigate();
+
     const [selectedId, setSelectedId] = useState<string | null>(OPTIONS[0].id);
+
+    const [open, setOpen] = useState(false);
+    const [closing, setClosing] = useState(false);
+
+    useEffect(() => {
+        const t = setTimeout(() => setOpen(true), 0);
+        return () => clearTimeout(t);
+    }, []);
 
     const handleConfirm = () => {
         if (!selectedId) return;
         onConfirm?.(selectedId);
     };
 
+
+    const handleCloseWithSlide = () => {
+        setClosing(true);
+        setOpen(false);
+        setTimeout(() => {
+            if (onClose) onClose();
+
+            navigate("/ChattingUserNote", {
+                state: { mode: "merge-select" },
+                replace: true,
+            });
+        }, TRANSITION_MS);
+    };
+
     return (
         <div className="min-h-screen bg-white flex items-center justify-center">
-            <div className="relative w-[375px] h-[896px] bg-[#0F1622] text-white rounded-sm overflow-hidden flex flex-col">
+            <div
+                className={[
+                    "relative w-[375px] h-[896px] bg-[#0F1622] text-white rounded-sm overflow-hidden flex flex-col",
+                    "transform transition-transform duration-300 ease-out will-change-transform",
+                    open && !closing ? "translate-y-0" : "translate-y-full",
+                ].join(" ")}
+            >
                 <header className="flex items-center h-[56px] px-[13px] py-[15px]">
                     <button
                         type="button"
                         aria-label="닫기"
-                        onClick={() => onClose?.()}
+                        onClick={handleCloseWithSlide}
                         className="w-[40px] h-[40px] flex items-center justify-center rounded-md text-[#FFF] bg-[#141924] border-none"
                     >
                         <svg

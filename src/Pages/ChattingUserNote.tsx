@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, MoreVerticalIcon } from '../components/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type MyNote = {
   userNoteId: number;
@@ -35,7 +35,7 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const KebabButton: React.FC = () => (
   <button
     aria-label="더보기"
-    className="absolute top-3 mt-[6px] ml-[270px] flex items-center justify-center bg-[rgba(217,200,239,0.03)]/10 border-none"
+    className="absolute top-3 mt-[6px] ml-[270px] flex items-center justify-center bg([rgba(217,200,239,0.03)]/10) border-none"
     onClick={(e) => e.stopPropagation()}
   >
     <MoreVerticalIcon className="w-[20px] h-[20px] text-[#FFF]" />
@@ -102,7 +102,6 @@ const SelectableCard: React.FC<{
     role="button"
     aria-pressed={selected}
   >
-
     <span
       className={[
         'absolute left-[10px] top-[16px] w-[22px] h-[22px] rounded-[4px] border-[#DADDE9] flex items-center justify-center',
@@ -130,13 +129,17 @@ const SelectableCard: React.FC<{
 
 const ChattingUserNote: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // API 데이터 상태
+  //location.state에서 초기 모드 읽기
+  const initialMode: 'browse' | 'merge-select' =
+    (location.state as any)?.mode === 'merge-select' ? 'merge-select' : 'browse';
+
   const [myNotes, setMyNotes] = useState<MyNote[]>([]);
   const [likedNotes, setLikedNotes] = useState<LikedNote[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [mode, setMode] = useState<'browse' | 'merge-select'>('browse');
+  const [mode, setMode] = useState<'browse' | 'merge-select'>(initialMode);
 
   const [selectedApply, setSelectedApply] = useState<string | null>(null);
 
@@ -147,7 +150,13 @@ const ChattingUserNote: React.FC = () => {
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
-  // 데이터 로드
+  // 초기 진입 시 state 사용 후 히스토리 상태 정리(선택)
+  useEffect(() => {
+    if ((location.state as any)?.mode) {
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     const loadUserNotes = async () => {
       try {
@@ -157,9 +166,7 @@ const ChattingUserNote: React.FC = () => {
           credentials: 'include',
         });
 
-        if (!res.ok) {
-          throw new Error('API 호출 실패');
-        }
+        if (!res.ok) throw new Error('API 호출 실패');
 
         const data: ApiResponse<UserNotesResult> = await res.json();
 
@@ -169,7 +176,6 @@ const ChattingUserNote: React.FC = () => {
         }
       } catch (error) {
         console.error('유저노트 로드 실패:', error);
-        // 에러 발생 시 빈 배열로 설정
         setMyNotes([]);
         setLikedNotes([]);
       } finally {
@@ -265,7 +271,6 @@ const ChattingUserNote: React.FC = () => {
     </header>
   );
 
-  // 로딩 중일 때
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -341,7 +346,6 @@ const ChattingUserNote: React.FC = () => {
               </section>
             )}
 
-            {/* 데이터가 없는 경우 */}
             {myNotes.length === 0 && likedNotes.length === 0 && (
               <div className="flex items-center justify-center h-[400px]">
                 <div className="text-center">
@@ -456,8 +460,7 @@ const ChattingUserNote: React.FC = () => {
                   type="button"
                   role="radio"
                   aria-checked={selectedOption === 'merge'}
-                  className={`${optionBase} mt-[10px] ${selectedOption === 'merge' ? selectedStyle : unselectedStyle
-                    }`}
+                  className={`${optionBase} mt-[10px] ${selectedOption === 'merge' ? selectedStyle : unselectedStyle}`}
                   onClick={enterMergeSelect}
                 >
                   <div className="w-[25px] h-10 bg-gray-600 flex items-center justify-center text-[#FFF]">
@@ -466,7 +469,7 @@ const ChattingUserNote: React.FC = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2z"
                       />
                     </svg>
                   </div>

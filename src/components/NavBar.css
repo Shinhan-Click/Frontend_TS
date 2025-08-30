@@ -1,17 +1,40 @@
-.bottom-nav {
+:root {
+    --glass-bg: rgba(46, 46, 61, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-blur: saturate(180%) blur(16px);
+    --glass-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.nav-row {
     position: fixed;
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.bottom-nav {
     width: 335px;
     height: 64px;
-    background: #2e2e3d;
+
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
     border-radius: 100px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--glass-shadow);
+
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
+}
+
+.bottom-nav.narrow {
+    width: 280px;
 }
 
 .nav-button {
@@ -25,27 +48,153 @@
     font-size: 10px;
     cursor: pointer;
     flex: 0 0 64px;
-    /* 폭 고정 */
     height: 48px;
     border-radius: 100px;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-
 .nav-button .icon {
-    font-size: 20px;
+    font-size: 18px;
     margin-bottom: 4px;
-
 }
-
 
 .nav-button.active {
     background-color: #6f4acd;
-    /* 보라색 배경 */
-    color: white;
+    color: #fff;
     box-shadow: 0 4px 10px rgba(111, 74, 205, 0.6);
 }
 
 .nav-button:focus {
     outline: none;
+}
+
+.noteicon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    display: inline-block;
+}
+
+.add-wrap {
+    position: relative;
+    height: 64px;
+    display: flex;
+    align-items: center;
+}
+
+.add-btn {
+    width: 64px;
+    height: 64px;
+
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 100px;
+    box-shadow: var(--glass-shadow);
+
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease;
+}
+
+.add-btn:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
+}
+
+.add-plus {
+    font-size: 50px;
+    line-height: 0;
+    color: #837F91;
+    display: inline-block;
+    transition: transform .2s ease;
+}
+
+.add-btn.open .add-plus {
+    transform: rotate(45deg);
+}
+
+.add-popover {
+    position: absolute;
+    bottom: 72px;
+    right: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    background: none;
+    border: none;
+    box-shadow: none;
+
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    z-index: 1001;
+}
+
+.add-popover.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    margin-right: 8px;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+
+.add-item {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 100px;
+    background: #6F4ACD;
+    color: #fff;
+    cursor: pointer;
+    transition: transform .12s ease, background-color .12s ease;
+}
+
+.add-item:hover {
+    transform: translateY(-1px);
+    background: #283143;
+}
+
+.add-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.add-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.add-label {
+    min-width: 90px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 8px;
+
+    background: rgba(46, 46, 61, 0.6);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+
+    transition: transform .15s ease;
+}
+
+.add-label:hover {
+    transform: translateY(-2px);
 }

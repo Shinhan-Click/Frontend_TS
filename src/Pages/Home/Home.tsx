@@ -190,16 +190,21 @@ const Home: React.FC = () => {
    </div>
  );
 
- const renderNoteCard = (item: CardItem) => (
-   <div className="note-card" key={item.id}>
-     <img src={item.image} alt={item.title} className="note-card-image" />
-     <div className="note-card-body">
-       <h3 className="note-card-title">{item.title}</h3>
-       <p className="note-card-desc">{item.description}</p>
-       <p className="note-card-author">@{item.author}</p>
-     </div>
-   </div>
- );
+const renderNoteCard = (item: CardItem) => (
+  <div 
+    className="note-card" 
+    key={item.id}
+    onClick={() => navigate(`/UserNoteDetail/${item.id}`)}
+    style={{ cursor: 'pointer' }}
+  >
+    <img src={item.image} alt={item.title} className="note-card-image" />
+    <div className="note-card-body">
+      <h3 className="note-card-title">{item.title}</h3>
+      <p className="note-card-desc">{item.description}</p>
+      <p className="note-card-author">@{item.author}</p>
+    </div>
+  </div>
+);
 
  let content: React.ReactNode;
  switch (activeIndex) {

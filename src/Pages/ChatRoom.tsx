@@ -253,37 +253,6 @@ const ChatRoom: React.FC = () => {
         return messages;
     };
 
-    // "..."로 감싸진 대화인지 확인
-    const isQuotedDialogue = (text: string): boolean => {
-        const trimmed = text.trim();
-        // 모든 종류의 따옴표 패턴 확인 (ASCII, 유니코드, 한국어)
-        return /^["""""''`'′″‛‚„‟].*["""""''`'′″‛‚„‟]$/.test(trimmed);
-    };
-
-    // "..."에서 내용 추출
-    const extractQuotedText = (text: string): string => {
-        const trimmed = text.trim();
-        // 모든 종류의 따옴표에서 내용 추출
-        const match = trimmed.match(/^["""""''`'′″‛‚„‟](.*?)["""""''`'′″‛‚„‟]$/);
-        return match ? match[1] : trimmed;
-    };
-
-    // '...'로 감싸진 생각이나 문서인지 확인
-    const isSingleQuotedThought = (text: string): boolean => {
-        return /^'.*'$/.test(text.trim());
-    };
-
-    // [...]로 감싸진 시간/장소 정보인지 확인
-    const isTimestampOrSetting = (text: string): boolean => {
-        return /^\[.*\]/.test(text.trim());
-    };
-
-    // 서술 문장인지 확인 (동작, 상황 묘사 등)
-    const isNarrativeDescription = (text: string): boolean => {
-        // 한국어 서술 패턴: ~다, ~었다, ~했다, ~있다, ~된다 등으로 끝남
-        return /[다였었했있된됐쳤렸았놨뤘갔났왔]\.?$/.test(text.trim());
-    };
-
     // 캐릭터 정보 가져오기
     useEffect(() => {
         let aborted = false;

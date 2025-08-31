@@ -110,6 +110,13 @@ const ChattingUserNote: React.FC = () => {
     window.history.replaceState({}, document.title);
   }, []);
 
+  // 우선 선택 화면에서 돌아왔을 때 상태 복원
+  useEffect(() => {
+    const s = (location.state as any) || {};
+    if (s.mode) setMode(s.mode);
+    if (Array.isArray(s.selectedForMerge)) setSelectedForMerge(s.selectedForMerge);
+  }, [location.key]); // 라우트 이동 시 갱신
+
   useEffect(() => {
     const loadUserNotes = async () => {
       try {
@@ -153,8 +160,58 @@ const ChattingUserNote: React.FC = () => {
     navigate('/UserNoteWrite', { state: { draft: incomingDraft, fromSearch } });
   };
 
+  // 선택된 키를 실제 노트 데이터로 해석
+  const resolveSelectedOptions = () => {
+    return selectedForMerge.map((key) => {
+      const [kind, idStr] = key.split(':');
+      const id = parseInt(idStr, 10);
+      if (kind === 'my') {
+        const n = myNotes.find((x) => x.userNoteId === id);
+        return n
+          ? {
+              id: key,
+              title: n.title,
+              description: n.description,
+              meta: n.createdAt,
+              kind: 'my' as const,
+              rawId: id,
+            }
+          : null;
+      } else {
+        const n = likedNotes.find((x) => x.userNoteId === id);
+        return n
+          ? {
+              id: key,
+              title: n.title,
+              description: n.description,
+              meta: `@${n.author}`,
+              kind: 'liked' as const,
+              rawId: id,
+            }
+          : null;
+      }
+    }).filter(Boolean) as Array<{
+      id: string;
+      title: string;
+      description: string;
+      meta: string;
+      kind: 'my' | 'liked';
+      rawId: number;
+    }>;
+  };
+
+  // 병합 선택 확정 → 우선순위 선택 화면으로 이동 (선택 요소들 전달)
   const handleConfirmMerge = () => {
-    navigate('/UserNoteWrite', { state: { mergeFrom: selectedForMerge, draft: incomingDraft, fromSearch } });
+    if (selectedForMerge.length !== 2) return;
+    const options = resolveSelectedOptions();
+    navigate('/UserNoteSelectPriorityBeforeMerging', {
+      state: {
+        options,
+        selectedForMerge,
+        draft: incomingDraft,
+        fromSearch,
+      },
+    });
   };
 
   const handleApply = () => {

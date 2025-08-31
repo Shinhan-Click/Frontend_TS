@@ -6,7 +6,6 @@ export default async function handler(req, res) {
     const { path, ...restQuery } = req.query;
     const host = process.env.VITE_BACKEND_HOST;
     const port = process.env.VITE_BACKEND_PORT;
-
     if (!host || !port) {
       return res.status(500).json({ error: true, message: 'Backend configuration missing' });
     }
@@ -15,7 +14,6 @@ export default async function handler(req, res) {
     const qs = new URLSearchParams(restQuery).toString();
     const backendUrl = `http://${host}:${port}/${subPath}${qs ? `?${qs}` : ''}`;
 
-    // 절대 host 헤더 덮어쓰지 말 것. X-Forwarded-* 만 명시.
     const forwardHeaders = {
       ...req.headers,
       'x-forwarded-host': 'frontend-ts-ihnk.vercel.app',
@@ -28,10 +26,10 @@ export default async function handler(req, res) {
       url: backendUrl,
       headers: forwardHeaders,
       data: (req.body && Object.keys(req.body).length) ? req.body : undefined,
-      validateStatus: () => true, // 4xx/5xx도 그대로 전달
+      validateStatus: () => true,
+      maxRedirects: 0
     });
 
-    // Set-Cookie 포함 응답 헤더/상태 그대로 전달
     const setCookie = response.headers['set-cookie'];
     if (setCookie) res.setHeader('set-cookie', setCookie);
 
@@ -46,6 +44,11 @@ export default async function handler(req, res) {
     if (err.response) {
       const setCookie = err.response.headers?.['set-cookie'];
       if (setCookie) res.setHeader('set-cookie', setCookie);
+      Object.entries(err.response.headers || {}).forEach(([k, v]) => {
+        if (!['content-encoding', 'transfer-encoding'].includes(k)) {
+          try { res.setHeader(k, v); } catch {}
+        }
+      });
       return res.status(err.response.status).send(err.response.data);
     }
     res.status(502).json({ error: true, message: 'Bad gateway / Proxy crashed' });

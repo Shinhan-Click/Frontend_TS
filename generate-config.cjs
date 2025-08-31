@@ -13,12 +13,10 @@ if (!host || !port) {
 }
 
 const config = {
-  "cleanUrls": false,
-  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": `http://${host}:${port}/:path*`
+      "destination": "/api/proxy?path=:path*"
     }
   ]
 };

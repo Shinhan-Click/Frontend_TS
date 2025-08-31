@@ -6,6 +6,7 @@ export default async function handler(req, res) {
     const { path, ...restQuery } = req.query;
     const host = process.env.VITE_BACKEND_HOST;
     const port = process.env.VITE_BACKEND_PORT;
+
     if (!host || !port) {
       return res.status(500).json({ error: true, message: 'Backend configuration missing' });
     }
@@ -14,8 +15,10 @@ export default async function handler(req, res) {
     const qs = new URLSearchParams(restQuery).toString();
     const backendUrl = `http://${host}:${port}/${subPath}${qs ? `?${qs}` : ''}`;
 
+    // host 제거
+    const { host: _ignored, ...restHeaders } = req.headers;
     const forwardHeaders = {
-      ...req.headers,
+      ...restHeaders,
       'x-forwarded-host': 'frontend-ts-ihnk.vercel.app',
       'x-forwarded-proto': 'https',
       'x-forwarded-port': '443',

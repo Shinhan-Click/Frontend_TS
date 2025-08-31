@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "http://BACKEND_HOST:BACKEND_PORT/$1"
+    }
+  ]
+}

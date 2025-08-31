@@ -18,8 +18,8 @@ const DEFAULT_MERGED = `#기숙사 규칙
 - 대화 톤은 "명랑, 가벼움, 농담"을 유지한다.`;
 
 const MAX_LEN = 500;
-
-const UserNoteMergeResult: React.FC<Props> = ({ onClose, onSave }) => {
+/*onSave*/
+const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);

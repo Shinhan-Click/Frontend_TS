@@ -185,7 +185,7 @@ const Home: React.FC = () => {
      <div className="novel-card-body">
        <h3 className="novel-card-title">{item.title}</h3>
        <p className="novel-card-desc">{item.description}</p>
-       <p className="novel-card-author">{item.author}</p>
+       <p className="novel-card-author">@{item.author}</p>
      </div>
    </div>
  );
@@ -196,7 +196,7 @@ const Home: React.FC = () => {
      <div className="note-card-body">
        <h3 className="note-card-title">{item.title}</h3>
        <p className="note-card-desc">{item.description}</p>
-       <p className="note-card-author">{item.author}</p>
+       <p className="note-card-author">@{item.author}</p>
      </div>
    </div>
  );

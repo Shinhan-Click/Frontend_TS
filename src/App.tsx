@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { Toaster } from 'react-hot-toast';   // ✅ 추가
 
 import Home from './Pages/Home/Home';
 import ChatSetting from './Pages/ChatSetting/ChatSetting';
@@ -25,13 +26,14 @@ const App: React.FC = () => {
           <Route path="/UserNoteWrite" element={<UserNoteWrite />} />
           <Route path="/LikeUserNote" element={<LikeUserNote />} />
           <Route path="/ChattingUserNote" element={<ChattingUserNote />} />
-
           <Route path="/ChatRoom/:chatId" element={<ChatRoom />} />
-
           <Route path="/UserNoteSelectPriorityBeforeMerging" element={<UserNoteSelectPriorityBeforeMerging />} />
           <Route path="/UserNoteMergeResult" element={<UserNoteMergeResult />} />
           <Route path="/UserNoteMergeLoading" element={<UserNoteMergeLoading />} />
         </Routes>
+
+        {/*토스트 컨테이너 */}
+        <Toaster position="bottom-center" reverseOrder={false} />
       </Router>
     </AuthProvider>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowLeftIcon, MoreVerticalIcon } from '../components/icons';
+import { useNavigate } from 'react-router-dom';
 
 export interface Note {
     id: number;
@@ -25,14 +26,15 @@ const NoteCard: React.FC<NoteCardProps> = ({
 }) => {
     return (
         <div
-            className={
-                [
-                    'relative bg-[rgba(217,200,239,0.03)] p-[3px] rounded-[12px] mt-[13px] shadow-lg transition-transform hover:scale-[1.02] h-[140px]',
-                    containerClassName,
-                ].join(' ')
-            }
+            className={[
+                'relative bg-[rgba(217,200,239,0.03)] p-[3px] rounded-[12px] mt-[13px] shadow-lg transition-transform hover:scale-[1.02] h-[140px]',
+                containerClassName,
+            ].join(' ')}
         >
-            <button className="absolute top-4 right-0 mt-[5px] ml-[280px] text-[#FFF] hover:text-gray-200 bg-[rgba(217,200,239,0.03)] border-none" aria-label="더보기">
+            <button
+                className="absolute top-4 right-0 mt-[5px] ml-[280px] text-[#FFF] hover:text-gray-200 bg-[rgba(217,200,239,0.03)] border-none"
+                aria-label="더보기"
+            >
                 <MoreVerticalIcon className="w-[30px] h-[30px]" />
             </button>
 
@@ -40,7 +42,12 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 <h2 className={['text-[15px] font-bold text-[#FFF] mb-2 ml-[10px]', titleClassName].join(' ')}>
                     {note.title}
                 </h2>
-                <p className={['text-[#9CA3AF] text-[15px] mb-4 ml-[10px] line-clamp-2', descriptionClassName].join(' ')}>
+                <p
+                    className={[
+                        'text-[#9CA3AF] text-[15px] mb-4 ml-[10px] line-clamp-2',
+                        descriptionClassName,
+                    ].join(' ')}
+                >
                     {note.description}
                 </p>
             </div>
@@ -58,6 +65,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
 };
 
 const LikeUserNote: React.FC = () => {
+    const navigate = useNavigate();
+
     const notesData: Note[] = [
         {
             id: 1,
@@ -85,20 +94,27 @@ const LikeUserNote: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#FFF] flex items-center justify-center">
             <div className="w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
-
                 <header className="flex-shrink-0 h-[34px] mt-[30px] flex items-center px-[20.5px]">
-                    <button className="bg-[#141924] p-2 ml-2 border-none" aria-label="뒤로가기">
+
+                    <button
+                        className="bg-[#141924] p-2 ml-2 border-none"
+                        aria-label="뒤로가기"
+                        onClick={() => navigate('/UserNoteDetail')}
+                    >
                         <ArrowLeftIcon className="w-[20px] h-[20px] text-[#FFF]" />
                     </button>
-                    <h1 className="ml-[10px] mb-[17px] text-[18px] font-bold text-[#FFF]">좋아요한 유저노트</h1>
+                    <h1 className="ml-[10px] mb-[17px] text-[18px] font-bold text-[#FFF]">
+                        좋아요한 유저노트
+                    </h1>
                 </header>
 
                 <main className="mt-[20px] flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-webkit-overflow-scrolling:touch]">
                     <div className="w-[335px] mx-auto py-4">
-
                         <section className="flex justify-between items-center mb-6">
                             <div className="leading-snug">
-                                <p className="text-[#9CA3AF] text-[14px]">좋아요한 유저노트를 합쳐<br />나만의 새로운 노트를 만들 수 있어요</p>
+                                <p className="text-[#9CA3AF] text-[14px]">
+                                    좋아요한 유저노트를 합쳐<br />나만의 새로운 노트를 만들 수 있어요
+                                </p>
                             </div>
                             <button
                                 className="w-[80px] h-[36px] bg-[#404D68] hover:bg-[#475572] text-[#FFF] font-semibold py-2 px-4 border-none rounded-[6px] text-[15px] whitespace-nowrap transition-colors"

@@ -17,7 +17,7 @@ const config = {
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "destination": "/api/proxy?path=:path*"
     }
   ]
 };

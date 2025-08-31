@@ -8,7 +8,7 @@ import BottomSheet from '../../components/ChatSettingcomponents/BottomSheet';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const API_BASE = '/api'; // 프록시 사용
+const API_BASE = '/api';
 
 const GENDER_OPTIONS = [
   { id: 'male', label: '남성' },
@@ -19,20 +19,42 @@ const GENDER_OPTIONS = [
 type ApiResponse<T> = { isSuccess: boolean; code: string; message: string; result: T };
 type PersonaListItem = { personaId: number; name: string };
 type PersonaDetail = { personaId: number; name: string; gender: 'MALE' | 'FEMALE' | string; persona: string };
-
 type UserNotesResult = {
   myNotes: Array<{ userNoteId: number; title: string; description: string; createdAt: string }>;
   likedNotes: Array<{ userNoteId: number; title: string; description: string; author: string }>;
 };
-
-type LocationState = { selectedUserNoteDescription?: string } | null;
+type CharacterDetail = {
+  characterId: number;
+  characterImageUrl: string;
+  name: string;
+  gender: 'MALE' | 'FEMALE';
+  description: string;
+  authorComment: string;
+  introductions: Array<{ introductionId: number; title: string; text: string }>;
+  tags: Array<{ tagId: number; name: string }>;
+  story?: { storyId: number; storyImageUrl: string; title: string; description: string };
+};
+type Draft = {
+  personaChoice?: string;
+  personaText?: string;
+  name?: string;
+  gender?: 'male' | 'female' | 'none';
+  introduction?: string;
+  userNote?: string;
+};
+type LocationState =
+  | {
+      selectedUserNoteDescription?: string | null;
+      draft?: Draft;
+      fromSearch?: string;
+    }
+  | null;
 
 const ChatSetting: React.FC = () => {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 로그인 가드
   useEffect(() => {
     if (!isLoggedIn) {
       alert('로그인이 필요합니다.');
@@ -40,47 +62,69 @@ const ChatSetting: React.FC = () => {
     }
   }, [isLoggedIn, navigate]);
 
-  // UserNoteWrite/ChattingUserNote에서 넘어온 description 적용
-  const [userNote, setUserNote] = useState('');
-  useEffect(() => {
-    const state = (location?.state as LocationState) || null;
-    if (state?.selectedUserNoteDescription) {
-      setUserNote(state.selectedUserNoteDescription);
-      // 뒤로가기로 재적용 방지
-      window.history.replaceState({}, document.title);
-    }
-  }, [location?.state]);
-
-  // URL 파라미터 characterId
   const [params] = useSearchParams();
   const [characterId, setCharacterId] = useState<string>('');
   useEffect(() => {
     setCharacterId(params.get('characterId') ?? '');
   }, [params]);
 
-  // 페르소나/폼 상태
+  const [characterName, setCharacterName] = useState<string>('');
+  const [characterImageUrl, setCharacterImageUrl] = useState<string>('');
+  useEffect(() => {
+    if (!characterId) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/character/${characterId}`, {
+          credentials: 'include',
+          headers: { accept: '*/*' },
+        });
+        if (!res.ok) return;
+        const data: ApiResponse<CharacterDetail> = await res.json();
+        if (data?.isSuccess && data.result) {
+          setCharacterName(data.result.name ?? '');
+          setCharacterImageUrl(data.result.characterImageUrl ?? '');
+        }
+      } catch {}
+    })();
+  }, [characterId]);
+
   const [personaChoice, setPersonaChoice] = useState<string>('custom');
   const [personaText, setPersonaText] = useState<string>('');
   const [personaOptions, setPersonaOptions] = useState<{ id: string; label: string }[]>([
     { id: 'custom', label: '직접 입력' },
   ]);
-
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'none'>('male');
   const [introduction, setIntroduction] = useState('');
+  const [userNote, setUserNote] = useState('');
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  const effectivePersona = personaChoice === 'custom' ? personaText : personaChoice;
+  useEffect(() => {
+    const state = (location?.state as LocationState) || null;
+    if (state?.draft) {
+      const d = state.draft;
+      if (d.personaChoice) setPersonaChoice(d.personaChoice);
+      if (typeof d.personaText === 'string') setPersonaText(d.personaText);
+      if (typeof d.name === 'string') setName(d.name);
+      if (d.gender === 'male' || d.gender === 'female' || d.gender === 'none') setGender(d.gender);
+      if (typeof d.introduction === 'string') setIntroduction(d.introduction);
+      if (typeof d.userNote === 'string') setUserNote(d.userNote);
+    }
+    if (state && 'selectedUserNoteDescription' in state) {
+      setUserNote(state.selectedUserNoteDescription ?? '');
+    }
+    if (state) window.history.replaceState({}, document.title);
+  }, [location?.state]);
 
-  // 페르소나 목록 로드
   useEffect(() => {
     if (!isLoggedIn) return;
     (async () => {
       try {
         const res = await fetch(`${API_BASE}/persona`, { credentials: 'include' });
-        if (!res.ok) throw new Error('GET /persona 실패');
+        if (!res.ok) throw new Error();
         const data: ApiResponse<PersonaListItem[]> = await res.json();
         if (!data.isSuccess || !Array.isArray(data.result)) return;
         const opts = data.result.map((p) => ({ id: String(p.personaId), label: p.name }));
@@ -96,14 +140,7 @@ const ChatSetting: React.FC = () => {
 
   const handlePersonaChange = async (value: string) => {
     setPersonaChoice(value);
-    if (value === 'custom') {
-      setName('');
-      setIntroduction('');
-      setPersonaText('');
-      // userNote는 유지 (원하는 경우 비우려면 아래 주석 해제)
-      // setUserNote('');
-      return;
-    }
+    if (value === 'custom') return;
     if (!value) return;
     try {
       const res = await fetch(`${API_BASE}/persona/${value}`, { credentials: 'include' });
@@ -114,38 +151,43 @@ const ChatSetting: React.FC = () => {
       setName(persona.name || '');
       setGender(mapGender(persona.gender));
       setIntroduction(persona.persona || '');
-    } catch {
-      // 무시
-    }
+    } catch {}
   };
 
-  // 유저노트 목록 열기 → 있으면 선택 화면으로, 없으면 바텀시트
   const handleOpenUserNotes = useCallback(async () => {
     setNotesLoading(true);
     try {
       const res = await fetch(`${API_BASE}/usernote/my-usernotes`, {
         method: 'GET',
-        headers: { accept: '*/*' },
+        headers: { accept: '*/*', 'Cache-Control': 'no-cache' },
         credentials: 'include',
       });
+
+      const draft: Draft = { personaChoice, personaText, name, gender, introduction, userNote };
+      const fromSearch = location.search || window.location.search || '';
+
       if (!res.ok) {
         setSheetOpen(true);
         return;
       }
+
       const data: ApiResponse<UserNotesResult> = await res.json();
-      const result = data?.result ?? { myNotes: [], likedNotes: [] };
-      const hasNotes =
-        (result.myNotes?.length ?? 0) > 0 || (result.likedNotes?.length ?? 0) > 0;
-      if (hasNotes) navigate('/ChattingUserNote');
-      else setSheetOpen(true);
+      const r = data?.result ?? { myNotes: [], likedNotes: [] };
+      const hasNotes = (r.myNotes?.length ?? 0) > 0 || (r.likedNotes?.length ?? 0) > 0;
+
+      if (hasNotes) {
+        navigate('/ChattingUserNote', { state: { draft, fromSearch } });
+      } else {
+        setSheetOpen(true);
+      }
     } catch {
       setSheetOpen(true);
     } finally {
       setNotesLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, personaChoice, personaText, name, gender, introduction, userNote, location.search]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (personaChoice === 'custom' && !personaText.trim()) {
       alert('페르소나를 입력해주세요.');
       return;
@@ -158,35 +200,53 @@ const ChatSetting: React.FC = () => {
       alert('소개를 입력해주세요.');
       return;
     }
-    // 필요한 곳으로 전달/저장 처리
-    console.log('채팅 설정 완료:', {
-      characterId,
-      effectivePersona,
-      name,
-      gender,
-      introduction,
-      userNote,
-    });
-  };
+    if (!characterId) {
+      alert('캐릭터가 선택되지 않았습니다.');
+      return;
+    }
 
-  if (!isLoggedIn) {
-    return (
-      <div className="cs-root">
-        <div
-          className="cs-app"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
-            fontSize: '16px',
-          }}
-        >
-          로그인 중...
-        </div>
-      </div>
-    );
-  }
+    setCreating(true);
+
+    const personaGender: 'MALE' | 'FEMALE' | 'NONE' =
+      gender === 'male' ? 'MALE' : gender === 'female' ? 'FEMALE' : 'NONE';
+
+    const payload = {
+      characterId: Number(characterId),
+      introductionId: null,
+      personaName: name.trim(),
+      personaGender,
+      personaPrompt: introduction.trim(),
+      userNotePrompt: userNote.trim() ? userNote.trim() : null,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/chat/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', accept: '*/*' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error();
+
+      const data: ApiResponse<{ chatId: number; first_message: string }> = await res.json();
+      if (!data.isSuccess || !data.result) throw new Error();
+
+      const { chatId, first_message } = data.result;
+
+      navigate(`/ChatRoom/${chatId}`, {
+        state: {
+          firstMessage: first_message,
+          characterName,
+          characterImageUrl,
+          characterId: Number(characterId),
+        },
+      });
+    } catch {
+      alert('채팅방 생성에 실패했습니다.');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <div className="cs-root">
@@ -259,9 +319,7 @@ const ChatSetting: React.FC = () => {
               <div className="cs-field-head">
                 <div>
                   <h2 className="cs-label">유저노트</h2>
-                  <p className="cs-help">
-                    유저노트를 이용해서<br />더 다양한 대화를 나눌 수 있어요!
-                  </p>
+                  <p className="cs-help">유저노트를 이용해서<br />더 다양한 대화를 나눌 수 있어요!</p>
                 </div>
                 <button className="cs-btn" type="button" onClick={handleOpenUserNotes} disabled={notesLoading}>
                   {notesLoading ? '불러오는 중...' : '불러오기'}
@@ -269,8 +327,7 @@ const ChatSetting: React.FC = () => {
               </div>
             </div>
 
-            {/* 유저노트가 적용된 경우 편집 가능 */}
-            {userNote && (
+            {userNote !== '' && (
               <div style={{ marginTop: '2px' }}>
                 <InputWithCounter
                   id="userNote"
@@ -282,14 +339,8 @@ const ChatSetting: React.FC = () => {
                   rows={20}
                 />
                 <style>{`
-                  #userNote {
-                    height: 380px !important;
-                    scrollbar-width: none;
-                    -ms-overflow-style: none;
-                  }
-                  #userNote::-webkit-scrollbar {
-                    display: none;
-                  }
+                  #userNote { height: 380px !important; scrollbar-width: none; -ms-overflow-style: none; }
+                  #userNote::-webkit-scrollbar { display: none; }
                 `}</style>
               </div>
             )}
@@ -303,9 +354,9 @@ const ChatSetting: React.FC = () => {
             type="button"
             className="cs-primary"
             onClick={handleSubmit}
-            disabled={(personaChoice === 'custom' && !personaText.trim()) || !name.trim() || !introduction.trim()}
+            disabled={(personaChoice === 'custom' && !personaText.trim()) || !name.trim() || !introduction.trim() || creating}
           >
-            대화하기
+            {creating ? '생성 중...' : '대화하기'}
           </button>
         </footer>
 
@@ -321,8 +372,10 @@ const ChatSetting: React.FC = () => {
               className="sheet-cta"
               type="button"
               onClick={() => {
+                const draft: Draft = { personaChoice, personaText, name, gender, introduction, userNote };
+                const fromSearch = location.search || window.location.search || '';
                 setSheetOpen(false);
-                navigate('/UserNoteWrite');
+                navigate('/UserNoteWrite', { state: { draft, fromSearch } });
               }}
             >
               유저노트 작성하기

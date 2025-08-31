@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 import { ArrowLeftIcon } from "../components/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const MAX_TITLE = 20;
 const MAX_BODY = 500;
 
-type ApiResponse<T> = {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  result: T;
-};
+type ApiResponse<T> = { isSuccess: boolean; code: string; message: string; result: T };
+type Draft = { personaChoice?: string; personaText?: string; name?: string; gender?: 'male' | 'female' | 'none'; introduction?: string; userNote?: string };
 
-const API_BASE = "/api"; // 프록시 사용
+const API_BASE = "/api";
 
 const UserNoteWrite: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const incomingDraft: Draft | undefined = (location.state as any)?.draft;
+  const fromSearch: string = (location.state as any)?.fromSearch ?? window.location.search ?? '';
+
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,26 +29,21 @@ const UserNoteWrite: React.FC = () => {
     try {
       const res = await fetch(`${API_BASE}/usernote/private`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          accept: "*/*",
-        },
+        headers: { "Content-Type": "application/json", accept: "*/*" },
         credentials: "include",
         body: JSON.stringify(requestData),
       });
-
-      if (!res.ok) throw new Error(`서버 오류 (${res.status})`);
+      if (!res.ok) throw new Error();
 
       const data: ApiResponse<{ userNoteId: number; title: string; prompt: string }> = await res.json();
-      if (!data.isSuccess) throw new Error(data.message || "저장 실패");
+      if (!data.isSuccess) throw new Error();
 
-      // 저장 성공 → ChatSetting으로 prompt 전달(= description)
-      navigate("/ChatSetting", {
+      const draft = { ...(incomingDraft || {}), userNote: data.result.prompt };
+      navigate(`/ChatSetting${fromSearch}`, {
         replace: true,
-        state: { selectedUserNoteDescription: data.result.prompt },
+        state: { selectedUserNoteDescription: data.result.prompt, draft },
       });
-    } catch (e) {
-      console.error(e);
+    } catch {
       alert("유저노트 저장에 실패했습니다.");
     } finally {
       setIsSubmitting(false);

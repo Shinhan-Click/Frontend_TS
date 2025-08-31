@@ -40,14 +40,14 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose, onSave }) => {
       navigate("/ChattingUserNote", { state: { mode: "merge-select" }, replace: true });
     }, TRANSITION_MS);
   };
-
-  const handleSave = () => {
-    onSave?.(text);
-    // 여기서 저장 API 연동 예정-> navigate 전에 처리
-    // 저장 후 돌아갈 곳이 정해지면 아래 경로 조정
-    navigate(-1);
-  };
-
+  /*
+    const handleSave = () => {
+      onSave?.(text);
+      // 여기서 저장 API 연동 예정-> navigate 전에 처리
+      // 저장 후 돌아갈 곳이 정해지면 아래 경로 조정
+      navigate(-1);
+    };
+  */
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div

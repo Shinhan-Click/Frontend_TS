@@ -1,6 +1,27 @@
 const fs = require('fs');
-const template = fs.readFileSync('vercel.template.json', 'utf8');
-const config = template
-  .replace('BACKEND_HOST', process.env.VITE_BACKEND_HOST || '52.78.132.85')
-  .replace('BACKEND_PORT', process.env.VITE_BACKEND_PORT || '8080');
-fs.writeFileSync('vercel.json', config);
+
+console.log('=== 환경변수 확인 ===');
+console.log('VITE_BACKEND_HOST:', process.env.VITE_BACKEND_HOST);
+console.log('VITE_BACKEND_PORT:', process.env.VITE_BACKEND_PORT);
+
+const host = process.env.VITE_BACKEND_HOST;
+const port = process.env.VITE_BACKEND_PORT;
+
+if (!host || !port) {
+  console.error('환경변수 누락: VITE_BACKEND_HOST, VITE_BACKEND_PORT 필요');
+  process.exit(1);
+}
+
+const config = {
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": `http://${host}:${port}/$1`
+    }
+  ]
+};
+
+console.log('생성할 config:', JSON.stringify(config, null, 2));
+
+fs.writeFileSync('vercel.json', JSON.stringify(config, null, 2));
+console.log('vercel.json 생성 완료');

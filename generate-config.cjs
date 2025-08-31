@@ -1,5 +1,8 @@
 const fs = require('fs');
 
+// dotenv 설정 추가
+require('dotenv').config();
+
 console.log('=== 환경변수 확인 ===');
 console.log('VITE_BACKEND_HOST:', process.env.VITE_BACKEND_HOST);
 console.log('VITE_BACKEND_PORT:', process.env.VITE_BACKEND_PORT);

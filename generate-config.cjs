@@ -13,10 +13,11 @@ if (!host || !port) {
 }
 
 const config = {
+  "version": 2,
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/proxy?path=:path*"
+      "destination": "/api/:path*"
     }
   ]
 };

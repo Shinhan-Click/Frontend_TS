@@ -25,4 +25,4 @@ dist-ssr
 *.sw?
 
 # Generated config files
-vercel.json
+# vercel.json

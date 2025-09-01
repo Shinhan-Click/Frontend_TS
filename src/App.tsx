@@ -14,6 +14,7 @@ import UserNoteSelectPriorityBeforeMerging from './Pages/UserNoteSelectPriorityB
 import UserNoteMergeResult from './Pages/UserNoteMergeResult';
 import UserNoteMergeLoading from './Pages/UserNoteMergeLoading';
 
+
 const App: React.FC = () => {
   return (
     <AuthProvider>

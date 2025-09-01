@@ -93,12 +93,11 @@ const UserNoteDetailFooter: React.FC<Props> = ({
         setToast((prev) => ({ ...prev, show: false }));
     };
 
-    // 토스트 자동 숨김 (5~6초 후)
     useEffect(() => {
         if (toast.show) {
             const timer = setTimeout(() => {
                 hideToast();
-            }, 5500); // 5.5초 후 페이드아웃
+            }, 5500);
             return () => clearTimeout(timer);
         }
     }, [toast.show]);
@@ -131,8 +130,7 @@ const UserNoteDetailFooter: React.FC<Props> = ({
     };
 
     return (
-        <footer className="relative h-[79px] flex-shrink-0 bg-[#000000]/60">
-            {/* 커스텀 토스트 (리퀴드 글라스) */}
+        <footer className="relative h-[79px] flex-shrink-0 bg-[#141924]">
             <div
                 className={`absolute left-1/2 -translate-x-1/2 transition-all duration-300 ease-out z-50 ${toast.show
                     ? "bottom-[90px] opacity-100 translate-y-0 scale-100"
@@ -155,15 +153,14 @@ const UserNoteDetailFooter: React.FC<Props> = ({
                         {toast.message}
                     </span>
 
-                    {/* 좋아요일 때만 바로가기 보이도록 */}
                     {toast.showLink && (
                         <button
                             onClick={goLikedList}
                             className={[
                                 "flex flex-col items-center",
-                                "bg-transparent border-none", // 투명 배경
+                                "bg-transparent border-none",
                                 "text-[14px] font-medium whitespace-nowrap text-[#FFF]",
-                                // 항상 보이는 밑줄 (after를 이용)
+
                                 "after:block after:w-full after:h-[1px] after:bg-[#FFF] after:mt-[2px]"
                             ].join(" ")}
                         >

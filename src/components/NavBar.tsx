@@ -1,4 +1,3 @@
-// src/components/NavBar.tsx
 import React, { useState } from 'react';
 import { FaCommentAlt, FaPlay, FaUser } from 'react-icons/fa';
 import { BsFilePerson } from 'react-icons/bs';

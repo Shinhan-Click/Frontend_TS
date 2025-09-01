@@ -1,3 +1,4 @@
+// src/pages/UserNoteDetail.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './UserNoteDetail.css';
@@ -11,6 +12,7 @@ import Tag from '../../components/UserNoteDetailcomponents/Tag';
 import Comment from '../../components/UserNoteDetailcomponents/Comment';
 import RelatedCard from '../../components/UserNoteDetailcomponents/RelatedCard';
 import UserNoteDetailFooter from '../../components/UserNoteDetailcomponents/UserNoteDetailFooter';
+import UndBottomSheet from '../../components/UserNoteDetailcomponents/undBottomSheet'; // ✅ 바텀시트 import
 import type { ApiResponse } from '../../types/api';
 
 const API_BASE = '/api';
@@ -19,10 +21,7 @@ interface UserNoteDetailData {
     userNoteId: number;
     userNoteImageUrl: string;
     title: string;
-    tags: {
-        tagId: number;
-        name: string;
-    }[];
+    tags: { tagId: number; name: string }[];
     description: string;
     prompt: string;
     exampleImageUrl: string;
@@ -51,6 +50,7 @@ interface CommentsResponse {
 const UserNoteDetail: React.FC = () => {
     const { userNoteId } = useParams<{ userNoteId: string }>();
     const navigate = useNavigate();
+
     const [userNoteData, setUserNoteData] = useState<UserNoteDetailData | null>(null);
     const [commentsData, setCommentsData] = useState<CommentsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +64,10 @@ const UserNoteDetail: React.FC = () => {
     const startX = useRef(0);
     const startScrollLeft = useRef(0);
 
-    // API 호출 함수들
+    // ✅ 바텀시트 열림 상태
+    const [sheetOpen, setSheetOpen] = useState(false);
+
+    // API
     const fetchUserNoteDetail = async (id: string): Promise<UserNoteDetailData | null> => {
         try {
             const res = await fetch(`${API_BASE}/usernote/${id}`, { credentials: 'include' });
@@ -79,17 +82,12 @@ const UserNoteDetail: React.FC = () => {
 
     const fetchComments = async (userNoteId: string): Promise<CommentsResponse | null> => {
         try {
-            const body = {
-                type: "USER_NOTE",
-                referenceId: Number(userNoteId),
-            };
-
+            const body = { type: "USER_NOTE", referenceId: Number(userNoteId) };
             const res = await fetch(`${API_BASE}/comment/all`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
-
             if (!res.ok) throw new Error('댓글 API 실패');
             const data: ApiResponse<CommentsResponse> = await res.json();
             return data.isSuccess ? data.result : null;
@@ -99,22 +97,18 @@ const UserNoteDetail: React.FC = () => {
         }
     };
 
-    // 데이터 로드
     useEffect(() => {
         if (!userNoteId) return;
-
         const loadData = async () => {
             setIsLoading(true);
             const [noteData, commentsData] = await Promise.all([
                 fetchUserNoteDetail(userNoteId),
-                fetchComments(userNoteId)
+                fetchComments(userNoteId),
             ]);
-
             setUserNoteData(noteData);
             setCommentsData(commentsData);
             setIsLoading(false);
         };
-
         loadData();
     }, [userNoteId]);
 
@@ -153,11 +147,12 @@ const UserNoteDetail: React.FC = () => {
             if (pending === 0) recalc();
         };
         imgs.forEach((img) => {
-            if ((img as HTMLImageElement).complete) {
+            const im = img as HTMLImageElement;
+            if (im.complete) {
                 done();
             } else {
-                img.addEventListener('load', done, { once: true });
-                img.addEventListener('error', done, { once: true });
+                im.addEventListener('load', done, { once: true });
+                im.addEventListener('error', done, { once: true });
             }
         });
     }, [exOpen]);
@@ -193,7 +188,6 @@ const UserNoteDetail: React.FC = () => {
         };
     }, []);
 
-    // 로딩 중일 때
     if (isLoading) {
         return (
             <div className="und-root">
@@ -206,7 +200,6 @@ const UserNoteDetail: React.FC = () => {
         );
     }
 
-    // 데이터가 없을 때
     if (!userNoteData) {
         return (
             <div className="und-root">
@@ -237,11 +230,7 @@ const UserNoteDetail: React.FC = () => {
                             src={userNoteData.userNoteImageUrl}
                             alt={userNoteData.title}
                             className="und-banner brightness-75 contrast-110"
-                            style={{
-                                width: '100%',
-                                height: '240px',
-                                objectFit: 'cover'
-                            }}
+                            style={{ width: '100%', height: '240px', objectFit: 'cover' }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#0F1420]/40 to-[#0F1420]/90 pointer-events-none" />
                     </div>
@@ -258,9 +247,7 @@ const UserNoteDetail: React.FC = () => {
 
                         <section className="und-section">
                             <h2 className="und-subtitle">유저노트 소개</h2>
-                            <p className="und-desc">
-                                {userNoteData.description}
-                            </p>
+                            <p className="und-desc">{userNoteData.description}</p>
 
                             <div className="und-code">
                                 <pre className="whitespace-pre-wrap">{userNoteData.prompt}</pre>
@@ -272,7 +259,7 @@ const UserNoteDetail: React.FC = () => {
                             <button
                                 type="button"
                                 className="und-chevron-btn"
-                                onClick={() => setExOpen(v => !v)}
+                                onClick={() => setExOpen((v) => !v)}
                                 aria-expanded={exOpen}
                             >
                                 <ChevronDownIcon className={`und-chevron transition-transform ${exOpen ? 'rotate-180' : ''}`} />
@@ -287,11 +274,7 @@ const UserNoteDetail: React.FC = () => {
                             >
                                 {userNoteData.exampleImageUrl ? (
                                     <div className="mt-3">
-                                        <img
-                                            src={userNoteData.exampleImageUrl}
-                                            alt="적용 예시"
-                                            className="w-full rounded-lg"
-                                        />
+                                        <img src={userNoteData.exampleImageUrl} alt="적용 예시" className="w-full rounded-lg" />
                                     </div>
                                 ) : (
                                     <div ref={scrollerRef} className="mt-3 overflow-x-auto no-scrollbar cursor-grab">
@@ -303,9 +286,8 @@ const UserNoteDetail: React.FC = () => {
                                                     </span>
                                                 </div>
                                                 <p className="text-[14px] leading-[22px] text-[#9CA3AF] mb-4">
-                                                    연습실 문을 열기 직전, 한서준의 귓가에 차현우의 목소리가 닿았다.
-                                                    아주 작고 나지막한 속삭임이었지만, 그 소리는 그의 뇌리에 거대한 파동을
-                                                    일으켰다. <strong>'헤일 하이드라.'</strong>
+                                                    연습실 문을 열기 직전, 한서준의 귓가에 차현우의 목소리가 닿았다. 아주 작고 나지막한 속삭임이었지만,
+                                                    그 소리는 그의 뇌리에 거대한 파동을 일으켰다. <strong>'헤일 하이드라.'</strong>
                                                 </p>
                                             </div>
                                         </div>
@@ -338,9 +320,7 @@ const UserNoteDetail: React.FC = () => {
                         <div className="w-full h-[6px] bg-[#222A39]"></div>
 
                         <section className="und-section-comment">
-                            <h2 className="und-subtitle">
-                                댓글 {commentsData?.commentCount || 0}
-                            </h2>
+                            <h2 className="und-subtitle">댓글 {commentsData?.commentCount || 0}</h2>
                             <div className="und-comments">
                                 {commentsData?.comments.map((comment, index) => (
                                     <Comment
@@ -373,7 +353,18 @@ const UserNoteDetail: React.FC = () => {
                     </div>
                 </main>
 
-                <UserNoteDetailFooter bookmarkCount={userNoteData.likeCount} />
+                {/* ✅ 바텀시트: 화면 하단(풋터 위치)에서 등장 */}
+                <UndBottomSheet
+                    open={sheetOpen}
+                    onClose={() => setSheetOpen(false)}
+                >
+                </UndBottomSheet>
+
+                {/* ✅ 풋터: onApply로 바텀시트 열기 */}
+                <UserNoteDetailFooter
+                    bookmarkCount={userNoteData.likeCount}
+                    onApply={() => setSheetOpen(true)}
+                />
             </div>
         </div>
     );

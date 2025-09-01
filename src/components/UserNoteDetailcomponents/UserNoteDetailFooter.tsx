@@ -1,9 +1,11 @@
+// src/components/UserNoteDetailcomponents/UserNoteDetailFooter.tsx
 import React, { useState, useEffect } from "react";
 import { BiLike, BiSolidLike } from "react-icons/bi";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
     bookmarkCount: number;
+    onApply?: () => void; // ✅ 추가: 바텀시트 열기용 콜백
 }
 
 interface ToastState {
@@ -12,7 +14,7 @@ interface ToastState {
     showLink: boolean;
 }
 
-const UserNoteDetailFooter: React.FC<Props> = ({ bookmarkCount }) => {
+const UserNoteDetailFooter: React.FC<Props> = ({ bookmarkCount, onApply }) => {
     const [liked, setLiked] = useState(false);
     const [count, setCount] = useState(bookmarkCount);
     const [toast, setToast] = useState<ToastState>({
@@ -58,10 +60,11 @@ const UserNoteDetailFooter: React.FC<Props> = ({ bookmarkCount }) => {
 
     return (
         <footer className="relative h-[79px] flex-shrink-0 bg-[#141924]">
+            {/* Toast */}
             <div
                 className={`absolute left-1/2 -translate-x-1/2 transition-all duration-300 ease-out z-50 ${toast.show
-                    ? "bottom-[90px] opacity-100 translate-y-0 scale-100"
-                    : "bottom-[70px] opacity-0 translate-y-4 scale-95 pointer-events-none"
+                        ? "bottom-[90px] opacity-100 translate-y-0 scale-100"
+                        : "bottom-[70px] opacity-0 translate-y-4 scale-95 pointer-events-none"
                     }`}
             >
                 <div
@@ -73,7 +76,7 @@ const UserNoteDetailFooter: React.FC<Props> = ({ bookmarkCount }) => {
                         "bg-[#00000099] backdrop-blur-xl saturate-150",
                         "shadow-[0_12px_30px_rgba(0,0,0,0.35)]",
                         "bg-gradient-to-br from-white/10 to-white/5",
-                        "text-white"
+                        "text-white",
                     ].join(" ")}
                 >
                     <span className="text-[14px] font-medium whitespace-nowrap">
@@ -87,17 +90,16 @@ const UserNoteDetailFooter: React.FC<Props> = ({ bookmarkCount }) => {
                                 "flex flex-col items-center",
                                 "bg-transparent border-none",
                                 "text-[14px] font-medium whitespace-nowrap text-[#FFF]",
-
-                                "after:block after:w-full after:h-[1px] after:bg-[#FFF] after:mt-[2px]"
+                                "after:block after:w-full after:h-[1px] after:bg-[#FFF] after:mt-[2px]",
                             ].join(" ")}
                         >
                             바로가기
                         </button>
                     )}
-
                 </div>
             </div>
 
+            {/* Footer Buttons */}
             <div className="w-[355px] mx-auto py-4 flex items-center gap-4">
                 <button
                     onClick={handleLikeToggle}
@@ -118,6 +120,7 @@ const UserNoteDetailFooter: React.FC<Props> = ({ bookmarkCount }) => {
                      px-8 rounded-[12px] text-[15px]
                      inline-flex items-center justify-center
                      hover:bg-[#5A3BA3] transition-colors duration-200"
+                    onClick={onApply} // ✅ “적용하기” 클릭 시 부모 콜백
                 >
                     적용하기
                 </button>

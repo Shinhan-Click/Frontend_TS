@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './UserNoteDetail.css';
 
 import {
@@ -50,9 +50,14 @@ interface CommentsResponse {
 
 const UserNoteDetail: React.FC = () => {
     const { userNoteId } = useParams<{ userNoteId: string }>();
+    const navigate = useNavigate();
     const [userNoteData, setUserNoteData] = useState<UserNoteDetailData | null>(null);
     const [commentsData, setCommentsData] = useState<CommentsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    
+    // 좋아요 상태
+    const [initialLikeStatus, setInitialLikeStatus] = useState(false);
+    const [commentLikeStatuses, setCommentLikeStatuses] = useState<{ [key: number]: boolean }>({});
 
     const [exOpen, setExOpen] = useState(false);
     const [panelMax, setPanelMax] = useState<string>('0px');
@@ -62,6 +67,11 @@ const UserNoteDetail: React.FC = () => {
     const isDown = useRef(false);
     const startX = useRef(0);
     const startScrollLeft = useRef(0);
+
+    // 뒤로가기 핸들러
+    const handleGoBack = () => {
+        navigate(-1);
+    };
 
     // API 호출 함수들
     const fetchUserNoteDetail = async (id: string): Promise<UserNoteDetailData | null> => {
@@ -77,7 +87,7 @@ const UserNoteDetail: React.FC = () => {
     };
 
     const fetchComments = async (userNoteId: string): Promise<CommentsResponse | null> => {
-    try {
+        try {
             const body = {
                 type: "USER_NOTE",
                 referenceId: Number(userNoteId),
@@ -98,19 +108,94 @@ const UserNoteDetail: React.FC = () => {
         }
     };
 
+    // 좋아요 상태 조회
+    const fetchLikeStatus = async (id: string): Promise<boolean> => {
+        try {
+            const res = await fetch(`${API_BASE}/usernote/${id}/like-status`, { 
+                credentials: 'include' 
+            });
+            if (!res.ok) throw new Error('좋아요 상태 조회 API 실패');
+            const data: ApiResponse<boolean> = await res.json();
+            return data.isSuccess ? data.result : false;
+        } catch (error) {
+            console.error('fetchLikeStatus 에러:', error);
+            return false;
+        }
+    };
+
+    // 댓글 좋아요 상태 조회
+    const fetchCommentLikeStatuses = async (comments: CommentData[]): Promise<{ [key: number]: boolean }> => {
+        try {
+            const statusPromises = comments.map(async (comment) => {
+                const res = await fetch(`${API_BASE}/comment/${comment.commentId}/like-status`, { 
+                    credentials: 'include' 
+                });
+                if (!res.ok) return { commentId: comment.commentId, isLiked: false };
+                const data: ApiResponse<boolean> = await res.json();
+                return { commentId: comment.commentId, isLiked: data.isSuccess ? data.result : false };
+            });
+            
+            const results = await Promise.all(statusPromises);
+            const statusMap: { [key: number]: boolean } = {};
+            results.forEach(result => {
+                statusMap[result.commentId] = result.isLiked;
+            });
+            return statusMap;
+        } catch (error) {
+            console.error('fetchCommentLikeStatuses 에러:', error);
+            return {};
+        }
+    };
+
+    // 댓글 좋아요 토글
+    const toggleCommentLike = async (commentId: number): Promise<'success' | 'own_comment' | 'error'> => {
+        try {
+            const res = await fetch(`${API_BASE}/comment/${commentId}/like`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({}),
+                credentials: 'include'
+            });
+            
+            if (!res.ok) {
+                if (res.status === 400) {
+                    return 'own_comment';
+                }
+                throw new Error('댓글 좋아요 토글 API 실패');
+            }
+            
+            const data: ApiResponse<any> = await res.json();
+            return data.isSuccess ? 'success' : 'error';
+        } catch (error) {
+            console.error('toggleCommentLike 에러:', error);
+            return 'error';
+        }
+    };
+
     // 데이터 로드
     useEffect(() => {
         if (!userNoteId) return;
         
         const loadData = async () => {
             setIsLoading(true);
-            const [noteData, commentsData] = await Promise.all([
+            const [noteData, commentsData, likeStatus] = await Promise.all([
                 fetchUserNoteDetail(userNoteId),
-                fetchComments(userNoteId)
+                fetchComments(userNoteId),
+                fetchLikeStatus(userNoteId)
             ]);
             
             setUserNoteData(noteData);
             setCommentsData(commentsData);
+            setInitialLikeStatus(likeStatus);
+            
+            // 댓글이 있으면 댓글 좋아요 상태도 조회
+            if (commentsData?.comments && commentsData.comments.length > 0) {
+                const commentStatuses = await fetchCommentLikeStatuses(commentsData.comments);
+                setCommentLikeStatuses(commentStatuses);
+            }
+            
             setIsLoading(false);
         };
 
@@ -222,7 +307,11 @@ const UserNoteDetail: React.FC = () => {
         <div className="und-root">
             <div className="und-app">
                 <header className="und-header">
-                    <button className="und-iconbtn" aria-label="뒤로가기">
+                    <button 
+                        className="und-iconbtn" 
+                        aria-label="뒤로가기"
+                        onClick={handleGoBack}
+                    >
                         <ArrowLeftIcon className="und-icon" />
                     </button>
                     <button className="und-iconbtn1" aria-label="더보기">
@@ -344,6 +433,7 @@ const UserNoteDetail: React.FC = () => {
                                 {commentsData?.comments.map((comment, index) => (
                                     <Comment 
                                         key={comment.commentId}
+                                        commentId={comment.commentId}
                                         isBest={index < 3}
                                         author={comment.nickname}
                                         time={comment.timeAgo}
@@ -351,6 +441,38 @@ const UserNoteDetail: React.FC = () => {
                                         likes={comment.likeCount}
                                         replies={comment.replyCount}
                                         avatarUrl={comment.profileImageUrl}
+                                        isLiked={commentLikeStatuses[comment.commentId] || false}
+                                        onLikeToggle={async () => {
+                                            const result = await toggleCommentLike(comment.commentId);
+                                            
+                                            if (result === 'success') {
+                                                // 댓글 좋아요 상태 토글
+                                                setCommentLikeStatuses(prev => ({
+                                                    ...prev,
+                                                    [comment.commentId]: !prev[comment.commentId]
+                                                }));
+                                                
+                                                // 댓글 데이터의 좋아요 수도 업데이트
+                                                setCommentsData(prev => {
+                                                    if (!prev) return prev;
+                                                    return {
+                                                        ...prev,
+                                                        comments: prev.comments.map(c => {
+                                                            if (c.commentId === comment.commentId) {
+                                                                const isCurrentlyLiked = commentLikeStatuses[comment.commentId];
+                                                                return {
+                                                                    ...c,
+                                                                    likeCount: c.likeCount + (isCurrentlyLiked ? -1 : 1)
+                                                                };
+                                                            }
+                                                            return c;
+                                                        })
+                                                    };
+                                                });
+                                            }
+                                            
+                                            return result;
+                                        }}
                                     />
                                 )) || []}
                             </div>
@@ -372,7 +494,11 @@ const UserNoteDetail: React.FC = () => {
                     </div>
                 </main>
 
-                <UserNoteDetailFooter bookmarkCount={userNoteData.likeCount} />
+                <UserNoteDetailFooter 
+                    bookmarkCount={userNoteData.likeCount} 
+                    userNoteId={userNoteId}
+                    initialLikeStatus={initialLikeStatus}
+                />
             </div>
         </div>
     );

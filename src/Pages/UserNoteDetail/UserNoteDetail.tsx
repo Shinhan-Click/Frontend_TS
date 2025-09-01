@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './UserNoteDetail.css';
 
 import {
@@ -50,6 +50,7 @@ interface CommentsResponse {
 
 const UserNoteDetail: React.FC = () => {
     const { userNoteId } = useParams<{ userNoteId: string }>();
+    const navigate = useNavigate();
     const [userNoteData, setUserNoteData] = useState<UserNoteDetailData | null>(null);
     const [commentsData, setCommentsData] = useState<CommentsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -77,7 +78,7 @@ const UserNoteDetail: React.FC = () => {
     };
 
     const fetchComments = async (userNoteId: string): Promise<CommentsResponse | null> => {
-    try {
+        try {
             const body = {
                 type: "USER_NOTE",
                 referenceId: Number(userNoteId),
@@ -101,14 +102,14 @@ const UserNoteDetail: React.FC = () => {
     // 데이터 로드
     useEffect(() => {
         if (!userNoteId) return;
-        
+
         const loadData = async () => {
             setIsLoading(true);
             const [noteData, commentsData] = await Promise.all([
                 fetchUserNoteDetail(userNoteId),
                 fetchComments(userNoteId)
             ]);
-            
+
             setUserNoteData(noteData);
             setCommentsData(commentsData);
             setIsLoading(false);
@@ -222,7 +223,7 @@ const UserNoteDetail: React.FC = () => {
         <div className="und-root">
             <div className="und-app">
                 <header className="und-header">
-                    <button className="und-iconbtn" aria-label="뒤로가기">
+                    <button className="und-iconbtn" aria-label="뒤로가기" onClick={() => navigate('/')}>
                         <ArrowLeftIcon className="und-icon" />
                     </button>
                     <button className="und-iconbtn1" aria-label="더보기">
@@ -236,15 +237,15 @@ const UserNoteDetail: React.FC = () => {
                             src={userNoteData.userNoteImageUrl}
                             alt={userNoteData.title}
                             className="und-banner brightness-75 contrast-110"
-                            style={{ 
-                                width: '100%', 
+                            style={{
+                                width: '100%',
                                 height: '240px',
-                                objectFit: 'cover' 
+                                objectFit: 'cover'
                             }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#0F1420]/40 to-[#0F1420]/90 pointer-events-none" />
                     </div>
-                    
+
                     <div className="und-sectionbox" style={{ marginTop: '20px' }}>
                         <section className="und-section2">
                             <h1 className="und-title">{userNoteData.title}</h1>
@@ -286,8 +287,8 @@ const UserNoteDetail: React.FC = () => {
                             >
                                 {userNoteData.exampleImageUrl ? (
                                     <div className="mt-3">
-                                        <img 
-                                            src={userNoteData.exampleImageUrl} 
+                                        <img
+                                            src={userNoteData.exampleImageUrl}
                                             alt="적용 예시"
                                             className="w-full rounded-lg"
                                         />
@@ -316,10 +317,10 @@ const UserNoteDetail: React.FC = () => {
                         <section className="und-section">
                             <div className="und-divider" />
                             <div className="und-example">
-                                <img 
-                                    src={userNoteData.authorProfileImageUrl} 
+                                <img
+                                    src={userNoteData.authorProfileImageUrl}
                                     alt={userNoteData.authorNickname}
-                                    className="und-avatar" 
+                                    className="und-avatar"
                                 />
                                 <div className="und-example-body">
                                     <div className="und-row between">
@@ -342,7 +343,7 @@ const UserNoteDetail: React.FC = () => {
                             </h2>
                             <div className="und-comments">
                                 {commentsData?.comments.map((comment, index) => (
-                                    <Comment 
+                                    <Comment
                                         key={comment.commentId}
                                         isBest={index < 3}
                                         author={comment.nickname}

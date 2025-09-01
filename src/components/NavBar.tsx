@@ -74,7 +74,14 @@ const NavBar: React.FC = () => {
 
                     <div className="add-row">
                         <div className="add-label">퓨처 노트 생성</div>
-                        <button className="add-item" aria-label="노트 작성">
+                        <button
+                            className="add-item"
+                            aria-label="노트 작성"
+                            onClick={() => {
+                                setOpen(false);
+                                navigate('/FutureNoteWrite');
+                            }}
+                        >
                             <MdNoteAlt className="add-icon" />
                         </button>
                     </div>

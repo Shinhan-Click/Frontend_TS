@@ -1,28 +1,30 @@
-// src/pages/HomeToUserNote.tsx
-import React from 'react';
+import React, { useState } from 'react';
 
-/* ── 트렌딩 카드 ─────────────────────────── */
 type TrendingCardProps = {
     rank: number;
     thumb: string;
     title: string;
-    saves: number;   // 저장
-    applies: number; // 적용
+    saves: number;
+    applies: number;
     tag: string;
     comments: { user: string; text: string; avatar: string }[];
 };
 
 const TrendingCard: React.FC<TrendingCardProps> = ({
-    rank, thumb, title, saves, applies, tag, comments,
+    rank,
+    thumb,
+    title,
+    saves,
+    applies,
+    tag,
+    comments,
 }) => {
     return (
         <div className="relative ml-[10px] bg-[#141924] p-2">
-            {/* 랭크 배지 (카드 안쪽만 유지) */}
             <div className="absolute top-[5px] -left-2 w-[25px] h-[25px] px-1 rounded-[8px] bg-[#6F4ACD] text-[#FFF] text-xs font-bold flex items-center justify-center shadow-md">
                 {rank}
             </div>
 
-            {/* 상단: 썸네일 + 타이틀/메타 */}
             <div className="flex gap-[7px] ml-[10px] mb-[6px] bg-[#D9C8EF08]/90 rounded-[8px]">
                 <img
                     src={thumb}
@@ -42,11 +44,10 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
                 </div>
             </div>
 
-            {/* 댓글 미리보기 (2개) */}
             <div className="mt-2 flex flex-col gap-[6px]">
                 {comments.slice(0, 2).map((c, i) => (
                     <div key={i} className="rounded-[8px] bg-[#283143] px-2 py-2 ml-[10px]">
-                        <p className="text-[13px] text-[#FFF]/90 leading-[18px] line-clamp-2 break-words">
+                        <p className="text-[13px] text-[#FFF]/90 ml-[8px] leading-[18px] line-clamp-2 break-words">
                             {c.text}
                         </p>
                         <div className="mt-2 flex items-center gap-[5px]">
@@ -66,9 +67,7 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
     );
 };
 
-/* ── 페이지 ──────────────────────────────────────────── */
 const HomeToUserNote: React.FC = () => {
-    // 데모 데이터 생성기 (각 랭크별 1장)
     const makeCard = (rank: number, seed: string, title: string): TrendingCardProps => ({
         rank,
         thumb: `https://picsum.photos/seed/${seed}/96/96`,
@@ -77,8 +76,16 @@ const HomeToUserNote: React.FC = () => {
         applies: 1500 + Math.floor(Math.random() * 1500),
         tag: ['출력규칙', '대화연결', '톤앤매너'][rank % 3],
         comments: [
-            { user: '하윤', text: '현신 캐릭터였는데 집착적 성향이 강하게 나와서 놀람!', avatar: 'https://picsum.photos/seed/u1/40/40' },
-            { user: '권이안', text: '부성애 수치 높게 찍힌 거 보고 더 의지하고 있음ㅜ', avatar: 'https://picsum.photos/seed/u2/40/40' },
+            {
+                user: '하윤',
+                text: '현신 캐릭터였는데 집착적 성향이 강하게 나와서 놀람!',
+                avatar: 'https://picsum.photos/seed/u1/40/40',
+            },
+            {
+                user: '권이안',
+                text: '부성애 수치 높게 찍힌 거 보고 더 의지하고 있음ㅜ',
+                avatar: 'https://picsum.photos/seed/u2/40/40',
+            },
         ],
     });
 
@@ -89,11 +96,37 @@ const HomeToUserNote: React.FC = () => {
         4: [makeCard(4, 'npc-4a', '역할 고정 OOC 방지')],
     };
 
+    const [selectedRuleId, setSelectedRuleId] = useState<number | null>(null);
+    const RULE_CARDS = [
+        {
+            id: 1,
+            title: '서사 쌓기용 규칙',
+            desc:
+                '로맨틱 코미디 톤 기반의 규칙 모음. 대화가 과장되거나 왜곡되지 않도록 균형을 맞추고, 감정선이 자연스럽게 이어지게 합니다.',
+            saves: 598,
+            applies: 1020,
+        },
+        {
+            id: 2,
+            title: '몰입도를 높여줄 1인칭 서술',
+            desc:
+                '주변 환경이나 인물들을 어떻게 인식하는지에 초점을 두고, 독자의 시점에서 현장감을 강화합니다.',
+            saves: 126,
+            applies: 89,
+        },
+        {
+            id: 3,
+            title: '감정 변화를 키워드로 요약',
+            desc:
+                '스토리 진행 상황과 감정선을 점검하는 규칙. 중요한 사건과 감정 키워드를 중심으로 간결하게 정리합니다.',
+            saves: 91,
+            applies: 234,
+        },
+    ];
+
     return (
         <div className="htun-root h-screen bg-[#FFF] text-white overflow-hidden">
-            {/* 스크롤 컨테이너 (모바일 375px 고정폭) */}
             <div className="mx-auto w-[375px] h-full overflow-y-auto no-scrollbar px-4 pb-10 bg-[#141924]">
-                {/* ===== Section 1. 히어로/프로모 카드 ===== */}
                 <section id="hero" className="pt-[5px] bg-[#141924]">
                     <header className="sr-only">히어로</header>
                     <div className="w-[345px] ml-[16px] rounded-[20px] bg-[#C663E7] border border-[#FFFFFF0D] shadow-[0_12px_30px_rgba(0,0,0,0.35)] h-[180px] flex items-center justify-center">
@@ -112,7 +145,6 @@ const HomeToUserNote: React.FC = () => {
 
                 <div className="h-6" />
 
-                {/* ===== Section 2. 후기가 증명하는 인기 유저노트 ===== */}
                 <section id="trending">
                     <div className="flex items-center justify-between mb-3 bg-[#141924]">
                         <h2 className="text-[17px] text-[#FFF] font-bold ml-[15px]">
@@ -120,12 +152,10 @@ const HomeToUserNote: React.FC = () => {
                         </h2>
                     </div>
 
-                    {/* 가로 스크롤: 랭크 1~4, 각 컬럼 안에 카드들 세로 배치 */}
                     <div className="-mx-4 px-4 overflow-x-auto no-scrollbar bg-[#141924]">
                         <div className="flex gap-2 min-w-max">
                             {[1, 2, 3, 4].map((rank) => (
                                 <div key={rank} className="w-[335px] flex-shrink-0">
-                                    {/* ⛔️ 컬럼 상단의 별도 랭크 배지 제거 */}
                                     <div className="flex flex-col gap-2">
                                         {RANK_COLUMNS[rank].map((card, i) => (
                                             <TrendingCard key={`${rank}-${i}`} {...card} />
@@ -137,29 +167,47 @@ const HomeToUserNote: React.FC = () => {
                     </div>
                 </section>
 
-                {/* spacing */}
                 <div className="h-6" />
 
-                {/* ===== Section 3. 해시태그 추천 ===== */}
                 <section id="hashtags">
-                    <h2 className="text-[15px] font-bold mb-3 ">
+                    <h2 className="text-[17px] text-[#FFF] font-bold mb-3 ml-[15px] mt-[25px] ">
                         더 만족스러운 채팅을 위한 <span className="text-[#8F7AE6]">#출력규칙</span>
                     </h2>
 
-                    {/* 태그 칩 리스트 */}
-                    <div className="flex flex-wrap gap-2">
-                        {['로맨스', '판타지', '스릴러', 'OOC', '시스템', 'SF'].map((tag) => (
-                            <button
-                                key={tag}
-                                className="px-3 h-8 rounded-lg bg-[#192131] border border-[#2A3244] text-sm text-white/80"
-                            >
-                                #{tag}
-                            </button>
-                        ))}
+                    <div className="mx-[12px]">
+                        {RULE_CARDS.map((r, idx) => {
+                            const active = selectedRuleId === r.id;
+                            return (
+                                <React.Fragment key={r.id}>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setSelectedRuleId((prev) => (prev === r.id ? null : r.id))
+                                        }
+                                        aria-pressed={active}
+                                        className={[
+                                            'w-full text-left text-[#FFF] px-4 py-3 bg-[#141924] border-none',
+                                            active ? 'bg-[#283143]' : 'hover:bg-[#1A2130]',
+                                        ].join(' ')}
+                                    >
+                                        <p className="text-[16px] font-semibold text-white">{r.title}</p>
+                                        <p className="mt-[2px] text-[14px] text-[#DFE1EA]/61 leading-[18px] line-clamp-2">
+                                            {r.desc}
+                                        </p>
+                                        <p className="mt-[6px] text-[12px] text-[#BEC1CB]/48">
+                                            저장 {r.saves.toLocaleString()} · 적용 {r.applies.toLocaleString()}
+                                        </p>
+                                    </button>
+
+                                    {idx < RULE_CARDS.length - 1 && (
+                                        <div className="h-[1px] bg-[#2A3244] mx-4" aria-hidden />
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
                     </div>
                 </section>
 
-                {/* spacing */}
                 <div className="h-6" />
 
                 {/* ===== Section 4. 합쳐서 더욱 새로운 유저노트 ===== */}
@@ -189,7 +237,6 @@ const HomeToUserNote: React.FC = () => {
                     </div>
                 </section>
 
-                {/* spacing */}
                 <div className="h-6" />
 
                 {/* ===== Section 5. 모든 유저 노트 ===== */}

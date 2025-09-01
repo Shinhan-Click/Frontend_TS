@@ -1,8 +1,10 @@
+// src/components/NavBar.tsx
 import React, { useState } from 'react';
 import { FaCommentAlt, FaPlay, FaUser } from 'react-icons/fa';
 import { BsFilePerson } from 'react-icons/bs';
 import { MdNoteAlt } from 'react-icons/md';
 import { NoteIcon } from '../components/icons';
+import { useNavigate } from 'react-router-dom';
 import './NavBar.css';
 
 type NavItem = {
@@ -21,6 +23,7 @@ const navItems: NavItem[] = [
 const NavBar: React.FC = () => {
     const [active, setActive] = useState<string>('home');
     const [open, setOpen] = useState<boolean>(false);
+    const navigate = useNavigate();
 
     return (
         <div className="nav-row">
@@ -58,7 +61,14 @@ const NavBar: React.FC = () => {
 
                     <div className="add-row">
                         <div className="add-label">유저 노트 생성</div>
-                        <button className="add-item" aria-label="유저노트">
+                        <button
+                            className="add-item"
+                            aria-label="유저노트"
+                            onClick={() => {
+                                setOpen(false);
+                                navigate('/UserNoteWrite');
+                            }}
+                        >
                             <NoteIcon className="add-icon" />
                         </button>
                     </div>
@@ -70,8 +80,6 @@ const NavBar: React.FC = () => {
                         </button>
                     </div>
                 </div>
-
-
             </div>
         </div>
     );

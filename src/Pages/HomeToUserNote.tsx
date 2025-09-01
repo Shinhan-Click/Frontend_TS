@@ -1,4 +1,3 @@
-// src/pages/HomeToUserNote.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -49,11 +48,38 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
 
 type SimpleCombo = { id: number; img: string; title: string; handle: string };
 const SimpleComboCard: React.FC<Omit<SimpleCombo, 'id'>> = ({ img, title }) => (
+    <button type="button" className="relative block w-full aspect-[4/3] overflow-hidden bg-[#141924] border-none rounded-[12px]">
+        <img src={img} alt={title} className="w-full h-full object-cover" />
+    </button>
+);
+
+type NoteListItemProps = {
+    thumb: string;
+    title: string;
+    desc: string;
+    handle: string;
+};
+const NoteListItem: React.FC<NoteListItemProps> = ({ thumb, title, desc, handle }) => (
     <button
         type="button"
-        className="relative block w-full aspect-[4/3] overflow-hidden bg-[#141924] border-none rounded-[12px]"
+        className="w-full text-left px-4 py-3 hover:bg-[#1A2130] transition-colors bg-[#141924] border-none -mt-[10px]"
     >
-        <img src={img} alt={title} className="w-full h-full object-cover" />
+        <div className="flex gap-3">
+            <img
+                src={thumb}
+                alt={title}
+                className="w-[70px] h-[98px] rounded-[4px] object-cover bg-[#1F2636] flex-shrink-0 mt-[20px] ml-[10px]"
+            />
+            <div className="min-w-0 flex-1 ml-[15px]">
+                <p className="text-[16px] font-bold text-[#FFF] truncate">{title}</p>
+                <p className="text-[14px] leading-[18px] text-[#FFF]/60 line-clamp-2">
+                    {desc}
+                </p>
+                <span className="inline-block mt-[4px] px-2 py-[6px] rounded-[6px] bg-[#222A39] text-[12px] text-[#FFF]/80">
+                    {handle.startsWith('@') ? handle : `@${handle}`}
+                </span>
+            </div>
+        </div>
     </button>
 );
 
@@ -95,8 +121,32 @@ const HomeToUserNote: React.FC = () => {
     ];
 
     const goMerge = () => {
-        navigate('/ChattingUserNote'); // 라우터에 맞춰 경로만 확인해서 사용하세요.
+        navigate('/ChattingUserNote');
     };
+
+    const FILTERS = ['전체', '출력규칙', '시스템', '세계관 확장', 'OOC', '퓨처노트', '기타'] as const;
+    const [activeFilter, setActiveFilter] = useState<typeof FILTERS[number]>('전체');
+
+    const NOTE_LIST = [
+        {
+            thumb: '/절대고수.png',
+            title: '절대고수',
+            desc: '현 무림은 정파,사파,마교로 삼분되어있고 그 어느곳에도 속하지 않은 정사지간의 고수들도 존재한다. 당신은 정파,마교,정사지간 중 세력을 선택해 ',
+            handle: '@tico',
+        },
+        {
+            thumb: '/수족관 소년들.png',
+            title: '수족관 소년들',
+            desc: '한때 인간의 잔혹한 탐욕에 유린당했던 수인들의 은밀한 안식처. 수인의 입양을 돕는 이곳..!!',
+            handle: '@whif_official',
+        },
+        {
+            thumb: '/무림생존기.png',
+            title: '무림생존기',
+            desc: '무림에서 일반인으로 살아남는 법! 규칙 없는 강호에서 살아남기 위한 전투와 계략, 생존의 기술...',
+            handle: '@goldsu',
+        },
+    ];
 
     return (
         <div className="htun-root h-screen bg-[#FFF] text-white overflow-hidden">
@@ -136,6 +186,7 @@ const HomeToUserNote: React.FC = () => {
 
                 <div className="h-6" />
 
+                {/* --- HASHTAGS --- */}
                 <section id="hashtags">
                     <h2 className="text-[17px] text-[#FFF] font-bold mb-3 ml-[15px] mt-[25px] ">
                         더 만족스러운 채팅을 위한 <span className="text-[#8F7AE6]">#출력규칙</span>
@@ -169,7 +220,7 @@ const HomeToUserNote: React.FC = () => {
 
                 <div className="h-6" />
 
-                {/* Combo (public 이미지) */}
+                {/* --- COMBO --- */}
                 <section id="combo">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-[17px] text-[#FFF] ml-[15px] font-bold">합쳐서 더욱 새로운 유저노트</h2>
@@ -185,38 +236,65 @@ const HomeToUserNote: React.FC = () => {
                         <button
                             onClick={goMerge}
                             className="w-[335px] h-[42px] ml-[20px] mt-[12px] rounded-[8px] bg-[#141924] text-[#FFF] border border-[#283143]
-                         transition-colors active:scale-[0.99]
-                         duration-150 hover:bg-[#1A2130] active:bg-[#0F1420] focus:outline-none focus:ring-2 focus:ring-[#6F4ACD]/40"
+              transition-colors active:scale-[0.99]
+              duration-150 hover:bg-[#1A2130] active:bg-[#0F1420] focus:outline-none focus:ring-2 focus:ring-[#6F4ACD]/40"
                         >
                             유저노트 병합하기
                         </button>
                     </div>
                 </section>
+
                 <div className="h-[8px] w-full bg-[#2A3244] mt-[20px]" aria-hidden />
                 <div className="h-6" />
 
-                {/* All notes */}
+                {/* --- ALL NOTES --- */}
                 <section id="all-notes">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-3 mt-[15px]">
                         <h2 className="text-[17px] text-[#FFF] ml-[15px] font-bold">모든 유저 노트</h2>
-                        <div className="flex gap-2">
-                            {['전체', '출력규칙', '시스템', '세계관 확장', 'OOC', '퓨처노트', '기타'].map((f, idx) => (
-                                <button
-                                    key={f}
-                                    className={`px-3 h-8 rounded-lg border text-sm ${idx === 0 ? 'bg-[#6F4ACD] border-[#6F4ACD]' : 'bg-[#192131] border-[#2A3244] text-white/80'
-                                        }`}
-                                >
-                                    {f}
-                                </button>
-                            ))}
+                    </div>
+
+                    {/* 가로 스크롤 토글 */}
+                    <div className="-mx-4 px-4 overflow-x-auto no-scrollbar">
+                        <div className="flex gap-[6px] min-w-max pl-[12px] pb-2 mb-[10px]">
+                            {FILTERS.map((f) => {
+                                const active = activeFilter === f;
+                                return (
+                                    <button
+                                        key={f}
+                                        type="button"
+                                        aria-pressed={active}
+                                        onClick={() => setActiveFilter(f)}
+                                        className={[
+                                            'whitespace-nowrap px-4 h-9 rounded-full border text-[14px] transition-colors',
+                                            active
+                                                ? 'bg-[#6F4ACD] border-[#6F4ACD] text-[#FFF]'
+                                                : 'bg-transparent border-[#404E6A] text-[#FFF]/80 hover:bg-[#1A2130]',
+                                        ].join(' ')}
+                                    >
+                                        {f}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="h-[92px] rounded-xl bg-[#1A2130] border border-[#2A3244] flex items-center justify-center">
-                                <span className="text-white/60 text-sm">[유저노트 리스트 아이템 {i}]</span>
-                            </div>
+                    <div className="flex items-center justify-between px-4 mb-[15px]">
+                        <span className="text-[12px] text-[#FFF]/80 ml-[20px]">총 817 개</span>
+                        <button className="text-[12px] text-[#FFF]/60 mr-[15px] inline-flex items-center gap-1 border-none bg-[#141924]">
+                            저장순 <span className="text-[10px] ml-[5px]">▼</span>
+                        </button>
+                    </div>
+
+                    {/* 리스트 아이템 */}
+                    <div className="flex flex-col gap-[5px]">
+                        {NOTE_LIST.map((n, idx) => (
+                            <NoteListItem
+                                key={`${n.title}-${idx}`}
+                                thumb={n.thumb}
+                                title={n.title}
+                                desc={n.desc}
+                                handle={n.handle}
+                            />
                         ))}
                     </div>
 

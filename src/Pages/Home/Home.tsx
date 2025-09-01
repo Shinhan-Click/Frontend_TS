@@ -167,7 +167,14 @@ const Home: React.FC = () => {
     };
   }, []);
 
-  const handleClick = (i: number) => setActiveIndex((prev) => (prev === i ? null : i));
+  // 유저 노트(인덱스 2) 클릭 시 HomeToUserNote로 이동
+  const handleClick = (i: number) => {
+    if (i === 2) {
+      navigate('/HomeToUserNote');
+      return;
+    }
+    setActiveIndex((prev) => (prev === i ? null : i));
+  };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -229,16 +236,7 @@ const Home: React.FC = () => {
       );
       break;
     case 2:
-      content = (
-        <>
-          {/*
-          <section className="section recommend-userNote"></section>
-          <section className="section genre-popular-note"></section>
-          <section className="section genre-romance"></section>
-          <section className="section all-user-note"></section>
-          */}
-        </>
-      );
+      content = <></>; // '유저 노트'는 별도 페이지로 이동하므로 이곳은 비워둠
       break;
     default:
       content = (
@@ -344,7 +342,12 @@ const Home: React.FC = () => {
         <section className="section chip">
           <div className="chip-button">
             {['캐릭터 챗', '웹 소설', '유저 노트'].map((label, index) => (
-              <button key={index} type="button" className={activeIndex === index ? 'active' : ''} onClick={() => handleClick(index)}>
+              <button
+                key={index}
+                type="button"
+                className={activeIndex === index ? 'active' : ''}
+                onClick={() => handleClick(index)}
+              >
                 {label}
               </button>
             ))}

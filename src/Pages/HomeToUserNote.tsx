@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import NavBar from '../components/NavBar';
 
 type TrendingCardProps = {
     rank: number;
@@ -12,7 +13,13 @@ type TrendingCardProps = {
 };
 
 const TrendingCard: React.FC<TrendingCardProps> = ({
-    rank, thumb, title, saves, applies, tag, comments,
+    rank,
+    thumb,
+    title,
+    saves,
+    applies,
+    tag,
+    comments,
 }) => {
     return (
         <div className="relative ml-[10px] bg-[#141924] p-2">
@@ -21,12 +28,20 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
             </div>
 
             <div className="flex gap-[7px] ml-[10px] mb-[6px] bg-[#D9C8EF08]/90 rounded-[8px]">
-                <img src={thumb} alt={title} className="w-[64px] h-[64px] rounded-[8px] object-cover mt-[20px]" />
+                <img
+                    src={thumb}
+                    alt={title}
+                    className="w-[64px] h-[64px] rounded-[8px] object-cover mt-[20px]"
+                />
                 <div className="min-w-0 flex-1 rounded-[8px]">
                     <p className="text-[15px] font-semibold text-[#FFF] truncate">{title}</p>
-                    <p className="text-[12px] text-[#FFF]/70 mt-[2px]">저장 {saves.toLocaleString()} · 적용 {applies.toLocaleString()}</p>
+                    <p className="text-[12px] text-[#FFF]/70 mt-[2px]">
+                        저장 {saves.toLocaleString()} · 적용 {applies.toLocaleString()}
+                    </p>
                     <div className="mt-2">
-                        <span className="inline-block px-[5px] py-[2px] mb-[5px] rounded-[6px] text-[11px] text-[#DFE1EA]/63 bg-[#363A4352]">#{tag}</span>
+                        <span className="inline-block px-[5px] py-[2px] mb-[5px] rounded-[6px] text-[11px] text-[#DFE1EA]/63 bg-[#363A4352]">
+                            #{tag}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -34,10 +49,18 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
             <div className="mt-2 flex flex-col gap-[6px]">
                 {comments.slice(0, 2).map((c, i) => (
                     <div key={i} className="rounded-[8px] bg-[#283143] px-2 py-2 ml-[10px]">
-                        <p className="text-[13px] text-[#FFF]/90 ml-[8px] leading-[18px] line-clamp-2 break-words">{c.text}</p>
+                        <p className="text-[13px] text-[#FFF]/90 ml-[8px] leading-[18px] line-clamp-2 break-words">
+                            {c.text}
+                        </p>
                         <div className="mt-2 flex items-center gap-[5px]">
-                            <img src={c.avatar} alt={c.user} className="w-[18px] h-[18px] ml-[5px] mb-[5px] rounded-full object-cover" />
-                            <span className="text-[11px] text-[#FFF]/70">{c.user} <span className="opacity-70">적용후기</span></span>
+                            <img
+                                src={c.avatar}
+                                alt={c.user}
+                                className="w-[18px] h-[18px] ml-[5px] mb-[5px] rounded-full object-cover"
+                            />
+                            <span className="text-[11px] text-[#FFF]/70">
+                                {c.user} <span className="opacity-70">적용후기</span>
+                            </span>
                         </div>
                     </div>
                 ))}
@@ -48,7 +71,10 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
 
 type SimpleCombo = { id: number; img: string; title: string; handle: string };
 const SimpleComboCard: React.FC<Omit<SimpleCombo, 'id'>> = ({ img, title }) => (
-    <button type="button" className="relative block w-full aspect-[4/3] overflow-hidden bg-[#141924] border-none rounded-[12px]">
+    <button
+        type="button"
+        className="relative block w-full aspect-[4/3] overflow-hidden bg-[#141924] border-none rounded-[12px]"
+    >
         <img src={img} alt={title} className="w-full h-full object-cover" />
     </button>
 );
@@ -72,9 +98,7 @@ const NoteListItem: React.FC<NoteListItemProps> = ({ thumb, title, desc, handle 
             />
             <div className="min-w-0 flex-1 ml-[15px]">
                 <p className="text-[16px] font-bold text-[#FFF] truncate">{title}</p>
-                <p className="text-[14px] leading-[18px] text-[#FFF]/60 line-clamp-2">
-                    {desc}
-                </p>
+                <p className="text-[14px] leading-[18px] text-[#FFF]/60 line-clamp-2">{desc}</p>
                 <span className="inline-block mt-[4px] px-2 py-[6px] rounded-[6px] bg-[#222A39] text-[12px] text-[#FFF]/80">
                     {handle.startsWith('@') ? handle : `@${handle}`}
                 </span>
@@ -82,6 +106,49 @@ const NoteListItem: React.FC<NoteListItemProps> = ({ thumb, title, desc, handle 
         </div>
     </button>
 );
+
+const TopAppBar: React.FC<{ onSearch?: () => void }> = ({ onSearch }) => {
+    const navigate = useNavigate();
+    return (
+        <div className="sticky top-0 z-40 bg-[#141924]/90 backdrop-blur supports-[backdrop-filter]:bg-[#141924]/70 border-b border-[#1f2636]">
+            <div className="w-[375px] h-14 mx-auto px-4 flex items-center justify-between mb-[20px]">
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/')}
+                        className="mt-[40px] ml-[30px] text-[#FFF] font-[700] text-[21px] tracking-wide bg-transparent border-none"
+                    >
+                        WHIF
+                    </button>
+                </div>
+
+                <button
+                    type="button"
+                    aria-label="검색"
+                    onClick={onSearch}
+                    className="mt-[40px] mr-[30px] p-2 rounded-full hover:bg-[#1A2130] transition-colors bg-[#141924] border-none"
+                >
+                    <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="text-gray-300 text-[#DFE1EA]/50 border-none bg-[#141924]"
+                    >
+                        <path
+                            d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm9 16-4.35-4.35"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    );
+};
 
 const HomeToUserNote: React.FC = () => {
     const navigate = useNavigate();
@@ -94,23 +161,44 @@ const HomeToUserNote: React.FC = () => {
         applies: 1500 + Math.floor(Math.random() * 1500),
         tag: ['출력규칙', '대화연결', '톤앤매너'][rank % 3],
         comments: [
-            { user: '하윤', text: '현신 캐릭터였는데 집착적 성향이 강하게 나와서 놀람!', avatar: 'https://picsum.photos/seed/u1/40/40' },
+            { user: '하윤', text: '헌신 캐릭터였는데 집착적 성향이 강하게 나와서 놀람!', avatar: 'https://picsum.photos/seed/u1/40/40' },
             { user: '권이안', text: '부성애 수치 높게 찍힌 거 보고 더 의지하고 있음ㅜ', avatar: 'https://picsum.photos/seed/u2/40/40' },
         ],
     });
 
     const RANK_COLUMNS: Record<number, TrendingCardProps[]> = {
-        1: [makeCard(1, 'npc-1a', 'NPC 감정분석지표')],
-        2: [makeCard(2, 'npc-2a', '메모리 기반 반응 템플릿')],
+        1: [{ ...makeCard(1, 'npc-1a', 'NPC 감정분석지표'), thumb: '/감정.png' }],
+        2: [{ ...makeCard(2, 'npc-2a', '메모리 기반 반응 템플릿'), thumb: '/메모리.png' }],
         3: [makeCard(3, 'npc-3a', '상황별 톤 컨트롤')],
         4: [makeCard(4, 'npc-4a', '역할 고정 OOC 방지')],
     };
 
     const [selectedRuleId, setSelectedRuleId] = useState<number | null>(null);
     const RULE_CARDS = [
-        { id: 1, title: '서사 쌓기용 규칙', desc: '로맨틱 코미디 톤 기반의 규칙 모음. 대화가 과장되거나 왜곡되지 않도록 균형을 맞추고, 감정선이 자연스럽게 이어지게 합니다.', saves: 598, applies: 1020 },
-        { id: 2, title: '몰입도를 높여줄 1인칭 서술', desc: '주변 환경이나 인물들을 어떻게 인식하는지에 초점을 두고, 독자의 시점에서 현장감을 강화합니다.', saves: 126, applies: 89 },
-        { id: 3, title: '감정 변화를 키워드로 요약', desc: '스토리 진행 상황과 감정선을 점검하는 규칙. 중요한 사건과 감정 키워드를 중심으로 간결하게 정리합니다.', saves: 91, applies: 234 },
+        {
+            id: 1,
+            title: '서사 쌓기용 규칙',
+            desc:
+                '로맨틱 코미디 톤 기반의 규칙 모음. 대화가 과장되거나 왜곡되지 않도록 균형을 맞추고, 감정선이 자연스럽게 이어지게 합니다.',
+            saves: 598,
+            applies: 1020,
+        },
+        {
+            id: 2,
+            title: '몰입도를 높여줄 1인칭 서술',
+            desc:
+                '주변 환경이나 인물들을 어떻게 인식하는지에 초점을 두고, 독자의 시점에서 현장감을 강화합니다.',
+            saves: 126,
+            applies: 89,
+        },
+        {
+            id: 3,
+            title: '감정 변화를 키워드로 요약',
+            desc:
+                '스토리 진행 상황과 감정선을 점검하는 규칙. 중요한 사건과 감정 키워드를 중심으로 간결하게 정리합니다.',
+            saves: 91,
+            applies: 234,
+        },
     ];
 
     const COMBO_IMAGES: SimpleCombo[] = [
@@ -131,7 +219,8 @@ const HomeToUserNote: React.FC = () => {
         {
             thumb: '/절대고수.png',
             title: '절대고수',
-            desc: '현 무림은 정파,사파,마교로 삼분되어있고 그 어느곳에도 속하지 않은 정사지간의 고수들도 존재한다. 당신은 정파,마교,정사지간 중 세력을 선택해 ',
+            desc:
+                '현 무림은 정파,사파,마교로 삼분되어있고 그 어느곳에도 속하지 않은 정사지간의 고수들도 존재한다. 당신은 정파,마교,정사지간 중 세력을 선택해 ',
             handle: '@tico',
         },
         {
@@ -143,22 +232,33 @@ const HomeToUserNote: React.FC = () => {
         {
             thumb: '/무림생존기.png',
             title: '무림생존기',
-            desc: '무림에서 일반인으로 살아남는 법! 규칙 없는 강호에서 살아남기 위한 전투와 계략, 생존의 기술...',
+            desc:
+                '무림에서 일반인으로 살아남는 법! 규칙 없는 강호에서 살아남기 위한 전투와 계략, 생존의 기술...',
             handle: '@goldsu',
         },
     ];
 
+    const handleSearch = () => {
+        navigate('/search');
+    };
+
     return (
-        <div className="htun-root h-screen bg-[#FFF] text-white overflow-hidden">
+        <div className="htun-root relative h-screen bg-[#FFF] text-white overflow-hidden">
             <div className="mx-auto w-[375px] h-full overflow-y-auto no-scrollbar px-4 pb-10 bg-[#141924]">
+                <TopAppBar onSearch={handleSearch} />
+
                 <section id="hero" className="pt-[5px] bg-[#141924]">
                     <header className="sr-only">히어로</header>
-                    <div className="w-[345px] ml-[16px] rounded-[20px] bg-[#C663E7] border border-[#FFFFFF0D] shadow-[0_12px_30px_rgba(0,0,0,0.35)] h-[180px] flex items-center justify-center">
-                        <span className="text-white/60 text-sm">[영역]</span>
+                    <div className="relative w-[345px] ml-[16px] mb-[15px] h-[365px] rounded-[20px] overflow-hidden border border-[#FFFFFF0D] shadow-[0_12px_30px_rgba(0,0,0,0.35)]">
+                        <img
+                            src="/유저노트.png"
+                            alt="유저노트"
+                            className="absolute inset-0 w-full h-[365px] object-cover"
+                        />
                     </div>
                     <div className="mt-[10px] ml-[16px]">
                         <button type="button" className="w-[345px] h-[52px] rounded-[12px] bg-[#6F4ACD] border-none">
-                            <span className="font-semibold">유저노트 바로 만들기</span>
+                            <span className="font-semibold text-[#FFF]">도혁이를 바꾼 유저노트 보러가기</span>
                         </button>
                     </div>
                 </section>
@@ -186,7 +286,6 @@ const HomeToUserNote: React.FC = () => {
 
                 <div className="h-6" />
 
-                {/* --- HASHTAGS --- */}
                 <section id="hashtags">
                     <h2 className="text-[17px] text-[#FFF] font-bold mb-3 ml-[15px] mt-[25px] ">
                         더 만족스러운 채팅을 위한 <span className="text-[#8F7AE6]">#출력규칙</span>
@@ -220,7 +319,6 @@ const HomeToUserNote: React.FC = () => {
 
                 <div className="h-6" />
 
-                {/* --- COMBO --- */}
                 <section id="combo">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-[17px] text-[#FFF] ml-[15px] font-bold">합쳐서 더욱 새로운 유저노트</h2>
@@ -247,16 +345,14 @@ const HomeToUserNote: React.FC = () => {
                 <div className="h-[8px] w-full bg-[#2A3244] mt-[20px]" aria-hidden />
                 <div className="h-6" />
 
-                {/* --- ALL NOTES --- */}
                 <section id="all-notes">
                     <div className="flex items-center justify-between mb-3 mt-[15px]">
                         <h2 className="text-[17px] text-[#FFF] ml-[15px] font-bold">모든 유저 노트</h2>
                     </div>
 
-                    {/* 가로 스크롤 토글 */}
                     <div className="-mx-4 px-4 overflow-x-auto no-scrollbar">
                         <div className="flex gap-[6px] min-w-max pl-[12px] pb-2 mb-[10px]">
-                            {FILTERS.map((f) => {
+                            {(['전체', '출력규칙', '시스템', '세계관 확장', 'OOC', '퓨처노트', '기타'] as const).map((f) => {
                                 const active = activeFilter === f;
                                 return (
                                     <button
@@ -266,9 +362,7 @@ const HomeToUserNote: React.FC = () => {
                                         onClick={() => setActiveFilter(f)}
                                         className={[
                                             'whitespace-nowrap px-4 h-9 rounded-full border text-[14px] transition-colors',
-                                            active
-                                                ? 'bg-[#6F4ACD] border-[#6F4ACD] text-[#FFF]'
-                                                : 'bg-transparent border-[#404E6A] text-[#FFF]/80 hover:bg-[#1A2130]',
+                                            active ? 'bg-[#6F4ACD] border-[#6F4ACD] text-[#FFF]' : 'bg-transparent border-[#404E6A] text-[#FFF]/80 hover:bg-[#1A2130]',
                                         ].join(' ')}
                                     >
                                         {f}
@@ -285,22 +379,17 @@ const HomeToUserNote: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* 리스트 아이템 */}
-                    <div className="flex flex-col gap-[5px]">
+                    <div className="flex flex-col gap-[4px]">
                         {NOTE_LIST.map((n, idx) => (
-                            <NoteListItem
-                                key={`${n.title}-${idx}`}
-                                thumb={n.thumb}
-                                title={n.title}
-                                desc={n.desc}
-                                handle={n.handle}
-                            />
+                            <NoteListItem key={`${n.title}-${idx}`} thumb={n.thumb} title={n.title} desc={n.desc} handle={n.handle} />
                         ))}
                     </div>
 
                     <div className="h-10" />
                 </section>
             </div>
+
+            <NavBar />
         </div>
     );
 };

@@ -18,7 +18,6 @@ export interface CommentProps {
 }
 
 const Comment: React.FC<CommentProps> = ({
-    commentId,
     isBest,
     author,
     time,
@@ -28,7 +27,6 @@ const Comment: React.FC<CommentProps> = ({
     avatarUrl,
     isLiked = false,
     onMoreClick,
-    onLikeClick,
     onReplyClick,
     onLikeToggle,
 }) => {

@@ -94,7 +94,7 @@ const UndBottomSheet: React.FC<BottomSheetProps> = ({ open, onClose }) => {
                 aria-modal="true"
                 aria-label="대화 중인 채팅방"
                 className={[
-                    'w-[375px] h-[443px] mt-[435px] mx-auto bg-[#222A39] shadow-[0_-12px_30px_rgba(0,0,0,0.35)]',
+                    'w-[375px] h-[443px] mt-[445px] mx-auto bg-[#222A39] shadow-[0_-12px_30px_rgba(0,0,0,0.35)]',
                     'rounded-t-[20px] relative flex flex-col',
                     'transform transition-transform duration-300',
                     open ? 'translate-y-0' : 'translate-y-full',

@@ -1,4 +1,3 @@
-// src/pages/UserNoteDetail.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './UserNoteDetail.css';
@@ -12,7 +11,7 @@ import Tag from '../../components/UserNoteDetailcomponents/Tag';
 import Comment from '../../components/UserNoteDetailcomponents/Comment';
 import RelatedCard from '../../components/UserNoteDetailcomponents/RelatedCard';
 import UserNoteDetailFooter from '../../components/UserNoteDetailcomponents/UserNoteDetailFooter';
-import UndBottomSheet from '../../components/UserNoteDetailcomponents/undBottomSheet'; // ✅ 바텀시트 import
+import UndBottomSheet from '../../components/UserNoteDetailcomponents/undBottomSheet'; // ✅ 바텀시트 import 추가
 import type { ApiResponse } from '../../types/api';
 
 const API_BASE = '/api';
@@ -21,7 +20,10 @@ interface UserNoteDetailData {
     userNoteId: number;
     userNoteImageUrl: string;
     title: string;
-    tags: { tagId: number; name: string }[];
+    tags: {
+        tagId: number;
+        name: string;
+    }[];
     description: string;
     prompt: string;
     exampleImageUrl: string;
@@ -50,10 +52,13 @@ interface CommentsResponse {
 const UserNoteDetail: React.FC = () => {
     const { userNoteId } = useParams<{ userNoteId: string }>();
     const navigate = useNavigate();
-
     const [userNoteData, setUserNoteData] = useState<UserNoteDetailData | null>(null);
     const [commentsData, setCommentsData] = useState<CommentsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    // 좋아요 상태
+    const [initialLikeStatus, setInitialLikeStatus] = useState(false);
+    const [commentLikeStatuses, setCommentLikeStatuses] = useState<{ [key: number]: boolean }>({});
 
     const [exOpen, setExOpen] = useState(false);
     const [panelMax, setPanelMax] = useState<string>('0px');
@@ -64,10 +69,15 @@ const UserNoteDetail: React.FC = () => {
     const startX = useRef(0);
     const startScrollLeft = useRef(0);
 
-    // ✅ 바텀시트 열림 상태
+    // ✅ 바텀시트 열림 상태 추가
     const [sheetOpen, setSheetOpen] = useState(false);
 
-    // API
+    // 뒤로가기 핸들러
+    const handleGoBack = () => {
+        navigate(-1);
+    };
+
+    // API 호출 함수들
     const fetchUserNoteDetail = async (id: string): Promise<UserNoteDetailData | null> => {
         try {
             const res = await fetch(`${API_BASE}/usernote/${id}`, { credentials: 'include' });
@@ -82,12 +92,17 @@ const UserNoteDetail: React.FC = () => {
 
     const fetchComments = async (userNoteId: string): Promise<CommentsResponse | null> => {
         try {
-            const body = { type: "USER_NOTE", referenceId: Number(userNoteId) };
+            const body = {
+                type: "USER_NOTE",
+                referenceId: Number(userNoteId),
+            };
+
             const res = await fetch(`${API_BASE}/comment/all`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
+
             if (!res.ok) throw new Error('댓글 API 실패');
             const data: ApiResponse<CommentsResponse> = await res.json();
             return data.isSuccess ? data.result : null;
@@ -97,18 +112,97 @@ const UserNoteDetail: React.FC = () => {
         }
     };
 
+    // 좋아요 상태 조회
+    const fetchLikeStatus = async (id: string): Promise<boolean> => {
+        try {
+            const res = await fetch(`${API_BASE}/usernote/${id}/like-status`, {
+                credentials: 'include'
+            });
+            if (!res.ok) throw new Error('좋아요 상태 조회 API 실패');
+            const data: ApiResponse<boolean> = await res.json();
+            return data.isSuccess ? data.result : false;
+        } catch (error) {
+            console.error('fetchLikeStatus 에러:', error);
+            return false;
+        }
+    };
+
+    // 댓글 좋아요 상태 조회
+    const fetchCommentLikeStatuses = async (comments: CommentData[]): Promise<{ [key: number]: boolean }> => {
+        try {
+            const statusPromises = comments.map(async (comment) => {
+                const res = await fetch(`${API_BASE}/comment/${comment.commentId}/like-status`, {
+                    credentials: 'include'
+                });
+                if (!res.ok) return { commentId: comment.commentId, isLiked: false };
+                const data: ApiResponse<boolean> = await res.json();
+                return { commentId: comment.commentId, isLiked: data.isSuccess ? data.result : false };
+            });
+
+            const results = await Promise.all(statusPromises);
+            const statusMap: { [key: number]: boolean } = {};
+            results.forEach(result => {
+                statusMap[result.commentId] = result.isLiked;
+            });
+            return statusMap;
+        } catch (error) {
+            console.error('fetchCommentLikeStatuses 에러:', error);
+            return {};
+        }
+    };
+
+    // 댓글 좋아요 토글
+    const toggleCommentLike = async (commentId: number): Promise<'success' | 'own_comment' | 'error'> => {
+        try {
+            const res = await fetch(`${API_BASE}/comment/${commentId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({}),
+                credentials: 'include'
+            });
+
+            if (!res.ok) {
+                if (res.status === 400) {
+                    return 'own_comment';
+                }
+                throw new Error('댓글 좋아요 토글 API 실패');
+            }
+
+            const data: ApiResponse<any> = await res.json();
+            return data.isSuccess ? 'success' : 'error';
+        } catch (error) {
+            console.error('toggleCommentLike 에러:', error);
+            return 'error';
+        }
+    };
+
+    // 데이터 로드
     useEffect(() => {
         if (!userNoteId) return;
+
         const loadData = async () => {
             setIsLoading(true);
-            const [noteData, commentsData] = await Promise.all([
+            const [noteData, commentsData, likeStatus] = await Promise.all([
                 fetchUserNoteDetail(userNoteId),
                 fetchComments(userNoteId),
+                fetchLikeStatus(userNoteId)
             ]);
+
             setUserNoteData(noteData);
             setCommentsData(commentsData);
+            setInitialLikeStatus(likeStatus);
+
+            // 댓글이 있으면 댓글 좋아요 상태도 조회
+            if (commentsData?.comments && commentsData.comments.length > 0) {
+                const commentStatuses = await fetchCommentLikeStatuses(commentsData.comments);
+                setCommentLikeStatuses(commentStatuses);
+            }
+
             setIsLoading(false);
         };
+
         loadData();
     }, [userNoteId]);
 
@@ -147,12 +241,11 @@ const UserNoteDetail: React.FC = () => {
             if (pending === 0) recalc();
         };
         imgs.forEach((img) => {
-            const im = img as HTMLImageElement;
-            if (im.complete) {
+            if ((img as HTMLImageElement).complete) {
                 done();
             } else {
-                im.addEventListener('load', done, { once: true });
-                im.addEventListener('error', done, { once: true });
+                img.addEventListener('load', done, { once: true });
+                img.addEventListener('error', done, { once: true });
             }
         });
     }, [exOpen]);
@@ -188,6 +281,7 @@ const UserNoteDetail: React.FC = () => {
         };
     }, []);
 
+    // 로딩 중일 때
     if (isLoading) {
         return (
             <div className="und-root">
@@ -200,6 +294,7 @@ const UserNoteDetail: React.FC = () => {
         );
     }
 
+    // 데이터가 없을 때
     if (!userNoteData) {
         return (
             <div className="und-root">
@@ -216,7 +311,11 @@ const UserNoteDetail: React.FC = () => {
         <div className="und-root">
             <div className="und-app">
                 <header className="und-header">
-                    <button className="und-iconbtn" aria-label="뒤로가기" onClick={() => navigate('/')}>
+                    <button
+                        className="und-iconbtn"
+                        aria-label="뒤로가기"
+                        onClick={handleGoBack}
+                    >
                         <ArrowLeftIcon className="und-icon" />
                     </button>
                     <button className="und-iconbtn1" aria-label="더보기">
@@ -230,7 +329,11 @@ const UserNoteDetail: React.FC = () => {
                             src={userNoteData.userNoteImageUrl}
                             alt={userNoteData.title}
                             className="und-banner brightness-75 contrast-110"
-                            style={{ width: '100%', height: '240px', objectFit: 'cover' }}
+                            style={{
+                                width: '100%',
+                                height: '240px',
+                                objectFit: 'cover'
+                            }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#0F1420]/40 to-[#0F1420]/90 pointer-events-none" />
                     </div>
@@ -247,7 +350,9 @@ const UserNoteDetail: React.FC = () => {
 
                         <section className="und-section">
                             <h2 className="und-subtitle">유저노트 소개</h2>
-                            <p className="und-desc">{userNoteData.description}</p>
+                            <p className="und-desc">
+                                {userNoteData.description}
+                            </p>
 
                             <div className="und-code">
                                 <pre className="whitespace-pre-wrap">{userNoteData.prompt}</pre>
@@ -259,7 +364,7 @@ const UserNoteDetail: React.FC = () => {
                             <button
                                 type="button"
                                 className="und-chevron-btn"
-                                onClick={() => setExOpen((v) => !v)}
+                                onClick={() => setExOpen(v => !v)}
                                 aria-expanded={exOpen}
                             >
                                 <ChevronDownIcon className={`und-chevron transition-transform ${exOpen ? 'rotate-180' : ''}`} />
@@ -274,7 +379,11 @@ const UserNoteDetail: React.FC = () => {
                             >
                                 {userNoteData.exampleImageUrl ? (
                                     <div className="mt-3">
-                                        <img src={userNoteData.exampleImageUrl} alt="적용 예시" className="w-full rounded-lg" />
+                                        <img
+                                            src={userNoteData.exampleImageUrl}
+                                            alt="적용 예시"
+                                            className="w-full rounded-lg"
+                                        />
                                     </div>
                                 ) : (
                                     <div ref={scrollerRef} className="mt-3 overflow-x-auto no-scrollbar cursor-grab">
@@ -286,8 +395,9 @@ const UserNoteDetail: React.FC = () => {
                                                     </span>
                                                 </div>
                                                 <p className="text-[14px] leading-[22px] text-[#9CA3AF] mb-4">
-                                                    연습실 문을 열기 직전, 한서준의 귓가에 차현우의 목소리가 닿았다. 아주 작고 나지막한 속삭임이었지만,
-                                                    그 소리는 그의 뇌리에 거대한 파동을 일으켰다. <strong>'헤일 하이드라.'</strong>
+                                                    연습실 문을 열기 직전, 한서준의 귓가에 차현우의 목소리가 닿았다.
+                                                    아주 작고 나지막한 속삭임이었지만, 그 소리는 그의 뇌리에 거대한 파동을
+                                                    일으켰다. <strong>'헤일 하이드라.'</strong>
                                                 </p>
                                             </div>
                                         </div>
@@ -320,11 +430,14 @@ const UserNoteDetail: React.FC = () => {
                         <div className="w-full h-[6px] bg-[#222A39]"></div>
 
                         <section className="und-section-comment">
-                            <h2 className="und-subtitle">댓글 {commentsData?.commentCount || 0}</h2>
+                            <h2 className="und-subtitle">
+                                댓글 {commentsData?.commentCount || 0}
+                            </h2>
                             <div className="und-comments">
                                 {commentsData?.comments.map((comment, index) => (
                                     <Comment
                                         key={comment.commentId}
+                                        commentId={comment.commentId}
                                         isBest={index < 3}
                                         author={comment.nickname}
                                         time={comment.timeAgo}
@@ -332,6 +445,38 @@ const UserNoteDetail: React.FC = () => {
                                         likes={comment.likeCount}
                                         replies={comment.replyCount}
                                         avatarUrl={comment.profileImageUrl}
+                                        isLiked={commentLikeStatuses[comment.commentId] || false}
+                                        onLikeToggle={async () => {
+                                            const result = await toggleCommentLike(comment.commentId);
+
+                                            if (result === 'success') {
+                                                // 댓글 좋아요 상태 토글
+                                                setCommentLikeStatuses(prev => ({
+                                                    ...prev,
+                                                    [comment.commentId]: !prev[comment.commentId]
+                                                }));
+
+                                                // 댓글 데이터의 좋아요 수도 업데이트
+                                                setCommentsData(prev => {
+                                                    if (!prev) return prev;
+                                                    return {
+                                                        ...prev,
+                                                        comments: prev.comments.map(c => {
+                                                            if (c.commentId === comment.commentId) {
+                                                                const isCurrentlyLiked = commentLikeStatuses[comment.commentId];
+                                                                return {
+                                                                    ...c,
+                                                                    likeCount: c.likeCount + (isCurrentlyLiked ? -1 : 1)
+                                                                };
+                                                            }
+                                                            return c;
+                                                        })
+                                                    };
+                                                });
+                                            }
+
+                                            return result;
+                                        }}
                                     />
                                 )) || []}
                             </div>
@@ -360,10 +505,12 @@ const UserNoteDetail: React.FC = () => {
                 >
                 </UndBottomSheet>
 
-                {/* ✅ 풋터: onApply로 바텀시트 열기 */}
+                {/* ✅ Footer: 좋아요 기능 + 바텀시트 열기 기능 모두 포함 */}
                 <UserNoteDetailFooter
                     bookmarkCount={userNoteData.likeCount}
-                    onApply={() => setSheetOpen(true)}
+                    userNoteId={userNoteId}
+                    initialLikeStatus={initialLikeStatus}
+                    onApply={() => setSheetOpen(true)} // ✅ 바텀시트 열기 추가
                 />
             </div>
         </div>

@@ -15,6 +15,7 @@ import UserNoteMergeResult from './Pages/UserNoteMergeResult';
 import UserNoteMergeLoading from './Pages/UserNoteMergeLoading';
 import HomeToUserNote from './Pages/HomeToUserNote';
 import FutureNoteWrite from './Pages/FutureNoteWrite';
+import FutureNoteLoading from './Pages/FutureNoteLoading';
 
 
 
@@ -36,6 +37,7 @@ const App: React.FC = () => {
           <Route path="/UserNoteMergeLoading" element={<UserNoteMergeLoading />} />
           <Route path="/HomeToUserNote" element={<HomeToUserNote />} />
           <Route path="/FutureNoteWrite" element={<FutureNoteWrite />} />
+          <Route path="/FutureNoteLoading" element={<FutureNoteLoading />} />
 
         </Routes>
 

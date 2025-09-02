@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Props {
@@ -24,24 +24,31 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
   const [text, setText] = useState<string>(incomingText ?? FALLBACK_TEXT);
 
   const taRef = useRef<HTMLTextAreaElement | null>(null);
-  const [taHeight, setTaHeight] = useState<number>(0);
 
-  const autoResize = () => {
+  const autoResize = useCallback(() => {
     const el = taRef.current;
     if (!el) return;
-    el.style.height = "auto";
-    const next = el.scrollHeight;
-    setTaHeight(next);
-  };
 
-  useEffect(() => {
+    el.style.height = "0px";
+    el.style.height = "auto";
+    el.style.overflowY = "hidden";
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  React.useEffect(() => {
     const t = setTimeout(() => setOpen(true), 0);
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     autoResize();
-  }, [open, text]);
+  }, [text, autoResize]);
+
+  React.useEffect(() => {
+    const handleResize = () => autoResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [autoResize]);
 
   const handleCloseWithSlide = () => {
     setClosing(true);
@@ -69,14 +76,11 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value.slice(0, MAX_LEN);
     setText(val);
-    const el = taRef.current;
-    if (el) {
-      el.style.height = "auto";
-    }
-    requestAnimationFrame(() => {
-      if (el) setTaHeight(el.scrollHeight);
-    });
   };
+
+  const handleInput = useCallback(() => {
+    autoResize();
+  }, [autoResize]);
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
@@ -118,17 +122,20 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
               ref={taRef}
               value={text}
               onChange={handleChange}
-              className="w-full resize-none rounded-[6px] bg-[#283143] text-[#F8F8FA] placeholder:text-white/40 px-4 py-3 text-[16px] leading-6 outline-none border border-[#404E6A] focus:border-[#6F4ACD] overflow-hidden"
+              onInput={handleInput}
+              rows={1}
+              className="w-full resize-none rounded-[6px] bg-[#283143] text-[#F8F8FA] placeholder:text-white/40 px-4 py-3 text-[16px] leading-6 outline-none border border-[#404E6A] focus:border-[#6F4ACD] transition-all duration-150 overflow-hidden"
               placeholder="병합된 내용을 검토하고 수정해주세요"
-              style={{ height: taHeight || undefined }}
+              style={{
+                boxSizing: "border-box",
+                overflowY: "hidden",
+              }}
             />
-            <style>{`
-              .no-scrollbar::-webkit-scrollbar { display: none; }
-              .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            `}</style>
-            <span className="absolute bottom-3 right-[0px] text-[12px] text-[#FFF]">
-              {text.length}/{MAX_LEN}
-            </span>
+            <div className="flex justify-end mt-2">
+              <span className="text-[12px] text-[#FFF]">
+                {text.length}/{MAX_LEN}
+              </span>
+            </div>
           </div>
         </main>
 

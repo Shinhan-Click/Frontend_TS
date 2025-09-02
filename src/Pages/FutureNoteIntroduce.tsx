@@ -1,9 +1,8 @@
-// src/pages/FutureNoteIntroduce.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeftIcon } from "../components/icons";
+import { ArrowLeftIcon, MoreVerticalIcon } from "../components/icons";
+import { BiLike } from "react-icons/bi";
 
-/** 부드러운 아코디언(현재 화면에선 버튼 펼침 시 샘플 본문을 노출) */
 const Collapsible: React.FC<{ open: boolean; className?: string; children: React.ReactNode }> = ({
     open,
     className = "",
@@ -42,14 +41,14 @@ const Collapsible: React.FC<{ open: boolean; className?: string; children: React
 
 const FutureNoteIntroduce: React.FC = () => {
     const navigate = useNavigate();
-    const [openExample, setOpenExample] = useState(true); // 펼침 시 아코디언 내부 샘플 표시
+    const [openExample, setOpenExample] = useState(true);
 
     const recs = [
         {
             id: 1,
             title: "역할 반전 OOC",
             author: "woof",
-            thumb: "/layers-three.png",
+            thumb: "/역할 반전.png",
             desc: "NPC와 PC의 상황과 역할, 직업을 반전시켜 도입부를 색다르게!",
             tags: ["#OOC"],
         },
@@ -57,7 +56,7 @@ const FutureNoteIntroduce: React.FC = () => {
             id: 2,
             title: "1인칭 서술",
             author: "user_m",
-            thumb: "/layer-single.png",
+            thumb: "/1인칭.png",
             desc: "주변 환경이나 인물들을 어떻게 인식하는지에 초점을 맞춰보자.",
             tags: ["#출력규칙"],
         },
@@ -85,12 +84,11 @@ const FutureNoteIntroduce: React.FC = () => {
         },
     ];
 
-    // 사용자들이 많이 적용한 캐릭터 (가로 스크롤)
     const popularChars = [
         {
             id: "c1",
             name: "이하민",
-            img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
+            img: "/이하민.png",
             tags: ["#집착공", "#연하공"],
             desc:
                 "이하민은 부잣집에 막내 도련님. 한없이 다정하지만 마음속에선 소유욕이 꿈틀거린다. 당신만을 바라보는 눈빛...",
@@ -99,7 +97,7 @@ const FutureNoteIntroduce: React.FC = () => {
         {
             id: "c2",
             name: "류겸",
-            img: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?q=80&w=1200&auto=format&fit=crop",
+            img: "/류겸.png",
             tags: ["#능글공", "#무심공"],
             desc: "처음에는 음악을 사랑하는 사람. 그러나 당신 앞에서는 장난스럽고 집요하다. 무심한 듯 챙겨주는 달인.",
             likes: 1298,
@@ -117,35 +115,39 @@ const FutureNoteIntroduce: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#FFF] flex items-center justify-center">
             <div className="w-[375px] h-[896px] bg-[#141924] text-white flex flex-col overflow-hidden">
-                {/* ===== 헤더(뒤로가기만) ===== */}
-                <header className="relative">
-                    <div className="relative w-full h-[180px]">
+                <header className="w-full h-[56px] flex items-center justify-between px-3 bg-[#141924] border-b border-[#222A39]">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/FutureNotePost")}
+                        className="ml-[10px] border-none w-10 h-10 bg-[#141924] flex items-center justify-center"
+                        aria-label="뒤로가기"
+                    >
+                        <ArrowLeftIcon className="w-[24px] h-[24px] text-[#FFF]" />
+                    </button>
+                    <button
+                        type="button"
+                        aria-label="메뉴 설정"
+                        className="w-10 h-10 border-none bg-[#141924] mr-[10px]"
+                    >
+                        <MoreVerticalIcon className="w-[22px] h-[22px] text-[#FFF]" />
+                    </button>
+                </header>
+
+                <main className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mr-[1px] pb-[96px]">
+                    <section className="relative w-full h-[260px]">
                         <img
                             src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1500&auto=format&fit=crop"
                             alt="banner"
-                            className="absolute inset-0 w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover blur-sm"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/35 to-[#141924]" />
-                        <div className="absolute left-3 top-3 flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => navigate("/FutureNotePost")}
-                                className="w-10 h-10 rounded-full bg-black/45 backdrop-blur-[2px] flex items-center justify-center"
-                                aria-label="뒤로가기"
-                            >
-                                <ArrowLeftIcon className="w-[22px] h-[22px] text-white" />
-                            </button>
-                        </div>
-                    </div>
-                </header>
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#141924]/40 via-[#141924]/35 to-[#141924]" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#141924]" />
+                    </section>
 
-                {/* ===== 메인 ===== */}
-                <main className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mr-[1px] pb-[96px]">
-                    {/* 배너 아래로 내려온 타이틀/태그/지표 */}
-                    <section className="px-4">
-                        <h1 className="text-[20px] font-[500] text-[#FFF] ml-[2px]">축제의 불빛 아래</h1>
+                    <section className="px-[8px] relative -mt-[140px] z-10">
+                        <h1 className="text-[20px] font-[500] text-[#FFF] ml-[8px]">축제의 불빛 아래</h1>
 
-                        <div className="mt-2 flex items-center">
+                        <div className="-mt-[8px] flex items-center">
                             {["#대화출력", "#저장기능향상"].map((t) => (
                                 <span
                                     key={t}
@@ -189,24 +191,29 @@ const FutureNoteIntroduce: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 알약형 통계 바 */}
-                    <section className="px-4">
-                        <div className="mt-[8px] ml-[15px] p-[5px] w-[334px] rounded-[8px] bg-[#222A39] text-center py-3 flex items-stretch justify-between">
+                    <section className="px-4 relative z-10">
+                        <div
+                            className="
+      mt-[8px] ml-[15px] p-[5px] w-[334px]
+      rounded-[8px] bg-[#222A39]
+      text-center py-3
+      flex items-stretch justify-between
+      divide-x divide-[#FFFFFF4D]
+    "
+                        >
                             {[
                                 { value: "50", label: "턴" },
                                 { value: "4", label: "마일스톤" },
                                 { value: "3", label: "엔딩" },
-                            ].map((it, i) => (
-                                <div key={it.label} className="flex-1 flex flex-col">
+                            ].map((it) => (
+                                <div key={it.label} className="flex-1 flex flex-col items-center px-3">
                                     <div className="text-[14px] text-[#FFF] font-[600]">{it.value}</div>
                                     <div className="mt-[2px] text-[12px] text-[#DFE1EA]/61">{it.label}</div>
-                                    {i < 2 && <div className="self-end w-px bg-white/10 mx-2 -mt-6 mb-[-6px]" />}
                                 </div>
                             ))}
                         </div>
                     </section>
 
-                    {/* 요약/소개 */}
                     <section className="px-[20px] space-y-5 mt-5">
                         <div>
                             <h2 className="text-[17px] text-[#FFF] font-semibold mb-2">스토리 요약</h2>
@@ -224,12 +231,11 @@ const FutureNoteIntroduce: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 적용 예시 — 버튼 */}
-                    <section className="px-4 mt-5 text-[#FFF]">
+                    <section className="px-4 mt-[10px] text-[#FFF]">
                         <button
                             type="button"
                             onClick={() => setOpenExample((v) => !v)}
-                            className="w-full flex items-center justify-between px-[20px] py-[20px] rounded-[10px] bg-[#0F1521] border border-[#2A3244]"
+                            className="w-full flex items-center justify-between px-[20px] py-[20px] rounded-[10px] bg-[#0F1521] border-none"
                         >
                             <span className="text-[17px] text-[#FFF] font-semibold">적용 예시</span>
                             <svg
@@ -243,18 +249,16 @@ const FutureNoteIntroduce: React.FC = () => {
                             </svg>
                         </button>
 
-                        {/* 1) 아코디언을 펼쳤을 때 표시되는(사진과 같은) 본문 */}
-                        <Collapsible open={openExample} className="mt-2">
-                            <div className="rounded-[12px] bg-[#141C2A] border border-[#2A3244] px-[16px] py-[14px] text-[#DFE1EA]">
-                                {/* 상단 보라색 캡션 알약 */}
+                        <Collapsible open={openExample} className="mt-[8px]">
+                            <div className="w-[325px] ml-[8px] rounded-[20px] bg-[#141C2A] border border-[#2A3244] px-[16px] py-[14px] text-[#DFE1EA]">
+
                                 <div className="w-full flex justify-center">
-                                    <span className="inline-flex items-center px-[14px] py-[8px] rounded-[16px] bg-[#6F4ACD] text-[#FFF] text-[13px] font-semibold">
+                                    <span className="px-[10px] py-[8px] rounded-[12px] ml-[155px] bg-[#6F4ACD] text-[#FFF] text-[11px] font-semibold">
                                         풍운지기, 내 손끝에 모여라...
                                     </span>
                                 </div>
 
-                                {/* 본문 글 */}
-                                <p className="mt-[14px] text-[14px] leading-[22px] text-[#DFE1EA]/90">
+                                <p className="mt-[14px] text-[11px] leading-[22px] text-[#DFE1EA]/61">
                                     주이한은 삐죽 나온 앞머리를 대충 쓸어 넘기며 담벼락에 기대
                                     채 서서 지켜보고 있었다. 달빛이 비스듬히 얼굴을 비추었지만,
                                     그는 눈 한줌 감은 채 시큰둥한 표정을 지었다. 웃긴줄을
@@ -268,12 +272,11 @@ const FutureNoteIntroduce: React.FC = () => {
                                     멈추고 어둠 속에서 낮게 입술을 열었다.
                                 </p>
 
-                                {/* 하단 대화 말풍선 */}
                                 <div className="mt-[14px] flex gap-[8px] items-start">
                                     <div className="w-[28px] h-[28px] rounded-full bg-[#232B3D] overflow-hidden" />
                                     <div className="flex-1">
-                                        <div className="text-[12px] text-[#FFF] mb-[6px]">주이한</div>
-                                        <div className="rounded-[10px] bg-[#0F1521] border border-[#2A3244] p-[10px] text-[14px] text-[#DFE1EA]/90">
+                                        <div className="text-[11px] text-[#FFF] mb-[6px]">주이한</div>
+                                        <div className="rounded-[10px] bg-[#DFE1EA]/10 border border-[#2A3244] p-[10px] text-[11px] text-[#DFE1EA]/90">
                                             보아하니, 기운을 부르는 법은 아는 모양이오. 허나, 제대로
                                             다루지 못하면 몸만 축나고 목숨이 먼저 닳아나지. 나처럼 오랜
                                             손에 익힌 자가 아니라면 말이오.
@@ -281,7 +284,6 @@ const FutureNoteIntroduce: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* 페이지 인디케이터 */}
                                 <div className="mt-[10px] flex justify-center items-center gap-[6px]">
                                     <span className="w-[6px] h-[6px] rounded-full bg-[#475066]" />
                                     <span className="w-[32px] h-[6px] rounded-full bg-[#6F4ACD]" />
@@ -291,24 +293,23 @@ const FutureNoteIntroduce: React.FC = () => {
                         </Collapsible>
                     </section>
 
-                    {/* 적용 예시 '콘텐츠' — 아코디언 바깥 별도 섹션(변경 없음) */}
-                    <section className="px-4 mt-2">
-                        <div className="rounded-[10px] border border-[#2A3244] bg-[#141C2A] p-[20px] space-y-4">
+                    <section className="px-4 mt-[8px]">
+                        <div className="rounded-[10px] bg-[#141924] p-[20px] space-y-4">
                             <h3 className="text-[17px] text-[#FFF] font-semibold">
                                 작가가 추천한 <span className="font-semibold text-[#B093F9]">함께 사용하면 좋은 유저노트</span>
                             </h3>
 
-                            <div className="flex gap-[8px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mr-[4px] pr-[4px]">
+                            <div className="flex gap-[6px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mr-[4px] pr-[4px]">
                                 {recs.map((r) => (
-                                    <article key={r.id} className="w-[152px] rounded-[12px] bg-[#0F1521] overflow-hidden flex-shrink-0">
-                                        <div className="w-[152px] h-[110px] bg-[#1E2535] relative">
-                                            <img src={r.thumb} alt={r.title} className="absolute inset-0 w-full h-full object-cover" />
+                                    <article key={r.id} className="w-[152px] rounded-[12px] bg-[#141924] overflow-hidden flex-shrink-0">
+                                        <div className="w=[152px] h-[110px] bg-[#141924] relative">
+                                            <img src={r.thumb} alt={r.title} className="absolute inset-0 w-full h-full rounded-[12px] object-cover" />
                                         </div>
                                         <div className="p-[6px]">
-                                            <h4 className="text-[16px] text-[#FFF] font-semibold line-clamp-1">{r.title}</h4>
-                                            <p className="text-[14px] text-[#DFE1EA]/61 line-clamp-2 mt-[2px]">{r.desc}</p>
+                                            <h4 className="text-[16px] text-[#FFF] font-semibold line-clamp-1 -mt-[1px]">{r.title}</h4>
+                                            <p className="text-[14px] text-[#DFE1EA]/61 line-clamp-2 -mt-[8px]">{r.desc}</p>
 
-                                            <div className="mt-2 flex gap-[2px]">
+                                            <div className="-mt-[3px] flex gap-[2px]">
                                                 {r.tags.map((tag) => (
                                                     <span
                                                         key={tag}
@@ -351,17 +352,20 @@ const FutureNoteIntroduce: React.FC = () => {
 
                     <hr className="border-[#222A39] mt-5" />
 
-                    {/* 댓글 섹션 */}
                     <section className="px-[20px] mt-[10px]">
-                        <h2 className="text-[17px] text-[#FFF] font-semibold mb-3">댓글 391</h2>
+                        <h2 className="text-[17px] text-[#FFF] font-semibold mb-3">댓글 245</h2>
 
                         <div className="space-y-4">
                             {comments.map((c) => (
                                 <div key={c.id} className="rounded-[10px] bg-[#141924] border-none p-[5px]">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-[4px]">
-                                            <div className="w-[24px] h-[24px] rounded-full bg-[#232B3D]" />
-                                            <div className="flex flex-col">
+                                            <div className="w-[24px] h-[24px] rounded-full bg-[#232B3D] flex items-center justify-center mb-[30px]">
+                                                <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="#fff">
+                                                    <path d="M12 12c2.761 0 5-2.686 5-6s-2.239-6-5-6-5 2.686-5 6 2.239 6 5 6zm0 2c-3.33 0-10 1.667-10 5v3h20v-3c0-3.333-6.67-5-10-5z" />
+                                                </svg>
+                                            </div>
+                                            <div className="flex flex-col mt-[10px]">
                                                 <div className="flex items-center gap-[4px]">
                                                     <span className="inline-flex items-center text-[#DFE1EA]/61 h-[22px] px-[4px] rounded-[6px] bg-[#6F4ACD] text-[10px] font-bold">
                                                         {c.badge}
@@ -382,10 +386,10 @@ const FutureNoteIntroduce: React.FC = () => {
                                         </button>
                                     </div>
 
-                                    <div className="mt-3 flex items-center gap-[4px]">
+                                    <div className="-mt-[5px] flex items-center gap-[4px] ml-[25px]">
                                         <button
                                             type="button"
-                                            className="inline-flex items-center gap-[2px] h-[30px] px-[6px] rounded-[8px] bg-[#9EBCFF2B] text-[#FFF]/90 text-[13px] border-none"
+                                            className="inline-flex items-center gap-[2px] h-[22px] px-[6px] rounded-[8px] bg-[#9EBCFF2B] text-[#FFF]/90 text-[13px] border-none"
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                 <path
@@ -398,7 +402,7 @@ const FutureNoteIntroduce: React.FC = () => {
                                         </button>
                                         <button
                                             type="button"
-                                            className="inline-flex items-center gap-[2px] h-[30px] px-[6px] rounded-[8px] bg-[#9EBCFF2B] text-[#FFF]/90 text-[13px] border-none"
+                                            className="inline-flex items-center gap-[2px] h-[22px] px-[6px] rounded-[8px] bg-[#9EBCFF2B] text-[#FFF]/90 text-[13px] border-none"
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                 <path
@@ -422,22 +426,21 @@ const FutureNoteIntroduce: React.FC = () => {
                         </button>
                     </section>
 
-                    {/* 사용자들이 많이 적용한 캐릭터 (가로 스크롤) */}
                     <section className="px-4 mt-5">
                         <h3 className="text-[17px] font-semibold mb-3 ml-[15px] text-[#FFF]">사용자들이 많이 적용한 캐릭터</h3>
 
-                        <div className="flex gap-[6px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pr-[6px] -mr-[6px]">
+                        <div className="flex gap-[5px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pr-[6px] -mr-[6px]">
                             {popularChars.map((c) => (
                                 <article
                                     key={c.id}
                                     className="w-[163px] ml-[15px] rounded-[12px] bg-[#141924] overflow-hidden flex-shrink-0"
                                 >
                                     <div className="h-[148px] relative">
-                                        <img src={c.img} alt={c.name} className="absolute inset-0 w-full h-full object-cover" />
+                                        <img src={c.img} alt={c.name} className="absolute inset-0 w-full h-full object-cover rounded-[12px]" />
                                     </div>
                                     <div className="p-3">
-                                        <h4 className="text-[16px] font-semibold text-[#FFF]">{c.name}</h4>
-                                        <div className="mt-2 flex flex-wrap gap-[5px] ">
+                                        <h4 className="text-[16px] font-semibold text-[#FFF] ">{c.name}</h4>
+                                        <div className="flex flex-wrap gap-[5px] -mt-[10px]">
                                             {c.tags.map((t) => (
                                                 <span
                                                     key={t}
@@ -457,7 +460,6 @@ const FutureNoteIntroduce: React.FC = () => {
                     <div className="h-6" />
                 </main>
 
-                {/* 하단 고정 버튼(변경 없음) */}
                 <div className="sticky bottom-0 w-full">
                     <div className="bg-gradient-to-t from-[#141924] via-[#141924] to-transparent pt-3 pb-4">
                         <div className="w-[335px] mx-auto mb-[8px] flex items-center gap-[8px]">
@@ -465,13 +467,7 @@ const FutureNoteIntroduce: React.FC = () => {
                                 type="button"
                                 className="flex items-center justify-center gap-2 h-[52px] w-[75px] rounded-[12px] bg-[#222A39] text-[#FFF] border-none"
                             >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M14 9V5a3 3 0 0 0-3-3l-1 6H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h8l5-7V9h-4Z"
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                    />
-                                </svg>
+                                <BiLike size={18} />
                                 <span className="text-[12px]">1,298</span>
                             </button>
 

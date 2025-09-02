@@ -116,9 +116,13 @@ const TopAppBar: React.FC<{ onSearch?: () => void }> = ({ onSearch }) => {
                     <button
                         type="button"
                         onClick={() => navigate('/')}
-                        className="mt-[40px] ml-[30px] text-[#FFF] font-[700] text-[21px] tracking-wide bg-transparent border-none"
+                        className="mt-[40px] ml-[30px] bg-transparent border-none"
                     >
-                        WHIF
+                        <img
+                            src="/위프 로고.png"
+                            alt="위프 로고"
+                            className="h-[20px] object-contain"
+                        />
                     </button>
                 </div>
 
@@ -149,6 +153,7 @@ const TopAppBar: React.FC<{ onSearch?: () => void }> = ({ onSearch }) => {
         </div>
     );
 };
+
 
 const HomeToUserNote: React.FC = () => {
     const navigate = useNavigate();

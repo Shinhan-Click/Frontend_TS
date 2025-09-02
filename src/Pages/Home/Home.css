@@ -35,11 +35,15 @@
     padding-right: 20.5px;
 }
 
-.appTitle {
-    font-size: 21px;
-    font-weight: bold;
-    color: white;
-    height: 32px;
+
+.appTitle.logo-button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     margin-left: 20.5px;
 }
 
@@ -561,7 +565,8 @@
     position: absolute;
     top: 10px;
     left: 50%;
-    transform: translateX(-50%);  /* 중앙 정렬 */
+    transform: translateX(-50%);
+    /* 중앙 정렬 */
     background-color: #fee500;
     color: #3c1e1e;
     border: none;
@@ -576,7 +581,8 @@
 
 .login-btn:hover {
     background-color: #fdd835;
-    transform: translateX(-50%) translateY(-1px);  /* hover 시에도 중앙 유지 */
+    transform: translateX(-50%) translateY(-1px);
+    /* hover 시에도 중앙 유지 */
 }
 
 .section.title {

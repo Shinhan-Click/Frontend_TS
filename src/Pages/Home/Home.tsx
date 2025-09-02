@@ -329,7 +329,22 @@ const Home: React.FC = () => {
       <div className="scroll-area">
         <section className="section title">
           {renderAuthButton()}
-          <div className="appTitle">WHIF</div>
+
+          {/* ▼▼▼ 변경된 로고 영역 ▼▼▼ */}
+          <button
+            type="button"
+            className="appTitle logo-button"
+            onClick={() => navigate('/')}
+            aria-label="홈으로 이동"
+          >
+            <img
+              src="/위프 로고.png"
+              alt="위프 로고"
+              className="logo-image"
+            />
+          </button>
+          {/* ▲▲▲ 변경 끝 ▲▲▲ */}
+
           <div ref={searchRef} className="search-container">
             {showSearch ? (
               <input type="text" className="search-input" placeholder="검색어를 입력하세요." autoFocus />

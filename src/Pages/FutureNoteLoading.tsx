@@ -1,15 +1,122 @@
-import React, { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import type { ApiResponse } from '../types/api';
+
+// 프록시 사용: 모든 API는 /api 로 호출
+const API_BASE = '/api';
 
 const FutureNoteLoading: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    
+    const [progress, setProgress] = useState(0);
+    const [apiCompleted, setApiCompleted] = useState(false);
 
-    const progress = 0; // UI 전용: 0% 고정
     const size = 22;
     const stroke = 4;
     const r = (size - stroke) / 2;
     const circumference = 2 * Math.PI * r;
     const dash = useMemo(() => circumference * (progress / 100), [circumference, progress]);
+
+    useEffect(() => {
+        let isMounted = true;
+        let progressInterval: NodeJS.Timeout;
+        
+        // API 호출 함수
+        const callApi = async () => {
+            try {
+                const apiRequestBody = location.state?.apiRequestBody;
+                const formData = location.state?.formData;
+
+                if (!apiRequestBody) {
+                    console.error('No API request body found');
+                    navigate('/FutureNoteWrite');
+                    return;
+                }
+
+                // API 호출 - Home.tsx 패턴 따라함
+                const response = await fetch(`${API_BASE}/futurenote/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(apiRequestBody),
+                    credentials: 'include' // 쿠키 포함
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data: ApiResponse<any> = await response.json();
+                
+                console.log('API 응답 완료:', data);
+
+                if (!data.isSuccess) {
+                    throw new Error(data.message || 'API 호출 실패');
+                }
+
+                const apiResult = data.result;
+                console.log('API 결과:', apiResult);
+
+                if (isMounted) {
+                    setApiCompleted(true);
+                    
+                    // API 응답과 폼 데이터를 함께 저장
+                    const completeState = {
+                        ...formData,
+                        apiResult,
+                        completedAt: Date.now()
+                    };
+                    
+                    localStorage.setItem('futureNoteState', JSON.stringify(completeState));
+                    
+                    navigate('/FutureNote', { 
+                        state: { 
+                            formData: completeState,
+                            apiResult 
+                        }
+                    });
+                }
+
+            } catch (error) {
+                console.error('API call failed:', error);
+                if (isMounted) {
+                    alert('퓨처노트 생성에 실패했습니다. 다시 시도해주세요.');
+                    navigate('/FutureNote');
+                }
+            }
+        };
+
+        // 진행률 애니메이션 시작
+        progressInterval = setInterval(() => {
+            setProgress(prev => {
+                if (apiCompleted) {
+                    return 100; // API 완료되면 100%로
+                } else if (prev < 95) {
+                    return prev + Math.random() * 2; // 95%까지 점진적 증가
+                } else {
+                    return prev; // 95%에서 대기
+                }
+            });
+        }, 200);
+
+        // API 호출 시작
+        callApi();
+
+        return () => {
+            isMounted = false;
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+        };
+    }, [navigate, location.state, apiCompleted]);
+
+    const handleCancel = () => {
+        // 생성 중단
+        localStorage.removeItem('futureNoteState');
+        navigate('/FutureNoteWrite');
+    };
 
     return (
         <div className="min-h-screen bg-[#FFF] flex items-center justify-center">
@@ -41,7 +148,7 @@ const FutureNoteLoading: React.FC = () => {
                     </p>
 
                     <div className="mt-6 flex items-center justify-center gap-[6px]">
-                        <div className="relative" aria-label={`진행률 ${progress}%`}>
+                        <div className="relative" aria-label={`진행률 ${Math.round(progress)}%`}>
                             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                                 <circle
                                     cx={size / 2}
@@ -66,7 +173,7 @@ const FutureNoteLoading: React.FC = () => {
                             </svg>
                         </div>
                         <div className="text-left">
-                            <div className="text-[14px] text-[#B093F9]">{progress}% 완료</div>
+                            <div className="text-[14px] text-[#B093F9]">{Math.round(progress)}% 완료</div>
                         </div>
                     </div>
 
@@ -80,7 +187,7 @@ const FutureNoteLoading: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => navigate(-1)}
+                        onClick={handleCancel}
                         className="mt-[100px] text-[16px] text-[#FFF] font-[400] underline underline-offset-4 decoration-white/60 bg-transparent border-none"
                     >
                         생성 중단

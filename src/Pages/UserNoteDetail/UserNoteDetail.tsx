@@ -502,6 +502,7 @@ const UserNoteDetail: React.FC = () => {
                 <UndBottomSheet
                     open={sheetOpen}
                     onClose={() => setSheetOpen(false)}
+                    userNoteId={userNoteId}
                 >
                 </UndBottomSheet>
 

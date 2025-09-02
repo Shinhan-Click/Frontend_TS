@@ -1,23 +1,36 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { XIcon } from '../icons';
 
 interface BottomSheetProps {
     open: boolean;
     onClose: () => void;
+    userNoteId?: string; // 유저노트 ID 추가
 }
 
 type Card = {
-    id: number;
-    name: string;
-    time: string;
-    message: string;
-    sub: string;
-    avatar: string;
+    chatId: number;
+    characterImageUrl: string;
+    characterName: string;
+    storyTitle: string;
+    lastChat: string;
+    timeAgo: string;
 };
 
-const UndBottomSheet: React.FC<BottomSheetProps> = ({ open, onClose }) => {
+type ApiResponse = {
+    isSuccess: boolean;
+    code: string;
+    message: string;
+    result: Card[];
+};
+
+const UndBottomSheet: React.FC<BottomSheetProps> = ({ open, onClose, userNoteId }) => {
     const sheetRef = useRef<HTMLDivElement>(null);
-    const [selectedId, setSelectedId] = useState<number>(1);
+    const navigate = useNavigate();
+    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [cards, setCards] = useState<Card[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [applying, setApplying] = useState<boolean>(false);
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -43,44 +56,88 @@ const UndBottomSheet: React.FC<BottomSheetProps> = ({ open, onClose }) => {
         };
     }, [open]);
 
-    const onOverlayClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-        if (e.target === e.currentTarget) onClose();
+    // API 호출
+    useEffect(() => {
+        if (open) {
+            fetchChats();
+        }
+    }, [open]);
+
+    const fetchChats = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('/api/chat/all', {
+                credentials: 'include'
+            });
+            const data: ApiResponse = await response.json();
+            
+            if (data.isSuccess && data.result) {
+                setCards(data.result);
+                // 첫 번째 카드를 기본 선택으로 설정
+                if (data.result.length > 0) {
+                    setSelectedId(data.result[0].chatId);
+                }
+            }
+        } catch (error) {
+            console.error('채팅 데이터를 불러오는데 실패했습니다:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const cards: Card[] = [
-        {
-            id: 1,
-            name: '하도혁',
-            time: '오후 7:30',
-            message:
-                '네 손끝에서 시작된 기운이 거짓말처럼 바람이 되어 비상계단을 휩쓸고 지나간 뒤에도, 나는 한동안 숨을 고르지 못했다…',
-            sub: '청하고등학교',
-            avatar: 'https://picsum.photos/seed/u1/80/80',
-        },
-        {
-            id: 2,
-            name: '백도하',
-            time: '오후 2:15',
-            message:
-                '나는 애써 고개를 돌려 창밖을 응시했지만, 시야 한구석에 자꾸만 네 모습이 걸렸다. 땀으로 축축해진 손을 꽉 쥐며…',
-            sub: '백도하',
-            avatar: 'https://picsum.photos/seed/u2/80/80',
-        },
-        {
-            id: 3,
-            name: '강태준',
-            time: '1일 전',
-            message:
-                '아, 본부장이 아니었구나. 안도감이 든 것도 잠시, ‘책임’이라는 직급과 ‘나만 시킨다’는 말에 내 미간이 저절로…',
-            sub: '페로몬 오피스 : 이해할 수 없는 관계',
-            avatar: 'https://picsum.photos/seed/u3/80/80',
-        },
-    ];
+    // 유저노트 적용 API
+    const applyUserNote = async (chatId: number, userNoteId: string) => {
+        try {
+            const response = await fetch(`/api/chat/${chatId}/user-note?userNoteId=${userNoteId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            const data: ApiResponse = await response.json();
+            
+            if (data.isSuccess) {
+                return true;
+            }
+            throw new Error('유저노트 적용 실패');
+        } catch (error) {
+            console.error('유저노트 적용 API 에러:', error);
+            return false;
+        }
+    };
+
+    // 적용하기 버튼 핸들러
+    const handleApply = async () => {
+        if (!selectedId || !userNoteId || applying) return;
+        
+        setApplying(true);
+        try {
+            const success = await applyUserNote(selectedId, userNoteId);
+            
+            if (success) {
+                console.log(`유저노트 ${userNoteId}가 채팅 ${selectedId}에 적용되었습니다.`);
+                onClose();
+                // ChatRoom으로 이동
+                navigate(`/ChatRoom/${selectedId}`);
+            } else {
+                console.error('유저노트 적용에 실패했습니다.');
+                // 필요시 에러 토스트 표시
+            }
+        } catch (error) {
+            console.error('적용하기 처리 중 에러:', error);
+        } finally {
+            setApplying(false);
+        }
+    };
 
     return (
         <div
             aria-hidden={!open}
-            onClick={onOverlayClick}
+            onClick={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
             className={[
                 'fixed inset-0 z-50 flex items-end',
                 'bg-black/45 backdrop-blur-[2px]',
@@ -119,59 +176,63 @@ const UndBottomSheet: React.FC<BottomSheetProps> = ({ open, onClose }) => {
                     aria-label="채팅방 선택"
                     className="flex-1 px-[14px] pt-[10px] pb-[10px] flex flex-col gap-[5px] overflow-auto no-scrollbar"
                 >
-                    {cards.map((c) => {
-                        const isSelected: boolean = selectedId === c.id;
-                        return (
-                            <div
-                                key={c.id}
-                                role="radio"
-                                aria-checked={isSelected}
-                                tabIndex={0}
-                                onClick={() => setSelectedId(c.id)}
-                                onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        setSelectedId(c.id);
-                                    }
-                                }}
-                                className={[
-                                    'flex items-center gap-[8px] p-[6px] h-[75px] rounded-[12px] cursor-pointer select-none',
-                                    'bg-[#1E2230] transition-colors',
-                                    isSelected ? 'border border-[#6F4ACD] bg-[#AE6FFF1F]' : 'border border-transparent',
-                                    isSelected ? 'shadow-[0_0_0_3px_rgba(111,74,205,0.25)]' : '',
-                                    'focus:outline-none focus:ring-2 focus:ring-[#6F4ACD]/60',
-                                ].join(' ')}
-                            >
-                                <img
-                                    src={c.avatar}
-                                    alt={c.name}
-                                    className="w-[64px] h-[75px] rounded-[10px] object-cover flex-shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between mb-[2px]">
-                                        <p className="text-white font-semibold text-[14px] leading-[14px] truncate">{c.name}</p>
-                                        <span className="text-[11px] text-[#A7B0C0] flex-shrink-0 leading-[12px]">{c.time}</span>
+                    {loading ? (
+                        <div className="flex items-center justify-center h-full">
+                            <p className="text-[#A7B0C0] text-[14px]">로딩 중...</p>
+                        </div>
+                    ) : (
+                        cards.map((c) => {
+                            const isSelected: boolean = selectedId === c.chatId;
+                            return (
+                                <div
+                                    key={c.chatId}
+                                    role="radio"
+                                    aria-checked={isSelected}
+                                    tabIndex={0}
+                                    onClick={() => setSelectedId(c.chatId)}
+                                    onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            setSelectedId(c.chatId);
+                                        }
+                                    }}
+                                    className={[
+                                        'flex items-center gap-[8px] p-[6px] h-[75px] rounded-[12px] cursor-pointer select-none',
+                                        'bg-[#1E2230] transition-colors',
+                                        isSelected ? 'border border-[#6F4ACD] bg-[#AE6FFF1F]' : 'border border-transparent',
+                                        isSelected ? 'shadow-[0_0_0_3px_rgba(111,74,205,0.25)]' : '',
+                                        'focus:outline-none focus:ring-2 focus:ring-[#6F4ACD]/60',
+                                    ].join(' ')}
+                                >
+                                    <img
+                                        src={c.characterImageUrl}
+                                        alt={c.characterName}
+                                        className="w-[64px] h-[75px] rounded-[10px] object-cover flex-shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-[2px]">
+                                            <p className="text-white font-semibold text-[14px] leading-[14px] truncate">{c.characterName}</p>
+                                            <span className="text-[11px] text-[#A7B0C0] flex-shrink-0 leading-[12px]">{c.timeAgo}</span>
+                                        </div>
+                                        <p className="text-[12px] leading-[12px] text-[#C8D0DC] line-clamp-1 break-words whitespace-normal">
+                                            {c.lastChat}
+                                        </p>
+                                        <p className="text-[11px] leading-[12px] text-[#9CA3AF] truncate">{c.storyTitle}</p>
                                     </div>
-                                    <p className="text-[12px] leading-[12px] text-[#C8D0DC] line-clamp-1 break-words whitespace-normal">
-                                        {c.message}
-                                    </p>
-                                    <p className="text-[11px] leading-[12px] text-[#9CA3AF] truncate">{c.sub}</p>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </div>
 
                 <div className="px-4 pb-4 flex justify-center">
                     <button
                         type="button"
-                        className="w-[327px] h-[44px] mb-[10px] bg-[#6F4ACD] text-[#FFF] font-semibold rounded-[12px] border-none"
-                        onClick={() => {
-                            console.log(`카드 ${selectedId} 적용하기`);
-                            onClose();
-                        }}
+                        className="w-[327px] h-[44px] mb-[10px] bg-[#6F4ACD] text-[#FFF] font-semibold rounded-[12px] border-none disabled:opacity-60 disabled:cursor-not-allowed"
+                        onClick={handleApply}
+                        disabled={!selectedId || applying}
                     >
-                        적용하기
+                        {applying ? '적용 중...' : '적용하기'}
                     </button>
                 </div>
             </div>

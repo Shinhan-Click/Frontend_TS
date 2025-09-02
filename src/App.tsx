@@ -17,6 +17,7 @@ import HomeToUserNote from './Pages/HomeToUserNote';
 import FutureNoteWrite from './Pages/FutureNoteWrite';
 import FutureNoteLoading from './Pages/FutureNoteLoading';
 import FutureNote from './Pages/FutureNote';
+import FutureNotePost from './Pages/FutureNotePost';
 
 
 
@@ -40,6 +41,7 @@ const App: React.FC = () => {
           <Route path="/FutureNoteWrite" element={<FutureNoteWrite />} />
           <Route path="/FutureNoteLoading" element={<FutureNoteLoading />} />
           <Route path="/FutureNote" element={<FutureNote />} />
+          <Route path="/FutureNotePost" element={<FutureNotePost />} />
 
         </Routes>
 

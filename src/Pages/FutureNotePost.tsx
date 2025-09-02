@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "../components/icons";
-import FutureNote from "./FutureNote";
 
 const MAX_TITLE = 20;
 const MAX_DESC = 500;
@@ -9,7 +8,6 @@ const MAX_GALLERY = 5;
 
 const FutureNotePost: React.FC = () => {
     const navigate = useNavigate();
-    const location = useLocation();
 
     const [title, setTitle] = useState("");
     const [desc, setDesc] = useState("");

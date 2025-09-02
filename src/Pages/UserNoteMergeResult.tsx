@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Props {
@@ -23,10 +23,25 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
   const [closing, setClosing] = useState(false);
   const [text, setText] = useState<string>(incomingText ?? FALLBACK_TEXT);
 
+  const taRef = useRef<HTMLTextAreaElement | null>(null);
+  const [taHeight, setTaHeight] = useState<number>(0);
+
+  const autoResize = () => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const next = el.scrollHeight;
+    setTaHeight(next);
+  };
+
   useEffect(() => {
     const t = setTimeout(() => setOpen(true), 0);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    autoResize();
+  }, [open, text]);
 
   const handleCloseWithSlide = () => {
     setClosing(true);
@@ -48,6 +63,18 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
         secondTitle,
       },
       replace: true,
+    });
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value.slice(0, MAX_LEN);
+    setText(val);
+    const el = taRef.current;
+    if (el) {
+      el.style.height = "auto";
+    }
+    requestAnimationFrame(() => {
+      if (el) setTaHeight(el.scrollHeight);
     });
   };
 
@@ -73,7 +100,7 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-[15px] pb-36">
+        <main className="flex-1 overflow-y-auto px-[15px] pb-36 bg-[#141924]">
           <div className="flex items-start gap-2 px-3 py-3">
             <svg className="w-[20px] h-[20px] flex-shrink-0 mt-[2px] text-[#22C55E]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -86,12 +113,14 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
 
           <h2 className="mt-[30px] text-[17px] font-bold text-[#FFF]">병합결과</h2>
 
-          <div className="relative mt-2">
+          <div className="relative mt-2 mr-[2px]">
             <textarea
+              ref={taRef}
               value={text}
-              onChange={(e) => setText(e.target.value.slice(0, MAX_LEN))}
-              className="w-full h-[280px] resize-none rounded-[6px] bg-[#283143] text-[#F8F8FA] placeholder:text-white/40 px-4 py-3 text-[16px] leading-6 outline-none border border-[#404E6A] focus:border-[#6F4ACD] overflow-y-scroll no-scrollbar"
+              onChange={handleChange}
+              className="w-full resize-none rounded-[6px] bg-[#283143] text-[#F8F8FA] placeholder:text-white/40 px-4 py-3 text-[16px] leading-6 outline-none border border-[#404E6A] focus:border-[#6F4ACD] overflow-hidden"
               placeholder="병합된 내용을 검토하고 수정해주세요"
+              style={{ height: taHeight || undefined }}
             />
             <style>{`
               .no-scrollbar::-webkit-scrollbar { display: none; }

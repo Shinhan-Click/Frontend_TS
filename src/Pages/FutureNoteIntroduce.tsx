@@ -465,11 +465,12 @@ const FutureNoteIntroduce: React.FC = () => {
                         <div className="w-[335px] mx-auto mb-[8px] flex items-center gap-[8px]">
                             <button
                                 type="button"
-                                className="flex items-center justify-center gap-2 h-[52px] w-[75px] rounded-[12px] bg-[#222A39] text-[#FFF] border-none"
+                                className="flex flex-col items-center justify-center gap-1 h-[52px] w-[75px] rounded-[12px] bg-[#222A39] text-[#FFF] border-none"
                             >
-                                <BiLike size={18} />
+                                <BiLike size={24} />
                                 <span className="text-[12px]">1,298</span>
                             </button>
+
 
                             <button
                                 type="button"

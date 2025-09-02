@@ -7,14 +7,64 @@ const MAX_BODY = 500;
 type TurnOptionId = "short" | "normal" | "long";
 type StructureOptionId = "three" | "five";
 
+// API 요청을 위한 타입 변환
+const turnOptionToApi: Record<TurnOptionId, string> = {
+  short: "SHORT",
+  normal: "NORMAL", 
+  long: "LONG"
+};
+
+const structureOptionToApi: Record<StructureOptionId, string> = {
+  three: "THREE_ACT",
+  five: "FIVE_ACT"
+};
+
 const FutureNoteWrite: React.FC = () => {
     const navigate = useNavigate();
 
     const [overview, setOverview] = useState("");
     const [turnOption, setTurnOption] = useState<TurnOptionId | null>(null);
     const [structureOption, setStructureOption] = useState<StructureOptionId | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const canProceed = overview.trim().length > 0 && turnOption && structureOption;
+
+    const handleSubmit = async () => {
+        if (!canProceed || isSubmitting) return;
+
+        setIsSubmitting(true);
+
+        try {
+            const requestBody = {
+                outline: overview.trim(),
+                playTurn: turnOptionToApi[turnOption!],
+                storyStructure: structureOptionToApi[structureOption!]
+            };
+
+            // 상태를 localStorage에 저장 (API 호출과 함께)
+            const stateToSave = {
+                overview: overview.trim(),
+                turnOption,
+                structureOption,
+                requestBody,
+                timestamp: Date.now()
+            };
+
+            localStorage.setItem('futureNoteState', JSON.stringify(stateToSave));
+
+            // API 호출 시작과 함께 로딩 화면으로 이동
+            navigate('/FutureNoteLoading', { 
+                state: { 
+                    apiRequestBody: requestBody,
+                    formData: stateToSave
+                }
+            });
+
+        } catch (error) {
+            console.error('Submit error:', error);
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#FFF] flex items-center justify-center">
@@ -185,15 +235,14 @@ const FutureNoteWrite: React.FC = () => {
                 <footer className="flex-shrink-0 px-4 pb-4 mt-[20px]">
                     <button
                         type="button"
-                        className={`w-[360px] h-[52px] ml-[8px] mb-[8px] rounded-[12px] border-none font-semibold text-[16px] ${canProceed
+                        className={`w-[360px] h-[52px] ml-[8px] mb-[8px] rounded-[12px] border-none font-semibold text-[16px] ${canProceed && !isSubmitting
                             ? "bg-[#6F4ACD] text-[#FFF] hover:bg-[#5A3A9E]"
                             : "bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed"
                             }`}
-                        disabled={!canProceed}
-                        onClick={() => {
-                        }}
+                        disabled={!canProceed || isSubmitting}
+                        onClick={handleSubmit}
                     >
-                        시나리오 변환
+                        {isSubmitting ? "처리 중..." : "시나리오 변환"}
                     </button>
                 </footer>
             </div>

@@ -172,64 +172,58 @@ const ChatRoom: React.FC = () => {
                 continue;
             }
             
-            // ASSISTANT 메시지인 경우 기존 파싱 로직 적용
-            // 복합 패턴 처리: "대화"지문 형태
-            const complexPattern = /^(\\?"[^"]*\\?"|"[^"]*")(.+)$/;
-            const complexMatch = trimmed.match(complexPattern);
+            // ASSISTANT 메시지인 경우 - 한 줄에서 따옴표들을 모두 찾아서 분리 처리
+            const foundQuotes: Array<{start: number, end: number, content: string}> = [];
             
-            if (complexMatch) {
-                // "대화"지문 패턴인 경우 분리해서 처리
-                const dialoguePart = complexMatch[1];
-                const narrationPart = complexMatch[2];
+            // 디버깅: 실제 문자 확인
+            console.log("텍스트 첫 글자들:", Array.from(trimmed.slice(0, 10)).map(c => `'${c}'(${c.charCodeAt(0)})`));
+            
+            // 정확한 유니코드 값으로 스마트 따옴표 처리
+            const allQuotesRegex = /(?:\u201C([^\u201D]*)\u201D)|(?:\\?"([^"]*?)\\?")|(?:"([^"]*)\")|(?:『([^』]*)』)|(?:「([^」]*)」)/g;
+            
+            let match;
+            while ((match = allQuotesRegex.exec(trimmed)) !== null) {
+                // 매칭된 그룹 중 실제 내용이 있는 것을 찾기 (순서 중요!)
+                const content = match[1] || match[2] || match[3] || match[4] || match[5] || '';
                 
-                // 대화 부분 처리
-                let dialogue = dialoguePart;
-                if (dialoguePart.startsWith('\\"') && dialoguePart.endsWith('\\"')) {
-                    dialogue = dialoguePart.slice(2, -2);
-                } else if (dialoguePart.startsWith('"') && dialoguePart.endsWith('"')) {
-                    dialogue = dialoguePart.slice(1, -1);
-                }
-                dialogue = dialogue.replace(/\{\{user\}\}/g, personaName || "사용자");
-                
-                messages.push({
-                    id: crypto.randomUUID(),
-                    role: "ai",
-                    text: dialogue,
-                    name: characterName,
-                    avatarUrl: characterImageUrl
+                console.log("정규식 매치 결과:", {
+                    fullMatch: match[0],
+                    groups: match.slice(1),
+                    content: content
                 });
                 
-                // 지문 부분 처리
-                const narration = narrationPart.trim().replace(/\{\{user\}\}/g, personaName || "사용자");
-                if (narration) {
-                    messages.push({
-                        id: crypto.randomUUID(),
-                        role: "narration",
-                        text: narration
+                if (content.trim()) {
+                    foundQuotes.push({
+                        start: match.index,
+                        end: match.index + match[0].length,
+                        content: content
                     });
                 }
+            }
+            
+            if (foundQuotes.length > 0) {
+                // 위치 순서로 정렬
+                foundQuotes.sort((a, b) => a.start - b.start);
                 
-                console.log("Found complex pattern - dialogue:", dialogue, "narration:", narration);
-            } else {
-                // 기존 단순 패턴 처리
-                const isEscapedQuote = trimmed.startsWith('\\"') && trimmed.endsWith('\\"');
-                const isNormalQuote = trimmed.startsWith('"') && trimmed.endsWith('"');
-                const isSmartQuote = trimmed.startsWith('"') && trimmed.endsWith('"');
+                let lastEnd = 0;
                 
-                if (isEscapedQuote || isNormalQuote || isSmartQuote) {
-                    let dialogue = trimmed;
-                    
-                    if (isEscapedQuote) {
-                        dialogue = trimmed.slice(2, -2);
-                    } else if (isNormalQuote) {
-                        dialogue = trimmed.slice(1, -1);
-                    } else if (isSmartQuote) {
-                        dialogue = trimmed.slice(1, -1);
+                for (const quote of foundQuotes) {
+                    // 따옴표 전의 지문 처리
+                    if (quote.start > lastEnd) {
+                        const beforeText = trimmed.slice(lastEnd, quote.start).trim();
+                        if (beforeText) {
+                            const narration = beforeText.replace(/\{\{user\}\}/g, personaName || "사용자");
+                            messages.push({
+                                id: crypto.randomUUID(),
+                                role: "narration",
+                                text: narration
+                            });
+                            console.log("Found narration before quote:", narration);
+                        }
                     }
                     
-                    dialogue = dialogue.replace(/\{\{user\}\}/g, personaName || "사용자");
-                    
-                    console.log("Found dialogue:", dialogue);
+                    // 따옴표 안의 대화 처리
+                    const dialogue = quote.content.replace(/\{\{user\}\}/g, personaName || "사용자");
                     messages.push({
                         id: crypto.randomUUID(),
                         role: "ai",
@@ -237,15 +231,33 @@ const ChatRoom: React.FC = () => {
                         name: characterName,
                         avatarUrl: characterImageUrl
                     });
-                } else {
-                    const replacedLine = trimmed.replace(/\{\{user\}\}/g, personaName || "사용자");
-                    console.log("Adding as narration:", replacedLine);
-                    messages.push({
-                        id: crypto.randomUUID(),
-                        role: "narration",
-                        text: replacedLine
-                    });
+                    console.log("Found dialogue:", dialogue);
+                    
+                    lastEnd = quote.end;
                 }
+                
+                // 마지막 따옴표 이후의 지문 처리
+                if (lastEnd < trimmed.length) {
+                    const afterText = trimmed.slice(lastEnd).trim();
+                    if (afterText) {
+                        const narration = afterText.replace(/\{\{user\}\}/g, personaName || "사용자");
+                        messages.push({
+                            id: crypto.randomUUID(),
+                            role: "narration",
+                            text: narration
+                        });
+                        console.log("Found narration after quotes:", narration);
+                    }
+                }
+            } else {
+                // 따옴표가 없는 경우 전체를 지문으로 처리
+                const replacedLine = trimmed.replace(/\{\{user\}\}/g, personaName || "사용자");
+                console.log("Adding as narration:", replacedLine);
+                messages.push({
+                    id: crypto.randomUUID(),
+                    role: "narration",
+                    text: replacedLine
+                });
             }
         }
         

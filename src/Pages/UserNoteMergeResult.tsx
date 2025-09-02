@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState, useCallback } from "react";
+import React, { useLayoutEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Props {
@@ -8,6 +8,29 @@ interface Props {
 const TRANSITION_MS = 300;
 const MAX_LEN = 500;
 const FALLBACK_TEXT = "병합 결과가 비어 있습니다. 잠시 후 다시 시도해주세요.";
+
+function formatMergedPrompt(raw?: string): string {
+  if (!raw) return FALLBACK_TEXT;
+
+  let s = raw.trim();
+
+  // 1) "## 제목 - 불릿시작" 이 한 줄에 붙어있는 경우 분리
+  //    예) "## 금지사항 - 수련 완료 전 ..." -> "## 금지사항\n\n- 수련 완료 전 ..."
+  s = s.replace(/^(\s*##\s+[^\n-]+?)\s+-\s+/gm, (_m, heading) => `${heading}\n\n- `);
+
+  // 2) 첫 번째 '# '는 유지. 그 외 '## ' 앞에는 항상 빈 줄 2개 삽입
+  //    (문자열 어디서든 '## ' 이전의 공백/개행을 통일해 '\n\n## '로)
+  s = s.replace(/\s*##\s/g, '\n\n## ');
+
+  // 3) 불릿 시작 전에 빈 줄 1개(= 시각상 한 줄 비움) 보장
+  //    (이미 개행이 있어도 일관되게 '\n\n- '로 맞춤)
+  s = s.replace(/\s*-\s/g, '\n\n- ');
+
+  // 4) 3개 이상 연속 개행은 최대 2개로 축약
+  s = s.replace(/\n{3,}/g, '\n\n');
+
+  return s.trim();
+}
 
 const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
   const navigate = useNavigate();
@@ -19,16 +42,20 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
   const firstTitle: string | undefined = (location.state as any)?.firstTitle;
   const secondTitle: string | undefined = (location.state as any)?.secondTitle;
 
+  const initialFormatted = useMemo(
+    () => formatMergedPrompt(incomingText ?? FALLBACK_TEXT),
+    [incomingText]
+  );
+
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [text, setText] = useState<string>(incomingText ?? FALLBACK_TEXT);
+  const [text, setText] = useState<string>(initialFormatted);
 
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   const autoResize = useCallback(() => {
     const el = taRef.current;
     if (!el) return;
-
     el.style.height = "0px";
     el.style.height = "auto";
     el.style.overflowY = "hidden";
@@ -126,10 +153,7 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
               rows={1}
               className="w-full resize-none rounded-[6px] bg-[#283143] text-[#F8F8FA] placeholder:text-white/40 px-4 py-3 text-[16px] leading-6 outline-none border border-[#404E6A] focus:border-[#6F4ACD] transition-all duration-150 overflow-hidden"
               placeholder="병합된 내용을 검토하고 수정해주세요"
-              style={{
-                boxSizing: "border-box",
-                overflowY: "hidden",
-              }}
+              style={{ boxSizing: "border-box", overflowY: "hidden" }}
             />
             <div className="flex justify-end mt-2">
               <span className="text-[12px] text-[#FFF]">

@@ -112,7 +112,6 @@ const Home: React.FC = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // 로그인 성공 후: URL 정리만, 쿠키는 서버 Set-Cookie에 맡김(중복 방지)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const loginStatus = urlParams.get('login');
@@ -134,19 +133,22 @@ const Home: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE}/member/logout`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+      await fetch(`${API_BASE}/member/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
       await logout();
     } catch {
-      // 무시
     }
   };
 
   const renderAuthButton = () =>
-    isLoggedIn ? (
-      <button className="login-btn" onClick={handleLogout}>로그아웃</button>
-    ) : (
-      <button className="login-btn" onClick={handleLogin}>로그인</button>
-    );
+    !isLoggedIn ? (
+      <button className="login-btn" onClick={handleLogin}>
+        로그인
+      </button>
+    ) : null;
 
   useEffect(() => {
     let mounted = true;
@@ -167,10 +169,13 @@ const Home: React.FC = () => {
     };
   }, []);
 
-  // 유저 노트(인덱스 2) 클릭 시 HomeToUserNote로 이동
-  const handleClick = (i: number) => {
+  const handleClick = async (i: number) => {
     if (i === 2) {
       navigate('/HomeToUserNote');
+      return;
+    }
+    if (i === 1) {
+      await handleLogout();
       return;
     }
     setActiveIndex((prev) => (prev === i ? null : i));
@@ -226,17 +231,10 @@ const Home: React.FC = () => {
       );
       break;
     case 1:
-      content = (
-        <>
-          <section className="section recommend-web-novel"></section>
-          <section className="section public-favorite-novel"></section>
-          <section className="section recommend-taste"></section>
-          <section className="section All-web-novel"></section>
-        </>
-      );
+      content = <></>;
       break;
     case 2:
-      content = <></>; // '유저 노트'는 별도 페이지로 이동하므로 이곳은 비워둠
+      content = <></>;
       break;
     default:
       content = (
@@ -330,7 +328,6 @@ const Home: React.FC = () => {
         <section className="section title">
           {renderAuthButton()}
 
-          {/* ▼▼▼ 변경된 로고 영역 ▼▼▼ */}
           <button
             type="button"
             className="appTitle logo-button"
@@ -343,7 +340,6 @@ const Home: React.FC = () => {
               className="logo-image"
             />
           </button>
-          {/* ▲▲▲ 변경 끝 ▲▲▲ */}
 
           <div ref={searchRef} className="search-container">
             {showSearch ? (

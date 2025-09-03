@@ -27,7 +27,7 @@
 
 .title {
     height: 34px;
-    margin-top: 44px;
+    margin-top: 40px;
 
     display: flex;
     align-items: center;
@@ -44,7 +44,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-left: 20.5px;
+    margin-left: 22px;
 }
 
 .searchIcon {

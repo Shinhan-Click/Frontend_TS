@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon, MoreVerticalIcon } from "../components/icons";
 import { BiLike } from "react-icons/bi";
-import FutureNoteBottomSheet from "./FutureNoteBottomSheetProps"; 
+import FutureNoteBottomSheet from "./FutureNoteBottomSheetProps"; // 바텀시트 import
 
 const API_BASE = "/api";
 
@@ -84,6 +84,7 @@ const FutureNoteIntroduce: React.FC = () => {
     // API 상태
     const [data, setData] = useState<FutureNoteDTO | null>(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // 바텀시트 상태 추가
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -94,6 +95,7 @@ const FutureNoteIntroduce: React.FC = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                setError(null);
                 const res = await fetch(`${API_BASE}/futurenote/${futureNoteId}`, {
                     method: "GET",
                     headers: { accept: "*/*" },

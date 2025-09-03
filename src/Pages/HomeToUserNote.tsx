@@ -154,7 +154,6 @@ const TopAppBar: React.FC<{ onSearch?: () => void }> = ({ onSearch }) => {
     );
 };
 
-
 const HomeToUserNote: React.FC = () => {
     const navigate = useNavigate();
 
@@ -171,11 +170,30 @@ const HomeToUserNote: React.FC = () => {
         ],
     });
 
+    const COMMENTS_BY_RANK: Record<number, { user: string; text: string; avatar: string }[]> = {
+        1: [
+            { user: '쏠SOL', text: '감정지표 세팅 후 캐릭터 반응이 안정적이에요.', avatar: 'https://picsum.photos/seed/r1a/40/40' },
+            { user: '몰리', text: '분노 수치만 낮췄는데 대화가 훨씬 부드러워졌어요.', avatar: 'https://picsum.photos/seed/r1b/40/40' },
+        ],
+        2: [
+            { user: '석우hong', text: '메모리 반영률이 좋아 맥락 유지력이 확실히 좋아졌어요.', avatar: 'https://picsum.photos/seed/r2a/40/40' },
+            { user: '훈상박', text: '지난 회차에서 자연스럽게 이어가줘서 몰입이 올라감!.', avatar: 'https://picsum.photos/seed/r2b/40/40' },
+        ],
+        3: [
+            { user: '라온', text: '상황 전환마다 톤이 과하지 않아 제일 좋았어요.', avatar: 'https://picsum.photos/seed/r3a/40/40' },
+            { user: '은결', text: '감정 과장 없이 담백해서 대화가 깔끔합니다.', avatar: 'https://picsum.photos/seed/r3b/40/40' },
+        ],
+        4: [
+            { user: '하람', text: 'OOC 방지 규칙 효과가 확실해서 일관성이 좋아요.', avatar: 'https://picsum.photos/seed/r4a/40/40' },
+            { user: '주안', text: '설정 이탈이 줄어서 노트 재활용성이 높아졌습니다.', avatar: 'https://picsum.photos/seed/r4b/40/40' },
+        ],
+    };
+
     const RANK_COLUMNS: Record<number, TrendingCardProps[]> = {
-        1: [{ ...makeCard(1, 'npc-1a', 'NPC 감정분석지표'), thumb: '/감정.png' }],
-        2: [{ ...makeCard(2, 'npc-2a', '메모리 기반 반응 템플릿'), thumb: '/메모리.png' }],
-        3: [makeCard(3, 'npc-3a', '상황별 톤 컨트롤')],
-        4: [makeCard(4, 'npc-4a', '역할 고정 OOC 방지')],
+        1: [{ ...makeCard(1, 'npc-1a', 'NPC 감정분석지표'), thumb: '/감정.png', comments: COMMENTS_BY_RANK[1] }],
+        2: [{ ...makeCard(2, 'npc-2a', '메모리 기반 반응 템플릿'), thumb: '/메모리.png', comments: COMMENTS_BY_RANK[2] }],
+        3: [{ ...makeCard(3, 'npc-3a', '상황별 톤 컨트롤'), comments: COMMENTS_BY_RANK[3] }],
+        4: [{ ...makeCard(4, 'npc-4a', '역할 고정 OOC 방지'), comments: COMMENTS_BY_RANK[4] }],
     };
 
     const [selectedRuleId, setSelectedRuleId] = useState<number | null>(null);

@@ -163,7 +163,8 @@ const FutureNotePost: React.FC = () => {
       alert("게시 완료");
       
       // Navigate to FutureNoteIntroduce with the response data
-      navigate("/FutureNoteIntroduce", {
+      const futureNoteId = responseData.result.futureNoteId;
+       navigate(`/futureNoteIntroduce/${futureNoteId}`, {
         state: { 
           futureNoteData: responseData.result 
         }

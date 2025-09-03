@@ -126,7 +126,7 @@ const API_BASE = "/api";
 
 const ChatRoom: React.FC = () => {
     const { chatId = "" } = useParams<{ chatId: string }>();
-    
+
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
@@ -150,16 +150,16 @@ const ChatRoom: React.FC = () => {
         const cleanContent = content.replace(/\\n/g, '\n').replace(/\n+/g, '\n');
         const lines = cleanContent.split('\n');
         const messages: Message[] = [];
-        
+
         console.log("Parsing content with", lines.length, "lines");
         console.log("Character info:", { characterName, characterImageUrl, personaName });
-        
+
         for (const line of lines) {
             const trimmed = line.trim();
             if (!trimmed) continue;
-            
+
             console.log("Processing line:", `"${trimmed}"`);
-            
+
             // USER 메시지인 경우 따옴표 관계없이 user role로 처리
             if (role === "USER") {
                 const replacedLine = trimmed.replace(/\{\{user\}\}/g, personaName || "사용자");
@@ -171,27 +171,27 @@ const ChatRoom: React.FC = () => {
                 console.log("Added user message:", replacedLine);
                 continue;
             }
-            
+
             // ASSISTANT 메시지인 경우 - 한 줄에서 따옴표들을 모두 찾아서 분리 처리
-            const foundQuotes: Array<{start: number, end: number, content: string}> = [];
-            
+            const foundQuotes: Array<{ start: number, end: number, content: string }> = [];
+
             // 디버깅: 실제 문자 확인
             console.log("텍스트 첫 글자들:", Array.from(trimmed.slice(0, 10)).map(c => `'${c}'(${c.charCodeAt(0)})`));
-            
+
             // 정확한 유니코드 값으로 스마트 따옴표 처리
             const allQuotesRegex = /(?:\u201C([^\u201D]*)\u201D)|(?:\\?"([^"]*?)\\?")|(?:"([^"]*)\")|(?:『([^』]*)』)|(?:「([^」]*)」)/g;
-            
+
             let match;
             while ((match = allQuotesRegex.exec(trimmed)) !== null) {
                 // 매칭된 그룹 중 실제 내용이 있는 것을 찾기 (순서 중요!)
                 const content = match[1] || match[2] || match[3] || match[4] || match[5] || '';
-                
+
                 console.log("정규식 매치 결과:", {
                     fullMatch: match[0],
                     groups: match.slice(1),
                     content: content
                 });
-                
+
                 if (content.trim()) {
                     foundQuotes.push({
                         start: match.index,
@@ -200,13 +200,13 @@ const ChatRoom: React.FC = () => {
                     });
                 }
             }
-            
+
             if (foundQuotes.length > 0) {
                 // 위치 순서로 정렬
                 foundQuotes.sort((a, b) => a.start - b.start);
-                
+
                 let lastEnd = 0;
-                
+
                 for (const quote of foundQuotes) {
                     // 따옴표 전의 지문 처리
                     if (quote.start > lastEnd) {
@@ -221,7 +221,7 @@ const ChatRoom: React.FC = () => {
                             console.log("Found narration before quote:", narration);
                         }
                     }
-                    
+
                     // 따옴표 안의 대화 처리
                     const dialogue = quote.content.replace(/\{\{user\}\}/g, personaName || "사용자");
                     messages.push({
@@ -232,10 +232,10 @@ const ChatRoom: React.FC = () => {
                         avatarUrl: characterImageUrl
                     });
                     console.log("Found dialogue:", dialogue);
-                    
+
                     lastEnd = quote.end;
                 }
-                
+
                 // 마지막 따옴표 이후의 지문 처리
                 if (lastEnd < trimmed.length) {
                     const afterText = trimmed.slice(lastEnd).trim();
@@ -260,7 +260,7 @@ const ChatRoom: React.FC = () => {
                 });
             }
         }
-        
+
         console.log("Total messages parsed:", messages.length);
         return messages;
     };
@@ -302,7 +302,7 @@ const ChatRoom: React.FC = () => {
     // 채팅 로그 가져오기 - 캐릭터 정보가 로드된 후에만 실행
     useEffect(() => {
         if (!characterName) return; // 캐릭터 정보가 없으면 대기
-        
+
         let aborted = false;
         (async () => {
             try {
@@ -354,7 +354,7 @@ const ChatRoom: React.FC = () => {
 
         const quoted = extractQuoted(raw);
         const pieces = splitLines(quoted ?? t);
-        
+
         // 사용자 메시지 즉시 UI에 추가
         setMessages((prev) => [
             ...prev,
@@ -364,7 +364,7 @@ const ChatRoom: React.FC = () => {
                 text,
             })),
         ]);
-        
+
         setInput("");
         requestAnimationFrame(() => inputRef.current?.focus());
 
@@ -384,7 +384,7 @@ const ChatRoom: React.FC = () => {
             });
 
             console.log("Response status:", response.status);
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error("API Error Response:", errorText);
@@ -392,7 +392,7 @@ const ChatRoom: React.FC = () => {
             }
 
             const data: ApiResponse<{ response: string }> = await response.json();
-            
+
             if (data.isSuccess && data.result?.response) {
                 // AI 응답을 파싱해서 메시지로 변환
                 const aiMessages = parseMessageContent(data.result.response, "ASSISTANT");

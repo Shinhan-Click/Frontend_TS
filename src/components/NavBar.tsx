@@ -31,7 +31,12 @@ const NavBar: React.FC = () => {
                     <button
                         key={id}
                         className={`nav-button ${active === id ? 'active' : ''}`}
-                        onClick={() => setActive(id)}
+                        onClick={() => {
+                            setActive(id);
+                            if (id === 'popular') {
+                                navigate('/ChattingUserNote');
+                            }
+                        }}
                         type="button"
                     >
                         <div className="icon">{icon}</div>

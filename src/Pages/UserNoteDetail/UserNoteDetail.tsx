@@ -11,7 +11,7 @@ import Tag from '../../components/UserNoteDetailcomponents/Tag';
 import Comment from '../../components/UserNoteDetailcomponents/Comment';
 import RelatedCard from '../../components/UserNoteDetailcomponents/RelatedCard';
 import UserNoteDetailFooter from '../../components/UserNoteDetailcomponents/UserNoteDetailFooter';
-import UndBottomSheet from '../../components/UserNoteDetailcomponents/undBottomSheet'; // ✅ 바텀시트 import 추가
+import UndBottomSheet from '../../components/UserNoteDetailcomponents/undBottomSheet';
 import type { ApiResponse } from '../../types/api';
 
 const API_BASE = '/api';
@@ -56,7 +56,6 @@ const UserNoteDetail: React.FC = () => {
     const [commentsData, setCommentsData] = useState<CommentsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 좋아요 상태
     const [initialLikeStatus, setInitialLikeStatus] = useState(false);
     const [commentLikeStatuses, setCommentLikeStatuses] = useState<{ [key: number]: boolean }>({});
 
@@ -69,7 +68,6 @@ const UserNoteDetail: React.FC = () => {
     const startX = useRef(0);
     const startScrollLeft = useRef(0);
 
-    // ✅ 바텀시트 열림 상태 추가
     const [sheetOpen, setSheetOpen] = useState(false);
 
     // 뒤로가기 핸들러
@@ -112,7 +110,6 @@ const UserNoteDetail: React.FC = () => {
         }
     };
 
-    // 좋아요 상태 조회
     const fetchLikeStatus = async (id: string): Promise<boolean> => {
         try {
             const res = await fetch(`${API_BASE}/usernote/${id}/like-status`, {
@@ -127,7 +124,6 @@ const UserNoteDetail: React.FC = () => {
         }
     };
 
-    // 댓글 좋아요 상태 조회
     const fetchCommentLikeStatuses = async (comments: CommentData[]): Promise<{ [key: number]: boolean }> => {
         try {
             const statusPromises = comments.map(async (comment) => {
@@ -151,7 +147,6 @@ const UserNoteDetail: React.FC = () => {
         }
     };
 
-    // 댓글 좋아요 토글
     const toggleCommentLike = async (commentId: number): Promise<'success' | 'own_comment' | 'error'> => {
         try {
             const res = await fetch(`${API_BASE}/comment/${commentId}/like`, {
@@ -194,7 +189,6 @@ const UserNoteDetail: React.FC = () => {
             setCommentsData(commentsData);
             setInitialLikeStatus(likeStatus);
 
-            // 댓글이 있으면 댓글 좋아요 상태도 조회
             if (commentsData?.comments && commentsData.comments.length > 0) {
                 const commentStatuses = await fetchCommentLikeStatuses(commentsData.comments);
                 setCommentLikeStatuses(commentStatuses);
@@ -450,13 +444,11 @@ const UserNoteDetail: React.FC = () => {
                                             const result = await toggleCommentLike(comment.commentId);
 
                                             if (result === 'success') {
-                                                // 댓글 좋아요 상태 토글
                                                 setCommentLikeStatuses(prev => ({
                                                     ...prev,
                                                     [comment.commentId]: !prev[comment.commentId]
                                                 }));
 
-                                                // 댓글 데이터의 좋아요 수도 업데이트
                                                 setCommentsData(prev => {
                                                     if (!prev) return prev;
                                                     return {
@@ -489,8 +481,8 @@ const UserNoteDetail: React.FC = () => {
                             <RelatedCard
                                 imageUrl="https://picsum.photos/seed/avengers/400/300"
                                 title="어벤져스 세계관"
-                                description="우리가 알고 있던 세계가 쥬라기 월드로 변합니다. 벤..."
-                                authorHandle="@hahahoho"
+                                description="우리가 알고 있던 세계가 영웅들이 모인 마블 세계관으로 변합니다. 아이언..."
+                                authorHandle="@썬더볼트"
                             />
                         </section>
 
@@ -498,7 +490,6 @@ const UserNoteDetail: React.FC = () => {
                     </div>
                 </main>
 
-                {/* ✅ 바텀시트: 화면 하단(풋터 위치)에서 등장 */}
                 <UndBottomSheet
                     open={sheetOpen}
                     onClose={() => setSheetOpen(false)}
@@ -506,12 +497,11 @@ const UserNoteDetail: React.FC = () => {
                 >
                 </UndBottomSheet>
 
-                {/* ✅ Footer: 좋아요 기능 + 바텀시트 열기 기능 모두 포함 */}
                 <UserNoteDetailFooter
                     bookmarkCount={userNoteData.likeCount}
                     userNoteId={userNoteId}
                     initialLikeStatus={initialLikeStatus}
-                    onApply={() => setSheetOpen(true)} // ✅ 바텀시트 열기 추가
+                    onApply={() => setSheetOpen(true)}
                 />
             </div>
         </div>

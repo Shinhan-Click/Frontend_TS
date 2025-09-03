@@ -278,23 +278,28 @@ const Home: React.FC = () => {
     default:
       content = (
         <div>
+          {/* 배너 (슬라이딩 전환) */}
           <section className="section banner" aria-roledescription="carousel" aria-label="추천 배너">
-            {(() => {
-              const s = bannerSlides[bannerIndex];
-              return (
-                <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                  <img src={s.image} alt={s.title} className="banner-image" />
-                  <div className="banner-overlay">
-                    <p className="banner-hashtag">{s.hashtag}</p>
-                    <h2 className="banner-title">{s.title}</h2>
-                    <p className="banner-desc">{s.desc}</p>
+            <div className="banner-viewport">
+              <div
+                className="banner-track"
+                style={{ transform: `translateX(-${bannerIndex * 100}%)` }}
+              >
+                {bannerSlides.map((s, idx) => (
+                  <div className="banner-slide" key={idx} aria-roledescription="slide" aria-label={`${idx + 1} / ${bannerSlides.length}`}>
+                    <img src={s.image} alt={s.title} className="banner-image" />
+                    <div className="banner-overlay">
+                      <p className="banner-hashtag">{s.hashtag}</p>
+                      <h2 className="banner-title">{s.title}</h2>
+                      <p className="banner-desc">{s.desc}</p>
+                    </div>
+                    <div className="banner-counter" aria-hidden="true">
+                      {bannerIndex + 1}/{bannerSlides.length}
+                    </div>
                   </div>
-                  <div className="banner-counter" aria-hidden="true">
-                    {bannerIndex + 1}/{bannerSlides.length}
-                  </div>
-                </div>
-              );
-            })()}
+                ))}
+              </div>
+            </div>
           </section>
 
           <section className="section">

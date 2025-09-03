@@ -20,6 +20,65 @@ type SimpleUser = {
   tags: string[];
 };
 
+// 캐릭터 상세 정보 타입 (API 응답 기반)
+type CharacterDetail = {
+  characterId: number;
+  characterImageUrl: string;
+  name: string;
+  gender: string;
+  description: string;
+  authorComment: string;
+  introductions: Array<{
+    introductionId: number;
+    title: string;
+    text: string;
+  }>;
+  tags: Array<{
+    tagId: number;
+    name: string;
+  }>;
+  story: {
+    storyId: number;
+    storyImageUrl: string;
+    title: string;
+    description: string;
+  } | null;
+};
+
+// 배너 데이터 타입
+type BannerItem = {
+  id: string;
+  image: string;
+  hashtag: string;
+  title: string;
+  description: string;
+};
+
+// 배너 데이터 (예시)
+const bannerData: BannerItem[] = [
+  {
+    id: '1',
+    image: '/주이한.png',
+    hashtag: '#츤데레',
+    title: '주이한',
+    description: '길들여지고 싶은 상처 입은 맹수'
+  },
+  {
+    id: '2',
+    image: '/백도하.png',
+    hashtag: '#츤데레',
+    title: '백도하',
+    description: '12살부터 한 사람만을 짝사랑한 츤데레'
+  },
+  {
+    id: '3',
+    image: 'https://image.whif.io/GEp2aRhIR9uOP3SUj2q_kA/2197d6b4-636d-4740-05db-fed3c3aca400/public',
+    hashtag: '#츤데레',
+    title: '서윤구',
+    description: '까다롭고 시니컬한 브런치 카페 사장님이자 SNS 셀럽'
+  }
+];
+
 const transformCharacterToUser = (characters: Character[]): SimpleUser[] =>
   characters.map((char) => ({
     id: char.characterId.toString(),
@@ -78,6 +137,18 @@ const fetchCharacters = async (): Promise<SimpleUser[]> => {
   }
 };
 
+const fetchCharacterDetail = async (characterId: string): Promise<CharacterDetail | null> => {
+  try {
+    const res = await fetch(`${API_BASE}/character/${characterId}`, { credentials: 'include' });
+    if (!res.ok) throw new Error('캐릭터 상세 API 실패');
+    const data: ApiResponse<CharacterDetail> = await res.json();
+    return data.isSuccess ? data.result : null;
+  } catch (error) {
+    console.error('캐릭터 상세 정보 조회 실패:', error);
+    return null;
+  }
+};
+
 const fetchStories = async (): Promise<CardItem[]> => {
   try {
     const res = await fetch(`${API_BASE}/story/all`, { credentials: 'include' });
@@ -105,12 +176,84 @@ const Home: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [activeCharacterId, setActiveCharacterId] = useState<string | null>(null);
+  const [selectedCharacterDetail, setSelectedCharacterDetail] = useState<CharacterDetail | null>(null);
   const [topUsers, setTopUsers] = useState<SimpleUser[]>([]);
   const [novels, setNovels] = useState<CardItem[]>([]);
   const [userNotes, setUserNotes] = useState<CardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCharacter, setIsLoadingCharacter] = useState(false);
+  
+  // 배너 슬라이드 관련 상태
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  
+  // 터치 이벤트 관련 상태
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // 캐릭터 클릭 핸들러 - API 호출
+  const handleCharacterClick = async (characterId: string) => {
+    if (activeCharacterId === characterId) {
+      // 같은 캐릭터 클릭 시 패널 닫기
+      setActiveCharacterId(null);
+      setSelectedCharacterDetail(null);
+      return;
+    }
+
+    setActiveCharacterId(characterId);
+    setIsLoadingCharacter(true);
+    
+    try {
+      const characterDetail = await fetchCharacterDetail(characterId);
+      setSelectedCharacterDetail(characterDetail);
+    } catch (error) {
+      console.error('캐릭터 상세 정보 로딩 실패:', error);
+      setSelectedCharacterDetail(null);
+    } finally {
+      setIsLoadingCharacter(false);
+    }
+  };
+
+  // 터치 스와이프 핸들러
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(0);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      setCurrentBannerIndex((prev) => (prev + 1) % bannerData.length);
+    }
+    if (isRightSwipe) {
+      setCurrentBannerIndex((prev) => (prev - 1 + bannerData.length) % bannerData.length);
+    }
+  };
+
+  // 배너 자동 슬라이드 효과
+  useEffect(() => {
+    if (isPaused) return;
+    
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prevIndex) => 
+        (prevIndex + 1) % bannerData.length
+      );
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isPaused]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -126,9 +269,10 @@ const Home: React.FC = () => {
   };
 
   const goToChatSetting = () => {
-    const selected = topUsers.find((u) => u.id === activeCharacterId);
-    if (!selected) return;
-    navigate(`/ChatSetting?characterId=${encodeURIComponent(selected.id)}`, { state: { character: selected } });
+    if (!selectedCharacterDetail) return;
+    navigate(`/ChatSetting?characterId=${encodeURIComponent(selectedCharacterDetail.characterId)}`, { 
+      state: { character: selectedCharacterDetail } 
+    });
   };
 
   const handleLogout = async () => {
@@ -189,7 +333,11 @@ const Home: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [showSearch]);
 
-  const selectedCharacter = topUsers.find((u) => u.id === activeCharacterId) || null;
+  // 따옴표로 감싸진 부분 추출 함수
+  const extractSpeechBubble = (description: string): string => {
+    const match = description.match(/"([^"]+)"/);
+    return match ? match[1] : '';
+  };
 
   const renderNovelCard = (item: CardItem) => (
     <div className="novel-card" key={item.id}>
@@ -239,16 +387,38 @@ const Home: React.FC = () => {
     default:
       content = (
         <div>
-          <section className="section banner">
-            <img
-              src="https://beizfkcdgqkvhqcqvtwk.supabase.co/storage/v1/object/public/character-thumbnails/c0f8aff0-0b17-4551-b1c4-d4539d067239/1753700613259-mw7jhzoxl7.png"
-              alt="Banner"
-              className="banner-image"
-            />
-            <div className="banner-overlay">
-              <p className="banner-hashtag">#축구공</p>
-              <h2 className="banner-title">서휼 (徐휼)</h2>
-              <p className="banner-desc">그가 내미는 달콤한 충심의 이면에는, 당신을 완벽..</p>
+          {/* 자동 페이드 배너 섹션 */}
+          <section 
+            className="section banner"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div className="banner-container">
+              {bannerData.map((banner, index) => (
+                <div
+                  key={banner.id}
+                  className={`banner-slide ${index === currentBannerIndex ? 'active' : ''}`}
+                >
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="banner-image"
+                  />
+                  <div className="banner-overlay">
+                    <p className="banner-hashtag">{banner.hashtag}</p>
+                    <h2 className="banner-title">{banner.title}</h2>
+                    <p className="banner-desc">{banner.description}</p>
+                  </div>
+                </div>
+              ))}
+              
+              {/* 배너 카운터 */}
+              <div className="banner-counter">
+                {currentBannerIndex + 1}/{bannerData.length}
+              </div>
             </div>
           </section>
 
@@ -266,11 +436,9 @@ const Home: React.FC = () => {
                     className={`top-user ${activeCharacterId === u.id ? 'active' : ''}`}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setActiveCharacterId((prev) => (prev === u.id ? null : u.id))}
+                    onClick={() => handleCharacterClick(u.id)}
                     onKeyDown={(e) =>
-                      e.key === 'Enter'
-                        ? setActiveCharacterId((prev) => (prev === u.id ? null : u.id))
-                        : null
+                      e.key === 'Enter' ? handleCharacterClick(u.id) : null
                     }
                   >
                     <img src={u.image} alt={u.name} className="avatar" />
@@ -280,23 +448,49 @@ const Home: React.FC = () => {
               </div>
             )}
 
-            {selectedCharacter && (
+            {/* 캐릭터 상세 패널 */}
+            {activeCharacterId && (
               <div className="character-panel">
-                <div className="character-name">{selectedCharacter.name}</div>
-                <div className="speech-bubble">{selectedCharacter.message}</div>
-                <div className="tag-row">
-                  {selectedCharacter.tags.map((t) => (
-                    <span key={t} className="tag-chip">{t}</span>
-                  ))}
-                </div>
-                <button className="primary-btn" onClick={goToChatSetting}>무슨 일인지 알아보러 가기</button>
+                {isLoadingCharacter ? (
+                  <div className="loading-container">캐릭터 정보 로딩 중...</div>
+                ) : selectedCharacterDetail ? (
+                  <>
+                    {/* 전체 설명 (맨 위) */}
+                    <div className="character-description">
+                      {selectedCharacterDetail.description}
+                    </div>
+                    
+                    {/* 캐릭터 이름 */}
+                    <div className="character-name">{selectedCharacterDetail.name}</div>
+                    
+                    {/* 따옴표 부분 (말풍선) */}
+                    {extractSpeechBubble(selectedCharacterDetail.description) && (
+                      <div className="speech-bubble">
+                        {extractSpeechBubble(selectedCharacterDetail.description)}
+                      </div>
+                    )}
+                    
+                    {/* 태그들 */}
+                    <div className="tag-row">
+                      {selectedCharacterDetail.tags.map((tag) => (
+                        <span key={tag.tagId} className="tag-chip">#{tag.name}</span>
+                      ))}
+                    </div>
+                    
+                    <button className="primary-btn" onClick={goToChatSetting}>
+                      무슨 일인지 알아보러 가기
+                    </button>
+                  </>
+                ) : (
+                  <div className="empty-container">캐릭터 정보를 불러올 수 없습니다.</div>
+                )}
               </div>
             )}
           </section>
 
           <section className="section">
             <div className="title-row">
-              <h2 className="section-title accent">#공공</h2>
+              <h2 className="section-title accent">#능글공</h2>
               <h2 className="section-title accent1">좋아하는 사람들이 많이 본 소설</h2>
             </div>
             {isLoading ? (
@@ -352,7 +546,7 @@ const Home: React.FC = () => {
 
         <section className="section chip">
           <div className="chip-button">
-            {['캐릭터 챗', '웹 소설'].map((label, index) => (
+            {['캐릭터', '웹 소설'].map((label, index) => (
               <button
                 key={index}
                 type="button"

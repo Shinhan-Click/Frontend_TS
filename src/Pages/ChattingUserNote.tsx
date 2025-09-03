@@ -8,6 +8,21 @@ type ApiResponse<T> = { isSuccess: boolean; code: string; message: string; resul
 type UserNotesResult = { myNotes: MyNote[]; likedNotes: LikedNote[] };
 type Draft = { personaChoice?: string; personaText?: string; name?: string; gender?: 'male' | 'female' | 'none'; introduction?: string; userNote?: string };
 
+// 단일 유저노트 조회 API 응답 타입
+type UserNoteDetail = {
+  userNoteId: number;
+  userNoteImageUrl: string;
+  title: string;
+  tags: Array<{ tagId: number; name: string }>;
+  description: string;
+  prompt: string;
+  exampleImageUrl: string;
+  authorProfileImageUrl: string;
+  authorNickname: string;
+  postDate: string;
+  likeCount: number;
+};
+
 const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <h2 className="text-[16px] font-bold text-[#FFF] mb-3">{children}</h2>
 );
@@ -97,6 +112,7 @@ const ChattingUserNote: React.FC = () => {
   const [myNotes, setMyNotes] = useState<MyNote[]>([]);
   const [likedNotes, setLikedNotes] = useState<LikedNote[]>([]);
   const [loading, setLoading] = useState(true);
+  const [applyLoading, setApplyLoading] = useState(false); // 적용하기 로딩 상태
 
   const [selectedApply, setSelectedApply] = useState<string | null>(null);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
@@ -214,15 +230,81 @@ const ChattingUserNote: React.FC = () => {
     });
   };
 
-  const handleApply = () => {
+  // 단일 유저노트 조회 API 호출 함수
+  const fetchUserNoteDetail = async (userNoteId: number): Promise<UserNoteDetail | null> => {
+    try {
+      const res = await fetch(`${API_BASE}/usernote/${userNoteId}`, {
+        method: 'GET',
+        headers: { accept: '*/*', 'Cache-Control': 'no-cache' },
+        credentials: 'include',
+      });
+      
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      
+      const data: ApiResponse<UserNoteDetail> = await res.json();
+      
+      if (data.isSuccess && data.result) {
+        return data.result;
+      } else {
+        throw new Error(data.message || 'Failed to fetch user note detail');
+      }
+    } catch (error) {
+      console.error('Error fetching user note detail:', error);
+      return null;
+    }
+  };
+
+  const handleApply = async () => {
     if (!selectedApply) return;
-    const [kind, idStr] = selectedApply.split(':');
-    const id = parseInt(idStr, 10);
-    let description = '';
-    if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
-    else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
-    const draft = { ...(incomingDraft || {}), userNote: description };
-    navigate(`/ChatSetting${fromSearch || ''}`, { state: { selectedUserNoteDescription: description, draft } });
+    
+    setApplyLoading(true);
+    
+    try {
+      const [kind, idStr] = selectedApply.split(':');
+      const id = parseInt(idStr, 10);
+      
+      // API를 통해 유저노트 상세 정보 조회
+      const userNoteDetail = await fetchUserNoteDetail(id);
+      
+      if (!userNoteDetail) {
+        // API 호출 실패 시 기존 로직 유지 (fallback)
+        let description = '';
+        if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
+        else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
+        
+        const draft = { ...(incomingDraft || {}), userNote: description };
+        navigate(`/ChatSetting${fromSearch || ''}`, { 
+          state: { selectedUserNoteDescription: description, draft } 
+        });
+        return;
+      }
+      
+      // API에서 가져온 prompt 데이터 사용
+      const draft = { ...(incomingDraft || {}), userNote: userNoteDetail.prompt };
+      navigate(`/ChatSetting${fromSearch || ''}`, { 
+        state: { 
+          selectedUserNoteDescription: userNoteDetail.prompt,
+          selectedUserNoteDetail: userNoteDetail, // 전체 상세 정보도 함께 전달
+          draft 
+        } 
+      });
+      
+    } catch (error) {
+      console.error('Error applying user note:', error);
+      // 에러 발생 시에도 기존 로직으로 fallback
+      const [kind, idStr] = selectedApply.split(':');
+      const id = parseInt(idStr, 10);
+      let description = '';
+      if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
+      else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
+      
+      const draft = { ...(incomingDraft || {}), userNote: description };
+      navigate(`/ChatSetting${fromSearch || ''}`, { 
+        state: { selectedUserNoteDescription: description, draft } 
+      });
+    } finally {
+      setApplyLoading(false);
+    }
   };
 
   if (loading) {
@@ -347,14 +429,20 @@ const ChattingUserNote: React.FC = () => {
                 </button>
                 <button
                   className={[
-                    'flex-1 h-[52px] rounded-[12px] border-none font-semibold',
-                    selectedApply ? 'bg-[#6F4ACD] text-[#FFF]' : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed',
+                    'flex-1 h-[52px] rounded-[12px] border-none font-semibold flex items-center justify-center gap-2',
+                    selectedApply && !applyLoading ? 'bg-[#6F4ACD] text-[#FFF]' : 'bg-[#6F4ACD] text-[#FFF] opacity-70 cursor-not-allowed',
                   ].join(' ')}
                   type="button"
-                  disabled={!selectedApply}
+                  disabled={!selectedApply || applyLoading}
                   onClick={handleApply}
                 >
-                  적용하기
+                  {applyLoading && (
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                  {applyLoading ? '적용 중...' : '적용하기'}
                 </button>
               </div>
             </div>

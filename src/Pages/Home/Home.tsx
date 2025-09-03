@@ -112,6 +112,43 @@ const Home: React.FC = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  const bannerSlides = [
+    {
+      image:
+        'https://beizfkcdgqkvhqcqvtwk.supabase.co/storage/v1/object/public/character-thumbnails/c0f8aff0-0b17-4551-b1c4-d4539d067239/1753700613259-mw7jhzoxl7.png',
+      hashtag: '#무협지',
+      title: '서휼 (徐휼)',
+      desc: '그가 내미는 달콤한 충심의 이면에는, 당신을 완벽..',
+    },
+    {
+      image: '/소유현.png',
+      hashtag: '#차도남',
+      title: '소유현',
+      desc: '곁을 쉽게 내주지 않는 차가운 남자',
+    },
+    {
+      image: '/주이한.png',
+      hashtag: '#츤데레',
+      title: '주이한',
+      desc: '길들여지고 싶은 상처 입은 맹수',
+    },
+  ] as const;
+
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const timerRef = useRef<number | null>(null);
+  const INTERVAL = 2000;
+
+  useEffect(() => {
+    if (timerRef.current) window.clearInterval(timerRef.current);
+    timerRef.current = window.setInterval(() => {
+      setBannerIndex((prev) => (prev + 1) % bannerSlides.length);
+    }, INTERVAL);
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+    };
+  }, [bannerSlides.length]);
+
+  // 로그인 콜백 처리
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const loginStatus = urlParams.get('login');
@@ -140,6 +177,7 @@ const Home: React.FC = () => {
       });
       await logout();
     } catch {
+      // no-op
     }
   };
 
@@ -150,6 +188,7 @@ const Home: React.FC = () => {
       </button>
     ) : null;
 
+  // 초기 데이터 로드
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -194,7 +233,7 @@ const Home: React.FC = () => {
   const renderNovelCard = (item: CardItem) => (
     <div className="novel-card" key={item.id}>
       <img src={item.image} alt={item.title} className="novel-card-image" />
-      <div className="novel-card-body">
+      <div>
         <h3 className="novel-card-title">{item.title}</h3>
         <p className="novel-card-desc">{item.description}</p>
         <p className="novel-card-author">@{item.author}</p>
@@ -210,7 +249,7 @@ const Home: React.FC = () => {
       style={{ cursor: 'pointer' }}
     >
       <img src={item.image} alt={item.title} className="note-card-image" />
-      <div className="note-card-body">
+      <div>
         <h3 className="note-card-title">{item.title}</h3>
         <p className="note-card-desc">{item.description}</p>
         <p className="note-card-author">@{item.author}</p>
@@ -239,17 +278,23 @@ const Home: React.FC = () => {
     default:
       content = (
         <div>
-          <section className="section banner">
-            <img
-              src="https://beizfkcdgqkvhqcqvtwk.supabase.co/storage/v1/object/public/character-thumbnails/c0f8aff0-0b17-4551-b1c4-d4539d067239/1753700613259-mw7jhzoxl7.png"
-              alt="Banner"
-              className="banner-image"
-            />
-            <div className="banner-overlay">
-              <p className="banner-hashtag">#축구공</p>
-              <h2 className="banner-title">서휼 (徐휼)</h2>
-              <p className="banner-desc">그가 내미는 달콤한 충심의 이면에는, 당신을 완벽..</p>
-            </div>
+          <section className="section banner" aria-roledescription="carousel" aria-label="추천 배너">
+            {(() => {
+              const s = bannerSlides[bannerIndex];
+              return (
+                <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                  <img src={s.image} alt={s.title} className="banner-image" />
+                  <div className="banner-overlay">
+                    <p className="banner-hashtag">{s.hashtag}</p>
+                    <h2 className="banner-title">{s.title}</h2>
+                    <p className="banner-desc">{s.desc}</p>
+                  </div>
+                  <div className="banner-counter" aria-hidden="true">
+                    {bannerIndex + 1}/{bannerSlides.length}
+                  </div>
+                </div>
+              );
+            })()}
           </section>
 
           <section className="section">

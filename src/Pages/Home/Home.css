@@ -189,13 +189,9 @@
     height: 584px;
 }
 
-/* -------------------------------
-   추가: 배너 / 카드 / 유저리스트 UI 
--------------------------------- */
-
 .banner {
     position: relative;
-    height: 160px;
+    height: 197px;
     border-radius: 12px;
     overflow: hidden;
 }
@@ -216,25 +212,45 @@
     justify-content: flex-end;
     padding: 12px;
     border-radius: 12px;
+    height: 190px;
 }
 
 .banner-hashtag {
-    font-size: 11px;
+    font-size: 12px;
     color: #cbd5e1;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
+    background-color: #454A55B8;
+    width: 40px;
+    border-radius: 6px;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
 .banner-title {
     font-weight: bold;
-    font-size: 13px;
+    font-size: 15px;
     margin: 0px;
 }
 
 .banner-desc {
-    font-size: 11px;
+    font-size: 14px;
     color: #e2e8f0;
     margin-top: 0px;
 }
+
+.banner-counter {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 
 .section-title {
     font-weight: bold;

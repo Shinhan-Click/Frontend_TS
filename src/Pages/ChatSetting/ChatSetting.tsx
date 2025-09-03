@@ -140,7 +140,15 @@ const ChatSetting: React.FC = () => {
 
   const handlePersonaChange = async (value: string) => {
     setPersonaChoice(value);
-    if (value === 'custom') return;
+    
+    if (value === 'custom') {
+      // 직접 입력 선택 시 필드들을 초기값으로 리셋
+      setName('');
+      setGender('male');
+      setIntroduction('');
+      return;
+    }
+    
     if (!value) return;
     try {
       const res = await fetch(`${API_BASE}/persona/${value}`, { credentials: 'include' });
@@ -188,10 +196,6 @@ const ChatSetting: React.FC = () => {
   }, [navigate, personaChoice, personaText, name, gender, introduction, userNote, location.search]);
 
   const handleSubmit = async () => {
-    if (personaChoice === 'custom' && !personaText.trim()) {
-      alert('페르소나를 입력해주세요.');
-      return;
-    }
     if (!name.trim()) {
       alert('이름을 입력해주세요.');
       return;
@@ -210,16 +214,41 @@ const ChatSetting: React.FC = () => {
     const personaGender: 'MALE' | 'FEMALE' | 'NONE' =
       gender === 'male' ? 'MALE' : gender === 'female' ? 'FEMALE' : 'NONE';
 
-    const payload = {
-      characterId: Number(characterId),
-      introductionId: null,
-      personaName: name.trim(),
-      personaGender,
-      personaPrompt: introduction.trim(),
-      userNotePrompt: userNote.trim() ? userNote.trim() : null,
-    };
-
     try {
+      // 직접 입력인 경우 페르소나 생성 API 호출
+      if (personaChoice === 'custom') {
+        const personaCreatePayload = {
+          name: name.trim(),
+          gender: personaGender === 'NONE' ? 'MALE' : personaGender, // NONE일 경우 기본값 MALE
+          persona: introduction.trim()
+        };
+
+        const personaRes = await fetch(`${API_BASE}/persona/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', accept: '*/*' },
+          credentials: 'include',
+          body: JSON.stringify(personaCreatePayload),
+        });
+
+        if (!personaRes.ok) {
+          throw new Error('페르소나 생성에 실패했습니다.');
+        }
+
+        const personaData: ApiResponse<{ personaId: number }> = await personaRes.json();
+        if (!personaData.isSuccess || !personaData.result) {
+          throw new Error('페르소나 생성에 실패했습니다.');
+        }
+      }
+
+      const payload = {
+        characterId: Number(characterId),
+        introductionId: null,
+        personaName: name.trim(),
+        personaGender,
+        personaPrompt: introduction.trim(),
+        userNotePrompt: userNote.trim() ? userNote.trim() : null,
+      };
+
       const res = await fetch(`${API_BASE}/chat/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', accept: '*/*' },
@@ -241,8 +270,12 @@ const ChatSetting: React.FC = () => {
           characterId: Number(characterId),
         },
       });
-    } catch {
-      alert('채팅방 생성에 실패했습니다.');
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('채팅방 생성에 실패했습니다.');
+      }
     } finally {
       setCreating(false);
     }
@@ -270,9 +303,9 @@ const ChatSetting: React.FC = () => {
                 onChange={handlePersonaChange}
                 options={personaOptions}
                 placeholder="페르소나를 선택하세요"
-                customId="custom"
-                customValue={personaText}
-                onCustomChange={setPersonaText}
+                customId=""
+                customValue=""
+                onCustomChange={() => {}}
               />
             </div>
 
@@ -354,7 +387,7 @@ const ChatSetting: React.FC = () => {
             type="button"
             className="cs-primary"
             onClick={handleSubmit}
-            disabled={(personaChoice === 'custom' && !personaText.trim()) || !name.trim() || !introduction.trim() || creating}
+            disabled={!name.trim() || !introduction.trim() || creating}
           >
             {creating ? '생성 중...' : '대화하기'}
           </button>

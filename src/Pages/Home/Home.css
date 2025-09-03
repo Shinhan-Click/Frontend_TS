@@ -67,7 +67,7 @@
 }
 
 .chip {
-    height: 34px;
+    height: 12px;
     width: 335px;
 }
 
@@ -348,7 +348,7 @@
 }
 
 .section-title.accent {
-    color: #6F4ACD;
+    color: #B093F9;
 }
 
 .section-title.accent1 {
@@ -463,23 +463,25 @@
 
 .novel-card {
     flex: 0 0 auto;
-    width: 164px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    width: 152px;
+    position: relative; /* 추가 */
+    height: 200px; /* 추가 */
 }
 
 .novel-card-image {
     width: 100%;
-    height: 250px;
+    height: 100%;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: 12px;
 }
+
 
 .novel-card-title {
     font-weight: 600;
-    font-size: 14px;
-    color: #fff;
+    font-size: 16px;
+    line-height: 150%;
+    letter-spacing: 0.57%;
+    color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -487,18 +489,50 @@
 }
 
 .novel-card-desc {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
     font-size: 12px;
-    color: #94a3b8;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 133%;
+    letter-spacing: 2.52%;
+    color: #DFE1EA;
+    opacity: 0.61;
     margin: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
 }
 
 .novel-card-author {
     font-size: 12px;
-    color: #64748b;
+    line-height: 133%;
+    letter-spacing: 2.52%;
+    color: #DFE1EA;
+    opacity: 0.61;
     margin: 0;
+    
+    /* 추가할 스타일 */
+    background: #454A55;
+    opacity: 0.72;
+    backdrop-filter: blur(4px);
+    padding: 4px 6px;
+    border-radius: 6px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.novel-card-body {
+    position: absolute; /* 추가 */
+    bottom: 0; /* 추가 */
+    left: 0; /* 추가 */
+    right: 0; /* 추가 */
+    padding: 12px; /* 추가 */
+    background: linear-gradient(transparent, rgba(0,0,0,0.8)); /* 추가 */
+    border-radius: 0 0 12px 12px; /* 추가 */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 /* ===============================
@@ -522,48 +556,75 @@
 
 .note-card {
     flex: 0 0 auto;
-    width: 156px;
+    width: 152px; /* 스펙에 맞게 변경 */
     display: flex;
     flex-direction: column;
     gap: 6px;
     margin-bottom: 60px;
-    /* 필요하면 경계/배경 커스터마이즈
-    border: 1px solid #2a3246;
-    border-radius: 10px;
-    padding: 6px;
-    */
 }
 
 .note-card-image {
-    width: 100%;
-    height: 110px;
+    width: 152px; /* 스펙에 맞게 변경 */
+    height: 110px; /* 스펙 유지 */
     object-fit: cover;
-    border-radius: 12px;
+    border-radius: 12px; /* 스펙 유지 */
 }
 
 .note-card-title {
-    font-weight: normal;
-    font-size: 13px;
-    color: #fff;
+    width: 152px; /* 스펙에 맞게 변경 */
+    height: 24px; /* 스펙에 맞게 변경 */
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 600; /* Bold -> 600 */
+    font-size: 16px; /* 스펙에 맞게 변경 */
+    line-height: 150%; /* 스펙에 맞게 변경 */
+    letter-spacing: 0.57%; /* 스펙에 맞게 변경 */
+    color: #F8F8FA; /* 스펙에 맞게 변경 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin: 0;
+    margin-bottom: 8px; /* 스펙의 list spacing */
 }
 
 .note-card-desc {
-    font-size: 11px;
-    color: #9aa8c1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    width: 152px; /* 스펙에 맞게 변경 */
+    height: 40px; /* 스펙에 맞게 변경 */
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400; /* Regular */
+    font-size: 14px; /* 스펙에 맞게 변경 */
+    line-height: 143%; /* 스펙에 맞게 변경 */
+    letter-spacing: 1.45%; /* 스펙에 맞게 변경 */
+    color: #DFE1EA; /* 스펙 색상 */
+    opacity: 0.61; /* 스펙의 61% 투명도 */
     margin: 0;
+    margin-bottom: 6px; /* 스펙의 list spacing */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
 }
 
 .note-card-author {
-    font-size: 11px;
-    color: #6b7a92;
+    /* 해시태그 컨테이너 - 이미지 1 스펙 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 73px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(54, 58, 67, 0.32); /* #363A43 with 32% opacity */
+    backdrop-filter: blur(4px);
     margin: 0;
+    
+    /* 해시태그 텍스트 - 이미지 2 스펙 */
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 133%;
+    letter-spacing: 2.52%;
+    color: rgba(223, 225, 234, 0.61); /* #DFE1EA with 61% opacity */
+    white-space: nowrap;
 }
 
 /* ===== 캐릭터 메시지 패널 ===== */
@@ -571,52 +632,137 @@
     cursor: pointer;
 }
 
-.top-user.active .avatar {
-    outline: 2px solid #6F4ACD;
-    outline-offset: 2px;
+.top-user.active {
+    width: 88px;
+    height: 80px; /* 높이를 줄여서 이름 공간 제거 */
+    background: rgba(217, 200, 239, 0.07); /* #D9C8EF with 7% opacity */
+    border-radius: 12px;
+    padding: 4px 8px;
+    gap: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* 중앙 정렬로 변경 */
+}
+
+.top-user.active .avatar-name {
+    display: none; /* 완전히 숨김 */
+}
+
+.character-description {
+    color: rgba(223, 225, 234, 0.61); /* #DFE1EA with 61% opacity */
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 157%;
+    letter-spacing: 1.45%;
+    margin-bottom: 12px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease;
 }
 
 .character-panel {
     margin-top: 14px;
     padding: 14px;
-    background: #283143;
-    border: 1px solid #2a3350;
+    background: #D9C8EF12;
     border-radius: 16px;
 }
 
-.character-name {
-    color: #ffffff;
-    font-weight: 700;
-    margin-bottom: 8px;
-    font-size: 14px;
+.character-panel.show .character-description {
+    opacity: 1;
+    transform: translateY(0);
 }
 
+.character-name {
+    color: #F8F8FA;
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 143%;
+    letter-spacing: 1.45%;
+    margin-bottom: 8px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease 0.1s;
+}
+
+.character-panel.show .character-name {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 말풍선 컨테이너 */
 .speech-bubble {
     display: inline-block;
     max-width: 100%;
-    color: #d6def2;
-    background: #3e4e6f;
-    padding: 10px 12px;
+    background: #283143;
     border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: -2px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease 0.2s;
+    
+    /* 말풍선 텍스트 스타일 */
+    color: #F8F8FA;
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
     font-size: 14px;
+    line-height: 143%;
+    letter-spacing: 1.45%;
+}
+
+.character-panel.show .speech-bubble {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .tag-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 2px;
     margin-top: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
 }
 
+/* 태그 칩 */
 .tag-chip {
-    display: inline-block;
-    padding: 6px 4px;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 6px;
     border-radius: 6px;
-    font-size: 11px;
-    color: #DFE1EA;
-    background: #454A55;
-    border: 1px solid #394665;
+    background: rgba(54, 58, 67, 0.32);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease;
+    
+    /* 태그 텍스트 스타일 */
+    color: rgba(190, 193, 203, 0.48);
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 133%;
+    letter-spacing: 2.52%;
+}
+
+.character-panel.show .tag-chip:nth-child(1) {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.3s;
+}
+
+.character-panel.show .tag-chip:nth-child(2) {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.35s;
+}
+
+.character-panel.show .tag-chip:nth-child(3) {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.4s;
 }
 
 /*위프 유저들이 가장 좋아한 캐릭터 수평 스크롤*/
@@ -642,12 +788,13 @@
 }
 
 .top-user .avatar {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 6px;
+    outline: none;
+    border: none;
+}
 
+.top-user.active .avatar {
+    outline: none;
+    border: none;
 }
 
 .avatar-name {

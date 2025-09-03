@@ -103,7 +103,7 @@ const transformUserNoteToCard = (userNotes: UserNote[]): CardItem[] =>
     image: note.userNoteImageUrl || 'https://picsum.photos/seed/default/400/300',
     title: note.title,
     description: extractDescription(note.description || ''),
-    author: note.author,
+    author: '#세계관확장',
   }));
 
 const extractMessage = (description: string): string => {
@@ -171,6 +171,16 @@ const fetchUserNotes = async (): Promise<CardItem[]> => {
   }
 };
 
+// 유틸리티 함수들을 컴포넌트 밖으로 이동
+const extractSpeechBubble = (description: string): string => {
+  const match = description.match(/"([^"]+)"/);
+  return match ? match[1] : '';
+};
+
+const removeQuotesFromDescription = (description: string): string => {
+  return description.replace(/"[^"]*"/g, '').trim();
+};
+
 const Home: React.FC = () => {
   const { isLoggedIn, logout, checkSession } = useAuth();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -196,26 +206,39 @@ const Home: React.FC = () => {
 
   // 캐릭터 클릭 핸들러 - API 호출
   const handleCharacterClick = async (characterId: string) => {
-    if (activeCharacterId === characterId) {
-      // 같은 캐릭터 클릭 시 패널 닫기
-      setActiveCharacterId(null);
-      setSelectedCharacterDetail(null);
-      return;
-    }
+ // 기존 애니메이션 초기화
+ const panel = document.querySelector('.character-panel');
+ if (panel) panel.classList.remove('show');
 
-    setActiveCharacterId(characterId);
-    setIsLoadingCharacter(true);
-    
-    try {
-      const characterDetail = await fetchCharacterDetail(characterId);
-      setSelectedCharacterDetail(characterDetail);
-    } catch (error) {
-      console.error('캐릭터 상세 정보 로딩 실패:', error);
-      setSelectedCharacterDetail(null);
-    } finally {
-      setIsLoadingCharacter(false);
-    }
-  };
+ if (activeCharacterId === characterId) {
+   setActiveCharacterId(null);
+   setSelectedCharacterDetail(null);
+   return;
+ }
+
+ setActiveCharacterId(characterId);
+ setIsLoadingCharacter(true);
+ 
+ try {
+   const characterDetail = await fetchCharacterDetail(characterId);
+   setSelectedCharacterDetail(characterDetail);
+   
+   // 애니메이션 트리거
+   if (characterDetail) {
+     setTimeout(() => {
+       const characterPanel = document.querySelector('.character-panel');
+       if (characterPanel) {
+         characterPanel.classList.add('show');
+       }
+     }, 100);
+   }
+ } catch (error) {
+   console.error('캐릭터 상세 정보 로딩 실패:', error);
+   setSelectedCharacterDetail(null);
+ } finally {
+   setIsLoadingCharacter(false);
+ }
+};
 
   // 터치 스와이프 핸들러
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -333,12 +356,6 @@ const Home: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [showSearch]);
 
-  // 따옴표로 감싸진 부분 추출 함수
-  const extractSpeechBubble = (description: string): string => {
-    const match = description.match(/"([^"]+)"/);
-    return match ? match[1] : '';
-  };
-
   const renderNovelCard = (item: CardItem) => (
     <div className="novel-card" key={item.id}>
       <img src={item.image} alt={item.title} className="novel-card-image" />
@@ -361,7 +378,7 @@ const Home: React.FC = () => {
       <div className="note-card-body">
         <h3 className="note-card-title">{item.title}</h3>
         <p className="note-card-desc">{item.description}</p>
-        <p className="note-card-author">@{item.author}</p>
+        <p className="note-card-author">{item.author}</p>
       </div>
     </div>
   );
@@ -452,12 +469,12 @@ const Home: React.FC = () => {
             {activeCharacterId && (
               <div className="character-panel">
                 {isLoadingCharacter ? (
-                  <div className="loading-container">캐릭터 정보 로딩 중...</div>
+                  <div className="loading-container"></div>
                 ) : selectedCharacterDetail ? (
                   <>
-                    {/* 전체 설명 (맨 위) */}
+                    {/* 전체 설명 (맨 위) - 따옴표 부분 제거 */}
                     <div className="character-description">
-                      {selectedCharacterDetail.description}
+                      {removeQuotesFromDescription(selectedCharacterDetail.description)}
                     </div>
                     
                     {/* 캐릭터 이름 */}

@@ -68,9 +68,9 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose }) => {
                 <h2 className="text-[18px] -mt-[15px] mb-[30px] font-bold text-[#FFF] px-2">채팅방 설정</h2>
 
                 <div className="grid grid-cols-3 gap-4 text-center text-[15px] mb-6">
-                    <IconButton icon={<UserIcon className="w-[38px] h-[38px] text-[#FFF]" />} label="유저 페르소나" />
-                    <IconButton icon={<NoteIcon className="w-[38px] h-[38px] text-[#FFF]" />} label="유저 노트" />
-                    <IconButton icon={<EditIcon className="w-[38px] h-[38px] text-[#FFF]" />} label="AI 모델 변경" />
+                    <IconButton icon={<UserIcon className="w-[33px] h-[33px] text-[#FFF]" />} label="유저 페르소나" />
+                    <IconButton icon={<NoteIcon className="w-[33px] h-[33px] text-[#FFF]" />} label="유저 노트" />
+                    <IconButton icon={<EditIcon className="w-[33px] h-[33px] text-[#FFF]" />} label="AI 모델 변경" />
                 </div>
 
                 <hr className="border-[1px] border-[#3B4966] w-[320px] mt-[15px] mb-[15px]" />

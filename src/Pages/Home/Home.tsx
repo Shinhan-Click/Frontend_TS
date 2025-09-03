@@ -352,7 +352,7 @@ const Home: React.FC = () => {
 
         <section className="section chip">
           <div className="chip-button">
-            {['캐릭터 챗', '웹 소설', '유저 노트'].map((label, index) => (
+            {['캐릭터 챗', '웹 소설'].map((label, index) => (
               <button
                 key={index}
                 type="button"

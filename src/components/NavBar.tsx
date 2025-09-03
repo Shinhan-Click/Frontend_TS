@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaCommentAlt, FaPlay, FaUser } from 'react-icons/fa';
 import { BsFilePerson } from 'react-icons/bs';
 import { MdNoteAlt } from 'react-icons/md';
 import { NoteIcon } from '../components/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './NavBar.css';
 
 type NavItem = {
-    id: string;
+    id: 'home' | 'popular' | 'continue' | 'mypage';
     label: string;
     icon: React.ReactNode;
 };
@@ -19,10 +19,34 @@ const navItems: NavItem[] = [
     { id: 'mypage', label: '마이 페이지', icon: <FaUser /> },
 ];
 
+const routeById: Record<NavItem['id'], string> = {
+    home: '/',
+    popular: '/HomeToUserNote',
+    continue: '/',
+    mypage: '/',
+};
+
 const NavBar: React.FC = () => {
-    const [active, setActive] = useState<string>('home');
     const [open, setOpen] = useState<boolean>(false);
+    const [active, setActive] = useState<NavItem['id']>('home');
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        const matched = (Object.entries(routeById).find(([, path]) => path === location.pathname)?.[0] ??
+            (location.pathname === '/' ? 'home' : null)) as NavItem['id'] | null;
+
+        if (matched) setActive(matched);
+    }, [location.pathname]);
+
+    const handleNavClick = (id: NavItem['id']) => {
+        setActive(id);
+        if (id === 'home') {
+            navigate('/');
+            return;
+        }
+        navigate(routeById[id]);
+    };
 
     return (
         <div className="nav-row">
@@ -31,13 +55,9 @@ const NavBar: React.FC = () => {
                     <button
                         key={id}
                         className={`nav-button ${active === id ? 'active' : ''}`}
-                        onClick={() => {
-                            setActive(id);
-                            if (id === 'popular') {
-                                navigate('/ChattingUserNote');
-                            }
-                        }}
+                        onClick={() => handleNavClick(id)}
                         type="button"
+                        aria-pressed={active === id}
                     >
                         <div className="icon">{icon}</div>
                         <div className="label">{label}</div>

@@ -112,56 +112,69 @@ const FutureNotePost: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    try {
-      if (!incoming) {
-        alert("데이터가 없습니다. 이전 단계로 돌아가 주세요.");
-        return;
-      }
+  try {
+    if (!incoming) {
+      alert("데이터가 없습니다. 이전 단계로 돌아가 주세요.");
+      return;
+    }
 
-      // data / mileStones / endings 모두 JSON 문자열로 전송
-      const dataPayload = {
-        title: title.trim(),
-        description: desc.trim(),
-        tagNames: normalizeTags(tags),
-        playTurn: incoming.playTurn ?? null,            // "SHORT" | "NORMAL" | "LONG"
-        storyStructure: incoming.storyStructure ?? null, // "THREE_ACT" | "FIVE_ACT"
-        summary: incoming.summary ?? "",
-        prompt: incoming.prompt ?? "",                  // ← FutureNote에서 넘어온 prompt
-      };
+    // data / mileStones / endings 모두 JSON 문자열로 전송
+    const dataPayload = {
+      title: title.trim(),
+      description: desc.trim(),
+      tagNames: normalizeTags(tags),
+      playTurn: incoming.playTurn ?? null,            // "SHORT" | "NORMAL" | "LONG"
+      storyStructure: incoming.storyStructure ?? null, // "THREE_ACT" | "FIVE_ACT"
+      summary: incoming.summary ?? "",
+      prompt: incoming.prompt ?? "",                  // ← FutureNote에서 넘어온 prompt
+    };
 
-      const mileStonesPayload = (incoming.mileStones || []).map((m: any) => ({
-        title: m.title ?? "",
-        content: m.content ?? "",
-        startTurn: m.startTurn ?? null,
-        endTurn: m.endTurn ?? null,
-      }));
+    const mileStonesPayload = (incoming.mileStones || []).map((m: any) => ({
+      title: m.title ?? "",
+      content: m.content ?? "",
+      startTurn: m.startTurn ?? null,
+      endTurn: m.endTurn ?? null,
+    }));
 
-      const endingsPayload = toEndingObjects(incoming.endings || []);
+    const endingsPayload = toEndingObjects(incoming.endings || []);
 
-      const formData = new FormData();
-      formData.append("data", JSON.stringify(dataPayload));
-      formData.append("mileStones", JSON.stringify(mileStonesPayload));
-      formData.append("endings", JSON.stringify(endingsPayload));
-      if (coverFile) formData.append("thumbnail", coverFile);
-      galleryFiles.forEach((f) => formData.append("exampleImages", f));
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(dataPayload));
+    formData.append("mileStones", JSON.stringify(mileStonesPayload));
+    formData.append("endings", JSON.stringify(endingsPayload));
+    if (coverFile) formData.append("thumbnail", coverFile);
+    galleryFiles.forEach((f) => formData.append("exampleImages", f));
 
-      const resp = await fetch(`${API_BASE}/futurenote/create`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
+    const resp = await fetch(`${API_BASE}/futurenote/create`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
 
-      if (!resp.ok) {
-        const text = await resp.text().catch(() => "");
-        throw new Error(`HTTP ${resp.status} ${text || ""}`);
-      }
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      throw new Error(`HTTP ${resp.status} ${text || ""}`);
+    }
 
+    // Parse the response
+    const responseData = await resp.json();
+    
+    if (responseData.isSuccess && responseData.result) {
       alert("게시 완료");
-      // 성공 후 이동 경로 필요 시 설정
-      // navigate('/UserNoteDetail/신규ID');
+      
+      // Navigate to FutureNoteIntroduce with the response data
+      navigate("/FutureNoteIntroduce", {
+        state: { 
+          futureNoteData: responseData.result 
+        }
+      });
+    } else {
+      throw new Error(responseData.message || "게시 실패");
+    }
+
     } catch (err: any) {
-      console.error(err);
-      alert("게시 실패: " + (err?.message || "알 수 없는 오류"));
+        console.error(err);
+        alert("게시 실패: " + (err?.message || "알 수 없는 오류"));
     }
   };
 

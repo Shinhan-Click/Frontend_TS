@@ -43,7 +43,7 @@ const App: React.FC = () => {
           <Route path="/FutureNoteLoading" element={<FutureNoteLoading />} />
           <Route path="/FutureNote" element={<FutureNote />} />
           <Route path="/FutureNotePost" element={<FutureNotePost />} />
-          <Route path="/FutureNoteIntroduce" element={<FutureNoteIntroduce />} />
+          <Route path="/FutureNoteIntroduce/:futureNoteId" element={<FutureNoteIntroduce />} />
 
         </Routes>
 

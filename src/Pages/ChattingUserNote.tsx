@@ -176,6 +176,15 @@ const ChattingUserNote: React.FC = () => {
     navigate('/UserNoteWrite', { state: { draft: incomingDraft, fromSearch } });
   };
 
+  // 선택 초기화 후 초기 화면으로 복귀
+  const handleExitMerge = () => {
+    setMode('browse');
+    setSelectedForMerge([]);
+    setSelectedOption(null);
+    setSelectedApply(null);
+    setIsBottomSheetOpen(false);
+  };
+
   // 선택된 키를 실제 노트 데이터로 해석
   const resolveSelectedOptions = () => {
     return selectedForMerge.map((key) => {
@@ -185,25 +194,25 @@ const ChattingUserNote: React.FC = () => {
         const n = myNotes.find((x) => x.userNoteId === id);
         return n
           ? {
-              id: key,
-              title: n.title,
-              description: n.description,
-              meta: n.createdAt,
-              kind: 'my' as const,
-              rawId: id,
-            }
+            id: key,
+            title: n.title,
+            description: n.description,
+            meta: n.createdAt,
+            kind: 'my' as const,
+            rawId: id,
+          }
           : null;
       } else {
         const n = likedNotes.find((x) => x.userNoteId === id);
         return n
           ? {
-              id: key,
-              title: n.title,
-              description: n.description,
-              meta: `@${n.author}`,
-              kind: 'liked' as const,
-              rawId: id,
-            }
+            id: key,
+            title: n.title,
+            description: n.description,
+            meta: `@${n.author}`,
+            kind: 'liked' as const,
+            rawId: id,
+          }
           : null;
       }
     }).filter(Boolean) as Array<{
@@ -238,11 +247,11 @@ const ChattingUserNote: React.FC = () => {
         headers: { accept: '*/*', 'Cache-Control': 'no-cache' },
         credentials: 'include',
       });
-      
+
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      
+
       const data: ApiResponse<UserNoteDetail> = await res.json();
-      
+
       if (data.isSuccess && data.result) {
         return data.result;
       } else {
@@ -256,39 +265,39 @@ const ChattingUserNote: React.FC = () => {
 
   const handleApply = async () => {
     if (!selectedApply) return;
-    
+
     setApplyLoading(true);
-    
+
     try {
       const [kind, idStr] = selectedApply.split(':');
       const id = parseInt(idStr, 10);
-      
+
       // API를 통해 유저노트 상세 정보 조회
       const userNoteDetail = await fetchUserNoteDetail(id);
-      
+
       if (!userNoteDetail) {
         // API 호출 실패 시 기존 로직 유지 (fallback)
         let description = '';
         if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
         else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
-        
+
         const draft = { ...(incomingDraft || {}), userNote: description };
-        navigate(`/ChatSetting${fromSearch || ''}`, { 
-          state: { selectedUserNoteDescription: description, draft } 
+        navigate(`/ChatSetting${fromSearch || ''}`, {
+          state: { selectedUserNoteDescription: description, draft }
         });
         return;
       }
-      
+
       // API에서 가져온 prompt 데이터 사용
       const draft = { ...(incomingDraft || {}), userNote: userNoteDetail.prompt };
-      navigate(`/ChatSetting${fromSearch || ''}`, { 
-        state: { 
+      navigate(`/ChatSetting${fromSearch || ''}`, {
+        state: {
           selectedUserNoteDescription: userNoteDetail.prompt,
           selectedUserNoteDetail: userNoteDetail, // 전체 상세 정보도 함께 전달
-          draft 
-        } 
+          draft
+        }
       });
-      
+
     } catch (error) {
       console.error('Error applying user note:', error);
       // 에러 발생 시에도 기존 로직으로 fallback
@@ -297,10 +306,10 @@ const ChattingUserNote: React.FC = () => {
       let description = '';
       if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
       else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
-      
+
       const draft = { ...(incomingDraft || {}), userNote: description };
-      navigate(`/ChatSetting${fromSearch || ''}`, { 
-        state: { selectedUserNoteDescription: description, draft } 
+      navigate(`/ChatSetting${fromSearch || ''}`, {
+        state: { selectedUserNoteDescription: description, draft }
       });
     } finally {
       setApplyLoading(false);
@@ -320,12 +329,33 @@ const ChattingUserNote: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
-        <header className="flex-shrink-0 flex items-center h-[34px] mt-[24px] px-[20px]">
-          <button className="p-2 ml-[4px] bg-[#141924] border-none" aria-label="뒤로가기" onClick={() => navigate(-1)}>
-            <ArrowLeftIcon className="w-[20px] h-[20px] text-[#FFF]" />
-          </button>
-          <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트</h1>
-        </header>
+        {mode === 'merge-select' ? (
+          <header className="flex-shrink-0 px-[20px] bg-[#222A39]">
+            <div className="flex items-center h-[106x]">
+              <button
+                className="p-2 bg-[#222A39] border-none"
+                aria-label="닫기"
+                onClick={handleExitMerge}
+              >
+                <svg className="w-[20px] h-[20px] text-[#FFF] mt-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+              <h1 className="mt-[20px] ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트 병합</h1>
+            </div>
+            <div className="mt-[10px] h-px bg-[#2A3346]" />
+            <div className="py-[12px] ml-[65px] text-[12px] text-[#DFE1EA]/61">
+              병합할 두 개의 유저노트를 선택해주세요
+            </div>
+          </header>
+        ) : (
+          <header className="flex-shrink-0 flex items-center h-[34px] mt-[24px] px-[20px]">
+            <button className="p-2 ml-[4px] bg-[#141924] border-none" aria-label="뒤로가기" onClick={() => navigate(-1)}>
+              <ArrowLeftIcon className="w-[20px] h-[20px] text-[#FFF]" />
+            </button>
+            <h1 className="ml-[8px] text-[18px] font-bold text-[#FFF]">유저노트</h1>
+          </header>
+        )}
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <div className="w-[335px] mx-auto pt-4 pb-24 space-y-6">
@@ -335,25 +365,25 @@ const ChattingUserNote: React.FC = () => {
                 <div className="space-y-3">
                   {mode === 'merge-select'
                     ? myNotes.map((n) => (
-                        <SelectableCard
-                          key={`my:${n.userNoteId}`}
-                          title={n.title}
-                          description={n.description}
-                          meta={n.createdAt}
-                          selected={isSelected('my', n.userNoteId)}
-                          onToggle={() => toggleSelect('my', n.userNoteId)}
-                        />
-                      ))
+                      <SelectableCard
+                        key={`my:${n.userNoteId}`}
+                        title={n.title}
+                        description={n.description}
+                        meta={n.createdAt}
+                        selected={isSelected('my', n.userNoteId)}
+                        onToggle={() => toggleSelect('my', n.userNoteId)}
+                      />
+                    ))
                     : myNotes.map((n) => (
-                        <SingleSelectableCard
-                          key={`my:${n.userNoteId}`}
-                          title={n.title}
-                          description={n.description}
-                          meta={n.createdAt}
-                          selected={isApplySelected('my', n.userNoteId)}
-                          onToggle={() => toggleApply('my', n.userNoteId)}
-                        />
-                      ))}
+                      <SingleSelectableCard
+                        key={`my:${n.userNoteId}`}
+                        title={n.title}
+                        description={n.description}
+                        meta={n.createdAt}
+                        selected={isApplySelected('my', n.userNoteId)}
+                        onToggle={() => toggleApply('my', n.userNoteId)}
+                      />
+                    ))}
                 </div>
               </section>
             )}
@@ -364,25 +394,25 @@ const ChattingUserNote: React.FC = () => {
                 <div className="space-y-3">
                   {mode === 'merge-select'
                     ? likedNotes.map((n) => (
-                        <SelectableCard
-                          key={`liked:${n.userNoteId}`}
-                          title={n.title}
-                          description={n.description}
-                          meta={`@${n.author}`}
-                          selected={isSelected('liked', n.userNoteId)}
-                          onToggle={() => toggleSelect('liked', n.userNoteId)}
-                        />
-                      ))
+                      <SelectableCard
+                        key={`liked:${n.userNoteId}`}
+                        title={n.title}
+                        description={n.description}
+                        meta={`@${n.author}`}
+                        selected={isSelected('liked', n.userNoteId)}
+                        onToggle={() => toggleSelect('liked', n.userNoteId)}
+                      />
+                    ))
                     : likedNotes.map((n) => (
-                        <SingleSelectableCard
-                          key={`liked:${n.userNoteId}`}
-                          title={n.title}
-                          description={n.description}
-                          meta={`@${n.author}`}
-                          selected={isApplySelected('liked', n.userNoteId)}
-                          onToggle={() => toggleApply('liked', n.userNoteId)}
-                        />
-                      ))}
+                      <SingleSelectableCard
+                        key={`liked:${n.userNoteId}`}
+                        title={n.title}
+                        description={n.description}
+                        meta={`@${n.author}`}
+                        selected={isApplySelected('liked', n.userNoteId)}
+                        onToggle={() => toggleApply('liked', n.userNoteId)}
+                      />
+                    ))}
                 </div>
               </section>
             )}
@@ -451,9 +481,8 @@ const ChattingUserNote: React.FC = () => {
 
         <>
           <div
-            className={`absolute inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
-              isBottomSheetOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'
-            }`}
+            className={`absolute inset-0 z-40 bg-black/50 transition-opacity duration-300 ${isBottomSheetOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'
+              }`}
             onClick={() => setIsBottomSheetOpen(false)}
           />
           <div
@@ -480,9 +509,8 @@ const ChattingUserNote: React.FC = () => {
                   type="button"
                   role="radio"
                   aria-checked={selectedOption === 'write'}
-                  className={`w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors ${
-                    selectedOption === 'write' ? 'bg-[#6F4ACD]/20 border-2 border-[#6F4ACD]' : 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10'
-                  }`}
+                  className={`w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors ${selectedOption === 'write' ? 'bg-[#6F4ACD]/20 border-2 border-[#6F4ACD]' : 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10'
+                    }`}
                   onClick={handleSelectWrite}
                 >
                   <div className="w-[25px] h-10 bg-gray-600 flex items-center justify-center text-[#FFF]">
@@ -505,9 +533,8 @@ const ChattingUserNote: React.FC = () => {
                   type="button"
                   role="radio"
                   aria-checked={selectedOption === 'merge'}
-                  className={`w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors mt-[10px] ${
-                    selectedOption === 'merge' ? 'bg-[#6F4ACD]/20 border-2 border-[#6F4ACD]' : 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10'
-                  }`}
+                  className={`w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors mt-[10px] ${selectedOption === 'merge' ? 'bg-[#6F4ACD]/20 border-2 border-[#6F4ACD]' : 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10'
+                    }`}
                   onClick={() => {
                     setSelectedOption('merge');
                     setIsBottomSheetOpen(false);

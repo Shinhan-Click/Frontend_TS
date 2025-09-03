@@ -44,10 +44,10 @@ type Draft = {
 };
 type LocationState =
   | {
-      selectedUserNoteDescription?: string | null;
-      draft?: Draft;
-      fromSearch?: string;
-    }
+    selectedUserNoteDescription?: string | null;
+    draft?: Draft;
+    fromSearch?: string;
+  }
   | null;
 
 const ChatSetting: React.FC = () => {
@@ -84,7 +84,7 @@ const ChatSetting: React.FC = () => {
           setCharacterName(data.result.name ?? '');
           setCharacterImageUrl(data.result.characterImageUrl ?? '');
         }
-      } catch {}
+      } catch { }
     })();
   }, [characterId]);
 
@@ -159,7 +159,7 @@ const ChatSetting: React.FC = () => {
       setName(persona.name || '');
       setGender(mapGender(persona.gender));
       setIntroduction(persona.persona || '');
-    } catch {}
+    } catch { }
   };
 
   const handleOpenUserNotes = useCallback(async () => {

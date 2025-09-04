@@ -140,7 +140,7 @@ const ChatSetting: React.FC = () => {
 
   const handlePersonaChange = async (value: string) => {
     setPersonaChoice(value);
-    
+
     if (value === 'custom') {
       // 직접 입력 선택 시 필드들을 초기값으로 리셋
       setName('');
@@ -148,7 +148,7 @@ const ChatSetting: React.FC = () => {
       setIntroduction('');
       return;
     }
-    
+
     if (!value) return;
     try {
       const res = await fetch(`${API_BASE}/persona/${value}`, { credentials: 'include' });
@@ -305,7 +305,7 @@ const ChatSetting: React.FC = () => {
                 placeholder="페르소나를 선택하세요"
                 customId=""
                 customValue=""
-                onCustomChange={() => {}}
+                onCustomChange={() => { }}
               />
             </div>
 

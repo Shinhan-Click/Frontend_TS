@@ -45,7 +45,7 @@ const App: React.FC = () => {
           <Route path="/FutureNote" element={<FutureNote />} />
           <Route path="/FutureNotePost" element={<FutureNotePost />} />
           <Route path="/FutureNoteIntroduce/:futureNoteId" element={<FutureNoteIntroduce />} />
-          <Route path="/CharacterIntroduce" element={<CharacterIntroduce />} />
+          <Route path="/CharacterIntroduce/:characterId" element={<CharacterIntroduce />} />
           CharacterIntroduce
         </Routes>
 

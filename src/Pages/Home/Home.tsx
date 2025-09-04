@@ -27,7 +27,7 @@ type CharacterDetail = {
   name: string;
   gender: string;
   description: string;
-  authorComment: string;
+  characterIntro: string;
   introductions: Array<{
     introductionId: number;
     title: string;
@@ -37,12 +37,6 @@ type CharacterDetail = {
     tagId: number;
     name: string;
   }>;
-  story: {
-    storyId: number;
-    storyImageUrl: string;
-    title: string;
-    description: string;
-  } | null;
 };
 
 // 배너 데이터 타입
@@ -293,7 +287,7 @@ const Home: React.FC = () => {
 
   const goToChatSetting = () => {
     if (!selectedCharacterDetail) return;
-    navigate(`/ChatSetting?characterId=${encodeURIComponent(selectedCharacterDetail.characterId)}`, { 
+    navigate(`/CharacterIntroduce/${selectedCharacterDetail.characterId}`, { 
       state: { character: selectedCharacterDetail } 
     });
   };

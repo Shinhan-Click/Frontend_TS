@@ -88,7 +88,7 @@ const ChatSetting: React.FC = () => {
     })();
   }, [characterId]);
 
-  const [personaChoice, setPersonaChoice] = useState<string>('custom');
+  const [personaChoice, setPersonaChoice] = useState<string>('');
   const [personaText, setPersonaText] = useState<string>('');
   const [personaOptions, setPersonaOptions] = useState<{ id: string; label: string }[]>([
     { id: 'custom', label: '직접 입력' },
@@ -346,7 +346,7 @@ const ChatSetting: React.FC = () => {
               />
             </div>
 
-            <hr className="border-t border-[#283143] my-4" />
+            <hr className="border-t border-[#283143] my-2" />
 
             <div className="cs-field">
               <div className="cs-field-head">
@@ -361,7 +361,7 @@ const ChatSetting: React.FC = () => {
             </div>
 
             {userNote !== '' && (
-              <div style={{ marginTop: '2px' }}>
+              <div style={{ marginTop: '16px' }}>
                 <InputWithCounter
                   id="userNote"
                   value={userNote}

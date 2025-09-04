@@ -36,7 +36,7 @@
 
 .cs-backbtn {
     padding: 8px;
-    margin-left: -8px;
+    margin-left: 10px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -76,7 +76,7 @@
 }
 
 .cs-field {
-    margin-bottom: 40px;
+    margin-bottom: 68px;
 }
 
 .cs-field:last-child {
@@ -204,9 +204,10 @@
 
 .cs-counter {
     margin-top: 6px;
+    margin-bottom: -35px; 
     text-align: right;
     font-size: 12px;
-    color: #94a3b8;
+    color: #ffffff;
     padding-right: 4px;
 }
 
@@ -298,12 +299,23 @@
 }
 
 .cs-dd-value.is-placeholder {
-    color: #9ca3af;
+    color: rgba(190, 193, 203, 0.48);
 }
 
 .cs-dd-caret {
-    color: #9ca3af;
-    margin-left: 12px;
+    color: #ffffff;
+    margin-left: 16px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.cs-dd-caret.is-rotated {
+    transform: rotate(180deg);
 }
 
 .cs-dd-menu {
@@ -369,7 +381,7 @@
 }
 
 .cs-dd-input::placeholder {
-    color: #9ca3af;
+    color: rgba(190, 193, 203, 0.48);
 }
 
 /* === PersonaDropdown: 입력 모드여도 트리거 박스 크기 고정 === */
@@ -380,7 +392,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 12px 36px 12px 12px !important;
+    padding: 12px 18px 12px 12px !important;
     min-height: 44px !important;
     height: 44px !important;
     box-sizing: border-box !important;
@@ -403,6 +415,8 @@
 .cs-dd>.cs-dd-trigger .cs-dd-caret {
     margin-left: 12px !important;
     flex: 0 0 auto !important;
+    width: 20px !important;
+    height: 20px !important;
 }
 
 .cs-dd .cs-dd-value {

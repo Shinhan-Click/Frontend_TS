@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Props { onClose?: () => void; }
@@ -81,32 +81,59 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
 
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [progress, setProgress] = useState(fromResult ? 100 : 10);
+  const [progress, setProgress] = useState(fromResult ? 100 : 0);
   const [noteName, setNoteName] = useState("");
-
-  const ticking = useRef<number | null>(null);
-  const doneRef = useRef(fromResult);
+  const [apiCompleted, setApiCompleted] = useState(fromResult);
 
   const { url: firstImgUrl } = useUserNoteImage(firstUserNoteId);
   const { url: secondImgUrl } = useUserNoteImage(secondUserNoteId);
+
+  // 원형 진행률 바 계산
+  const size = 22;
+  const stroke = 4;
+  const r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  const dash = useMemo(() => circumference * (progress / 100), [circumference, progress]);
 
   useEffect(() => {
     const t = setTimeout(() => setOpen(true), 0);
     return () => clearTimeout(t);
   }, []);
 
+  // 진행률 애니메이션
   useEffect(() => {
-    if (doneRef.current) return;
-    ticking.current = window.setInterval(() => {
-      setProgress((p) => (p < 95 ? Math.min(95, p + 3) : p));
-    }, 800);
-    return () => { if (ticking.current) clearInterval(ticking.current); };
-  }, []);
+    if (fromResult || apiCompleted) return;
+    
+    let progressInterval: NodeJS.Timeout;
+    
+    progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (apiCompleted) {
+          return 100; // API 완료되면 100%로
+        } else if (prev < 95) {
+          return prev + Math.random() * 2; // 95%까지 점진적 증가
+        } else {
+          return prev; // 95%에서 대기
+        }
+      });
+    }, 10); // 50ms 간격으로 업데이트
+    
+    return () => {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+    };
+  }, [fromResult, apiCompleted]);
 
+  // API 호출
   useEffect(() => {
     if (fromResult) return;
+    
     const run = async () => {
-      if (firstUserNoteId == null || secondUserNoteId == null) { navigate(-1); return; }
+      if (firstUserNoteId == null || secondUserNoteId == null) { 
+        navigate(-1); 
+        return; 
+      }
       try {
         const res = await fetch(`${API_BASE}/usernote/merge`, {
           method: "POST",
@@ -118,18 +145,29 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
         const data = await res.json();
         const mergedText: string | undefined = data?.result?.mergedPrompt;
 
-        navigate("/UserNoteMergeResult", {
-          state: { mergedText, firstTitle, secondTitle, firstUserNoteId, secondUserNoteId, draft: incomingDraft, fromSearch },
-          replace: true,
-        });
+        // API 완료 시 진행률 100%로 설정
+        setApiCompleted(true);
+        setProgress(100);
+        
+        // 잠깐 100% 보여주고 결과 페이지로 이동
+        setTimeout(() => {
+          navigate("/UserNoteMergeResult", {
+            state: { mergedText, firstTitle, secondTitle, firstUserNoteId, secondUserNoteId, draft: incomingDraft, fromSearch },
+            replace: true,
+          });
+        }, 500);
       } catch {
-        navigate("/UserNoteMergeResult", {
-          state: {
-            mergedText: "병합에 실패했습니다. 잠시 후 다시 시도해주세요.",
-            firstTitle, secondTitle, firstUserNoteId, secondUserNoteId, draft: incomingDraft, fromSearch,
-          },
-          replace: true,
-        });
+        setApiCompleted(true);
+        setProgress(100);
+        setTimeout(() => {
+          navigate("/UserNoteMergeResult", {
+            state: {
+              mergedText: "병합에 실패했습니다. 잠시 후 다시 시도해주세요.",
+              firstTitle, secondTitle, firstUserNoteId, secondUserNoteId, draft: incomingDraft, fromSearch,
+            },
+            replace: true,
+          });
+        }, 500);
       }
     };
     run();
@@ -184,7 +222,7 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
     <div
       className={[
         "relative w-[375px] h-[896px] bg-[#141924] text-white rounded-sm overflow-hidden",
-        "flex flex-col", // 여기에 scrollbar-hide 추가
+        "flex flex-col",
         "transform transition-transform duration-300 ease-out will-change-transform",
         open && !closing ? "translate-y-0" : "translate-y-full",
       ].join(" ")}
@@ -208,7 +246,7 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
 
         <main 
             className={[
-              "flex-1 overflow-hidden", // 여기가 현재 코드
+              "flex-1 overflow-hidden",
               "bg-[radial-gradient(60%_40%_at_50%_55%,rgba(111,74,205,0.15),transparent_70%)]"
             ].join(" ")}
             style={{
@@ -256,14 +294,36 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
             <section className="mt-[12px] flex flex-col items-center text-center">
               <h1 className="self-stretch text-[#F8F8FA] text-center font-['Pretendard'] text-[20px] font-semibold leading-[140%] tracking-[-0.24px]">유저노트 병합 중...</h1>
               <p className="mt-3 text-[#F8F8FA] text-center font-['Pretendard'] text-[14px] font-normal leading-[142.9%]">두 개의 유저노트를 병합 중입니다.<br />완성된 유저노트는 내 유저노트에 추가됩니다.</p>
-              <div className="mt-[5px] flex items-center gap-2">
-                <div className="relative w-6 h-6">
-                  <svg viewBox="0 0 36 36" className="w-[20px] h-[20px] mt-[6px]">
-                    <path d="M18 2a16 16 0 1 1 0 32a16 16 0 1 1 0-32" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
-                    <path d="M18 2a16 16 0 1 1 0 32a16 16 0 1 1 0-32" fill="none" stroke="#7C5CFF" strokeWidth="4" strokeDasharray={`${(progress / 100) * 100} 100`} strokeLinecap="round" />
+              
+              {/* 퓨처노트 스타일 진행률 바 */}
+              <div className="mt-6 flex items-center justify-center gap-[6px]">
+                <div className="relative" aria-label={`진행률 ${Math.round(progress)}%`}>
+                  <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                    <circle
+                      cx={size / 2}
+                      cy={size / 2}
+                      r={r}
+                      stroke="#1F2A44"
+                      strokeWidth={stroke}
+                      fill="none"
+                    />
+                    <circle
+                      cx={size / 2}
+                      cy={size / 2}
+                      r={r}
+                      stroke="#B093F9"
+                      strokeWidth={stroke}
+                      strokeLinecap="round"
+                      fill="none"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={circumference - dash}
+                      transform={`rotate(-90 ${size / 2} ${size / 2})`}
+                    />
                   </svg>
                 </div>
-                <span className="ml-[10px] text-[#B093F9] text-center font-['Pretendard'] text-[14px] font-medium leading-[142.9%] tracking-[0.203px]">{progress}% 완료</span>
+                <div className="text-left">
+                  <div className="text-[14px] text-[#B093F9]">{Math.round(progress)}% 완료</div>
+                </div>
               </div>
             </section>
           )}
@@ -370,8 +430,6 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
                   aria-label="병합 중"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
-                    <path d="M2.25171 5.47832C2.25171 4.35822 2.25171 3.79816 2.4697 3.37034C2.66144 2.99402 2.9674 2.68805 3.34373 2.49631C3.77155 2.27832 4.3316 2.27832 5.45171 2.27832H13.0517C14.1718 2.27832 14.7319 2.27832 15.1597 2.49631C15.536 2.68805 15.842 2.99402 16.0337 3.37034C16.2517 3.79816 16.2517 4.35822 16.2517 5.47832V13.0783C16.2517 14.1984 16.2517 14.7585 16.0337 15.1863C15.842 15.5626 15.536 15.8686 15.1597 16.0603C14.7319 16.2783 14.1718 16.2783 13.0517 16.2783H5.45171C4.3316 16.2783 3.77155 16.2783 3.34373 16.0603C2.9674 15.8686 2.66144 15.5626 2.4697 15.1863C2.25171 14.7585 2.25171 14.1984 2.25171 13.0783V5.47832Z" fill="white" fillOpacity="0.3"/>
-                    <path d="M8.25171 11.4783C8.25171 10.3582 8.25171 9.79816 8.4697 9.37034C8.66144 8.99402 8.9674 8.68805 9.34373 8.49631C9.77155 8.27832 10.3316 8.27832 11.4517 8.27832H19.0517C20.1718 8.27832 20.7319 8.27832 21.1597 8.49631C21.536 8.68805 21.842 8.99402 22.0337 9.37034C22.2517 9.79816 22.2517 10.3582 22.2517 11.4783V19.0783C22.2517 20.1984 22.2517 20.7585 22.0337 21.1863C21.842 21.5626 21.536 21.8686 21.1597 22.0603C20.7319 22.2783 20.1718 22.2783 19.0517 22.2783H11.4517C10.3316 22.2783 9.77155 22.2783 9.34373 22.0603C8.9674 21.8686 8.66144 21.5626 8.4697 21.1863C8.25171 20.7585 8.25171 20.1984 8.25171 19.0783V11.4783Z" fill="white" fillOpacity="0.3"/>
                     <path d="M2.25171 5.47832C2.25171 4.35822 2.25171 3.79816 2.4697 3.37034C2.66144 2.99402 2.9674 2.68805 3.34373 2.49631C3.77155 2.27832 4.3316 2.27832 5.45171 2.27832H13.0517C14.1718 2.27832 14.7319 2.27832 15.1597 2.49631C15.536 2.68805 15.842 2.99402 16.0337 3.37034C16.2517 3.79816 16.2517 4.35822 16.2517 5.47832V13.0783C16.2517 14.1984 16.2517 14.7585 16.0337 15.1863C15.842 15.5626 15.536 15.8686 15.1597 16.0603C14.7319 16.2783 14.1718 16.2783 13.0517 16.2783H5.45171C4.3316 16.2783 3.77155 16.2783 3.34373 16.0603C2.9674 15.8686 2.66144 15.5626 2.4697 15.1863C2.25171 14.7585 2.25171 14.1984 2.25171 13.0783V5.47832Z" stroke="#F8F8FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M8.25171 11.4783C8.25171 10.3582 8.25171 9.79816 8.4697 9.37034C8.66144 8.99402 8.9674 8.68805 9.34373 8.49631C9.77155 8.27832 10.3316 8.27832 11.4517 8.27832H19.0517C20.1718 8.27832 20.7319 8.27832 21.1597 8.49631C21.536 8.68805 21.842 8.99402 22.0337 9.37034C22.2517 9.79816 22.2517 10.3582 22.2517 11.4783V19.0783C22.2517 20.1984 22.2517 20.7585 22.0337 21.1863C21.842 21.5626 21.536 21.8686 21.1597 22.0603C20.7319 22.2783 20.1718 22.2783 19.0517 22.2783H11.4517C10.3316 22.2783 9.77155 22.2783 9.34373 22.0603C8.9674 21.8686 8.66144 21.5626 8.4697 21.1863C8.25171 20.7585 8.25171 20.1984 8.25171 19.0783V11.4783Z" stroke="#F8F8FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>

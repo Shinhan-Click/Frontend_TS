@@ -9,8 +9,9 @@ const FutureNoteLoading: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     
-    const [progress, setProgress] = useState(0);
-    const [apiCompleted, setApiCompleted] = useState(false);
+    const [progress, setProgress] = useState<number>(0);
+    const [apiCompleted, setApiCompleted] = useState<boolean>(false);
+    const [isCallInProgress, setIsCallInProgress] = useState<boolean>(false);
 
     const size = 22;
     const stroke = 4;
@@ -24,7 +25,16 @@ const FutureNoteLoading: React.FC = () => {
         
         // API 호출 함수
         const callApi = async () => {
+            // 이미 호출 중이거나 완료된 경우 리턴
+            if (isCallInProgress || apiCompleted) {
+                console.log('API 호출 스킵: 이미 진행 중이거나 완료됨');
+                return;
+            }
+            
             try {
+                setIsCallInProgress(true); // 호출 진행 중 플래그 설정
+                console.log('API 호출 시작');
+                
                 const apiRequestBody = location.state?.apiRequestBody;
                 const formData = location.state?.formData;
 
@@ -60,7 +70,7 @@ const FutureNoteLoading: React.FC = () => {
                 console.log('API 결과:', apiResult);
 
                 if (isMounted) {
-                    setApiCompleted(true);
+                    setApiCompleted(true); // 성공 시에만 완료 플래그 설정
                     
                     // API 응답과 폼 데이터를 함께 저장
                     const completeState = {
@@ -82,6 +92,7 @@ const FutureNoteLoading: React.FC = () => {
             } catch (error) {
                 console.error('API call failed:', error);
                 if (isMounted) {
+                    setIsCallInProgress(false); // 실패시 진행 중 플래그만 해제
                     alert('퓨처노트 생성에 실패했습니다. 다시 시도해주세요.');
                     navigate('/FutureNote');
                 }
@@ -99,18 +110,19 @@ const FutureNoteLoading: React.FC = () => {
                     return prev; // 95%에서 대기
                 }
             });
-        }, 200);
+        }, 150);
 
         // API 호출 시작
         callApi();
 
         return () => {
             isMounted = false;
+            setIsCallInProgress(false); // cleanup에서 플래그 해제
             if (progressInterval) {
                 clearInterval(progressInterval);
             }
         };
-    }, [navigate, location.state, apiCompleted]);
+    }, [navigate, location.state]); // state 변수들 제거!
 
     const handleCancel = () => {
         // 생성 중단

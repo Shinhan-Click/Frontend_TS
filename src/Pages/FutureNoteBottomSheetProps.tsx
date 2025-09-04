@@ -119,8 +119,12 @@ const FutureNoteBottomSheet: React.FC<FutureNoteBottomSheetProps> = ({ open, onC
             if (success) {
                 console.log(`FutureNote ${futureNoteId}가 채팅 ${selectedId}에 적용되었습니다.`);
                 onClose();
-                // ChatRoom으로 이동
-                navigate(`/ChatRoom/${selectedId}`);
+                // ChatRoom으로 이동하면서 퓨처노트 적용 상태 전달
+                navigate(`/ChatRoom/${selectedId}`, {
+                    state: {
+                        futureNoteApplied: true // 퓨처노트 적용 플래그 추가
+                    }
+                });
             } else {
                 console.error('FutureNote 적용에 실패했습니다.');
                 // 필요시 에러 토스트 표시

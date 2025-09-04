@@ -142,6 +142,13 @@ const ChatRoom: React.FC = () => {
     // ✅ AI 입력중 인디케이터 상태
     const [aiTyping, setAiTyping] = useState(false);
 
+    // ✅ 맨 아래로 스크롤용 앵커
+    const endRef = useRef<HTMLDivElement | null>(null);
+    const scrollToBottom = useCallback((smooth = true) => {
+        if (!endRef.current) return;
+        endRef.current.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "end" });
+    }, []);
+
     const splitLines = (s: string) =>
         (s ?? "")
             .split(/\r?\n/)
@@ -387,6 +394,12 @@ const ChatRoom: React.FC = () => {
         });
     };
 
+    // ✅ 메시지/타이핑 상태 변경 시 항상 아래로 스크롤
+    useEffect(() => {
+        // 첫 렌더 직후 튀는 현상 방지: 초기엔 auto, 그 뒤 smooth
+        scrollToBottom(messages.length > 0);
+    }, [messages, aiTyping, scrollToBottom]);
+
     return (
         <div className="min-h-screen bg-white flex items-center justify-center pointer-events-auto">
             <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
@@ -481,7 +494,7 @@ const ChatRoom: React.FC = () => {
                                         />
                                     )}
                                 </div>
-                                <div className="max-w-[78%]">
+                                <div className="ml-[5px] max-w-[78%]">
                                     <div className="text-[12px] font-medium text-[#FFF] mb-[6px]">
                                         {characterName}
                                     </div>
@@ -491,6 +504,9 @@ const ChatRoom: React.FC = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* ✅ 스크롤 앵커 */}
+                        <div ref={endRef} />
                     </div>
                 </main>
 

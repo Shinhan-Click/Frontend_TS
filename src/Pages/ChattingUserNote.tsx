@@ -533,7 +533,9 @@ const ChattingUserNote: React.FC = () => {
                   type="button"
                   role="radio"
                   aria-checked={selectedOption === 'merge'}
-                  className={`w-[327px] h-[70px] rounded-[12px] flex items-center gap-4 px-5 py-4 transition-colors mt-[10px] ${selectedOption === 'merge' ? 'bg-[#6F4ACD]/20 border-2 border-[#6F4ACD]' : 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10'
+                  className={`w-[327px] h-[70px] rounded-[12px] flex items-center justify-between gap-4 px-5 py-4 transition-colors mt-[10px] ${selectedOption === 'merge'
+                    ? 'bg-[#6F4ACD]/20 border-2 border-[#6F4ACD]'
+                    : 'bg-[#D9C8EF]/8 border border-transparent hover:bg-[#D9C8EF]/10'
                     }`}
                   onClick={() => {
                     setSelectedOption('merge');
@@ -542,21 +544,42 @@ const ChattingUserNote: React.FC = () => {
                     setSelectedForMerge([]);
                   }}
                 >
-                  <div className="w-[25px] h-10 bg-gray-600 flex items-center justify-center text-[#FFF]">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2z"
-                      />
-                    </svg>
+                  {/* 왼쪽 아이콘 + 설명 */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-[25px] h-10 bg-gray-600 flex items-center justify-center text-[#FFF]">
+                      <svg
+                        className="w-5 h-5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <div className="text-[#FFF] font-medium text-[16px]">병합하기</div>
+                      <div className="text-[#DFE1EA]/60 text-[13px] mt-0.5">
+                        선택된 노트를 참고해 새 노트를 생성합니다
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 text-left">
-                    <div className="text-[#FFF] font-medium text-[16px] ml-[10px]">병합하기</div>
-                    <div className="text-[#DFE1EA]/60 text-[13px] mt-0.5 ml-[10px]">선택된 노트를 참고해 새 노트를 생성합니다</div>
+
+                  {/* 오른쪽 과금 표시 */}
+                  <div className="flex items-center gap-[2px] mb-[20px] mr-[10px]">
+                    <img
+                      src="/열쇠.png"
+                      alt="key"
+                      className="w-[25px] h-[25px] object-contain opacity-100"
+                    />
+                    <span className="text-sm text-[#FFF] leading-none">10</span>
                   </div>
                 </button>
+
               </div>
             </div>
           </div>

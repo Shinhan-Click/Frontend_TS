@@ -19,6 +19,7 @@ import FutureNoteLoading from './Pages/FutureNoteLoading';
 import FutureNote from './Pages/FutureNote';
 import FutureNotePost from './Pages/FutureNotePost';
 import FutureNoteIntroduce from './Pages/FutureNoteIntroduce';
+import CharacterIntroduce from './Pages/CharacterIntroduce';
 
 
 
@@ -44,7 +45,8 @@ const App: React.FC = () => {
           <Route path="/FutureNote" element={<FutureNote />} />
           <Route path="/FutureNotePost" element={<FutureNotePost />} />
           <Route path="/FutureNoteIntroduce/:futureNoteId" element={<FutureNoteIntroduce />} />
-
+          <Route path="/CharacterIntroduce" element={<CharacterIntroduce />} />
+          CharacterIntroduce
         </Routes>
 
         {/*토스트 컨테이너 */}

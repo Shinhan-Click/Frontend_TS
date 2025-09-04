@@ -139,6 +139,9 @@ const ChatRoom: React.FC = () => {
     const [characterImageUrl, setCharacterImageUrl] = useState("");
     const [personaName, setPersonaName] = useState("");
 
+    // ✅ AI 입력중 인디케이터 상태
+    const [aiTyping, setAiTyping] = useState(false);
+
     const splitLines = (s: string) =>
         (s ?? "")
             .split(/\r?\n/)
@@ -146,21 +149,14 @@ const ChatRoom: React.FC = () => {
             .filter(Boolean);
 
     const parseMessageContent = (content: string, role: "USER" | "ASSISTANT"): Message[] => {
-        // \n 문자열을 실제 개행으로 변환하고, 여러 개행을 정리
         const cleanContent = content.replace(/\\n/g, '\n').replace(/\n+/g, '\n');
         const lines = cleanContent.split('\n');
         const messages: Message[] = [];
-
-        console.log("Parsing content with", lines.length, "lines");
-        console.log("Character info:", { characterName, characterImageUrl, personaName });
 
         for (const line of lines) {
             const trimmed = line.trim();
             if (!trimmed) continue;
 
-            console.log("Processing line:", `"${trimmed}"`);
-
-            // USER 메시지인 경우 따옴표 관계없이 user role로 처리
             if (role === "USER") {
                 const replacedLine = trimmed.replace(/\{\{user\}\}/g, personaName || "사용자");
                 messages.push({
@@ -168,30 +164,15 @@ const ChatRoom: React.FC = () => {
                     role: "user",
                     text: replacedLine
                 });
-                console.log("Added user message:", replacedLine);
                 continue;
             }
 
-            // ASSISTANT 메시지인 경우 - 한 줄에서 따옴표들을 모두 찾아서 분리 처리
             const foundQuotes: Array<{ start: number, end: number, content: string }> = [];
-
-            // 디버깅: 실제 문자 확인
-            console.log("텍스트 첫 글자들:", Array.from(trimmed.slice(0, 10)).map(c => `'${c}'(${c.charCodeAt(0)})`));
-
-            // 정확한 유니코드 값으로 스마트 따옴표 처리
             const allQuotesRegex = /(?:\u201C([^\u201D]*)\u201D)|(?:\\?"([^"]*?)\\?")|(?:"([^"]*)\")|(?:『([^』]*)』)|(?:「([^」]*)」)/g;
 
             let match;
             while ((match = allQuotesRegex.exec(trimmed)) !== null) {
-                // 매칭된 그룹 중 실제 내용이 있는 것을 찾기 (순서 중요!)
                 const content = match[1] || match[2] || match[3] || match[4] || match[5] || '';
-
-                console.log("정규식 매치 결과:", {
-                    fullMatch: match[0],
-                    groups: match.slice(1),
-                    content: content
-                });
-
                 if (content.trim()) {
                     foundQuotes.push({
                         start: match.index,
@@ -202,13 +183,10 @@ const ChatRoom: React.FC = () => {
             }
 
             if (foundQuotes.length > 0) {
-                // 위치 순서로 정렬
                 foundQuotes.sort((a, b) => a.start - b.start);
-
                 let lastEnd = 0;
 
                 for (const quote of foundQuotes) {
-                    // 따옴표 전의 지문 처리
                     if (quote.start > lastEnd) {
                         const beforeText = trimmed.slice(lastEnd, quote.start).trim();
                         if (beforeText) {
@@ -218,11 +196,9 @@ const ChatRoom: React.FC = () => {
                                 role: "narration",
                                 text: narration
                             });
-                            console.log("Found narration before quote:", narration);
                         }
                     }
 
-                    // 따옴표 안의 대화 처리
                     const dialogue = quote.content.replace(/\{\{user\}\}/g, personaName || "사용자");
                     messages.push({
                         id: crypto.randomUUID(),
@@ -231,12 +207,10 @@ const ChatRoom: React.FC = () => {
                         name: characterName,
                         avatarUrl: characterImageUrl
                     });
-                    console.log("Found dialogue:", dialogue);
 
                     lastEnd = quote.end;
                 }
 
-                // 마지막 따옴표 이후의 지문 처리
                 if (lastEnd < trimmed.length) {
                     const afterText = trimmed.slice(lastEnd).trim();
                     if (afterText) {
@@ -246,13 +220,10 @@ const ChatRoom: React.FC = () => {
                             role: "narration",
                             text: narration
                         });
-                        console.log("Found narration after quotes:", narration);
                     }
                 }
             } else {
-                // 따옴표가 없는 경우 전체를 지문으로 처리
                 const replacedLine = trimmed.replace(/\{\{user\}\}/g, personaName || "사용자");
-                console.log("Adding as narration:", replacedLine);
                 messages.push({
                     id: crypto.randomUUID(),
                     role: "narration",
@@ -261,7 +232,6 @@ const ChatRoom: React.FC = () => {
             }
         }
 
-        console.log("Total messages parsed:", messages.length);
         return messages;
     };
 
@@ -270,43 +240,29 @@ const ChatRoom: React.FC = () => {
         let aborted = false;
         (async () => {
             try {
-                console.log("Fetching character info for chatId:", chatId);
                 const res = await fetch(`${API_BASE}/chat/${chatId}/info`, {
                     headers: { accept: "*/*" },
                     credentials: "include",
                 });
-                console.log("Character info response status:", res.status);
-                if (!res.ok) {
-                    console.error("Character info fetch failed:", res.status, res.statusText);
-                    return;
-                }
+                if (!res.ok) return;
                 const data: ApiResponse<ChatInfo> = await res.json();
-                console.log("Character info data:", data);
-                if (!data?.isSuccess || !data.result) {
-                    console.error("Character info API returned error:", data);
-                    return;
-                }
+                if (!data?.isSuccess || !data.result) return;
                 if (!aborted) {
-                    console.log("Setting character info:", data.result);
                     setCharacterName(data.result.characterName || "캐릭터");
                     setCharacterImageUrl(data.result.characterImageUrl || "");
                     setPersonaName(data.result.personaName || "");
                 }
-            } catch (error) {
-                console.error("Failed to fetch character info:", error);
-            }
+            } catch { }
         })();
         return () => { aborted = true; };
     }, [chatId]);
 
-    // 채팅 로그 가져오기 - 캐릭터 정보가 로드된 후에만 실행
+    // 채팅 로그 가져오기
     useEffect(() => {
-        if (!characterName) return; // 캐릭터 정보가 없으면 대기
-
+        if (!characterName) return;
         let aborted = false;
         (async () => {
             try {
-                console.log("Fetching chat log for chatId:", chatId);
                 const res = await fetch(`${API_BASE}/chat/${chatId}`, {
                     method: "GET",
                     headers: { accept: "*/*" },
@@ -322,13 +278,12 @@ const ChatRoom: React.FC = () => {
                     flat.push(...parsedMessages);
                 }
                 if (!aborted) setMessages(flat);
-            } catch (error) {
-                console.error("Failed to fetch chat log:", error);
+            } catch {
                 if (!aborted) setMessages([]);
             }
         })();
         return () => { aborted = true; };
-    }, [chatId, characterName, characterImageUrl, personaName]); // 의존성에 캐릭터 정보 추가
+    }, [chatId, characterName, characterImageUrl, personaName]);
 
     const extractQuoted = (raw: string) => {
         const t = raw.trim();
@@ -368,9 +323,11 @@ const ChatRoom: React.FC = () => {
         setInput("");
         requestAnimationFrame(() => inputRef.current?.focus());
 
+        // ✅ AI "입력중..." 표시 시작
+        setAiTyping(true);
+
         // API 호출해서 AI 응답 받기
         try {
-            console.log("Sending message:", { content: t });
             const response = await fetch(`${API_BASE}/chat/${chatId}/message`, {
                 method: "POST",
                 headers: {
@@ -383,29 +340,27 @@ const ChatRoom: React.FC = () => {
                 })
             });
 
-            console.log("Response status:", response.status);
-
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error("API Error Response:", errorText);
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
             const data: ApiResponse<{ response: string }> = await response.json();
 
             if (data.isSuccess && data.result?.response) {
-                // AI 응답을 파싱해서 메시지로 변환
                 const aiMessages = parseMessageContent(data.result.response, "ASSISTANT");
                 setMessages((prev) => [...prev, ...aiMessages]);
             }
         } catch (error) {
-            console.error("Failed to send message:", error);
             // 에러 메시지 표시
             setMessages((prev) => [...prev, {
                 id: crypto.randomUUID(),
                 role: "narration",
                 text: "메시지 전송에 실패했습니다. 다시 시도해주세요."
             }]);
+        } finally {
+            // ✅ 응답 도착 또는 에러 시 인디케이터 종료
+            setAiTyping(false);
         }
     };
 
@@ -489,7 +444,7 @@ const ChatRoom: React.FC = () => {
                                                 />
                                             )}
                                         </div>
-                                        <div className="max-w-[78%]">
+                                        <div className="max-w-[78%] ml-[5px]">
                                             {(m.name || characterName) && (
                                                 <div className="text-[12px] font-medium text-[#FFF] mb-[6px]">
                                                     {m.name ?? characterName}
@@ -513,6 +468,29 @@ const ChatRoom: React.FC = () => {
                                 </div>
                             );
                         })}
+
+                        {/* ✅ AI 입력중 인디케이터 */}
+                        {aiTyping && (
+                            <div className="mt-5 flex items-start gap-2">
+                                <div className="flex-shrink-0 w-[32px] h-[32px] rounded-full overflow-hidden bg-[#222A39]">
+                                    {characterImageUrl && (
+                                        <img
+                                            src={characterImageUrl}
+                                            alt={characterName}
+                                            className="w-[32px] h-[32px] object-cover"
+                                        />
+                                    )}
+                                </div>
+                                <div className="max-w-[78%]">
+                                    <div className="text-[12px] font-medium text-[#FFF] mb-[6px]">
+                                        {characterName}
+                                    </div>
+                                    <div className="px-[12px] py-[6px] bg-[#2E3646] text-[#DFE1EA] rounded-[10px] rounded-tl-none">
+                                        <span className="text-[15px] tracking-widest">입력중&nbsp;...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </main>
 
@@ -539,7 +517,7 @@ const ChatRoom: React.FC = () => {
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    className="w-full h-[44px] rounded-[30px] bg-[#222A39] text-[#FFF] placeholder:text-[#BFC6D4]/60 pl-4 pr-12 outline-none border-none"
+                                    className="px-[10px] w-[270px] h-[44px] rounded-[30px] bg-[#222A39] text-[#FFF] placeholder:text-[#BFC6D4]/60 pl-4 pr-12 outline-none border-none"
                                     placeholder="&quot; &quot; 사이에 대사 지문을 넣어보세요"
                                     autoComplete="off"
                                 />
@@ -548,7 +526,7 @@ const ChatRoom: React.FC = () => {
                                     disabled={!input.trim()}
                                     className={[
                                         "absolute right-[3px] top-1/2 -translate-y-1/2 w-[40px] h-[40px] rounded-full flex items-center justify-center text-[#FFF]",
-                                        input.trim() ? "bg-[#404D68]" : "bg-[#404D68] text-white/70 opacity-70 cursor-not-allowed",
+                                        input.trim() ? "bg-[#404D68] border-none" : "bg-[#404D68] border-none text-white/50 opacity-70 cursor-not-allowed",
                                     ].join(" ")}
                                     aria-label="전송"
                                 >

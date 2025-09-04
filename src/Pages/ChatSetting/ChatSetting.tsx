@@ -163,37 +163,43 @@ const ChatSetting: React.FC = () => {
   };
 
   const handleOpenUserNotes = useCallback(async () => {
-    setNotesLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/usernote/my-usernotes`, {
-        method: 'GET',
-        headers: { accept: '*/*', 'Cache-Control': 'no-cache' },
-        credentials: 'include',
-      });
+  setNotesLoading(true);
+  
+  // characterId를 sessionStorage에 저장
+  if (characterId) {
+    sessionStorage.setItem('tempCharacterId', characterId);
+  }
+  
+  try {
+    const res = await fetch(`${API_BASE}/usernote/my-usernotes`, {
+      method: 'GET',
+      headers: { accept: '*/*', 'Cache-Control': 'no-cache' },
+      credentials: 'include',
+    });
 
-      const draft: Draft = { personaChoice, personaText, name, gender, introduction, userNote };
-      const fromSearch = location.search || window.location.search || '';
+    const draft: Draft = { personaChoice, personaText, name, gender, introduction, userNote };
+    const fromSearch = location.search || window.location.search || '';
 
-      if (!res.ok) {
-        setSheetOpen(true);
-        return;
-      }
-
-      const data: ApiResponse<UserNotesResult> = await res.json();
-      const r = data?.result ?? { myNotes: [], likedNotes: [] };
-      const hasNotes = (r.myNotes?.length ?? 0) > 0 || (r.likedNotes?.length ?? 0) > 0;
-
-      if (hasNotes) {
-        navigate('/ChattingUserNote', { state: { draft, fromSearch } });
-      } else {
-        setSheetOpen(true);
-      }
-    } catch {
+    if (!res.ok) {
       setSheetOpen(true);
-    } finally {
-      setNotesLoading(false);
+      return;
     }
-  }, [navigate, personaChoice, personaText, name, gender, introduction, userNote, location.search]);
+
+    const data: ApiResponse<UserNotesResult> = await res.json();
+    const r = data?.result ?? { myNotes: [], likedNotes: [] };
+    const hasNotes = (r.myNotes?.length ?? 0) > 0 || (r.likedNotes?.length ?? 0) > 0;
+
+    if (hasNotes) {
+      navigate('/ChattingUserNote', { state: { draft, fromSearch } });
+    } else {
+      setSheetOpen(true);
+    }
+  } catch {
+    setSheetOpen(true);
+  } finally {
+    setNotesLoading(false);
+  }
+}, [navigate, personaChoice, personaText, name, gender, introduction, userNote, location.search, characterId]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -407,17 +413,22 @@ const ChatSetting: React.FC = () => {
               <li>인기 유저노트를 둘러보고 마음에 드는 유저노트를 적용해보세요</li>
             </ul>
             <button
-              className="sheet-cta"
-              type="button"
-              onClick={() => {
-                const draft: Draft = { personaChoice, personaText, name, gender, introduction, userNote };
-                const fromSearch = location.search || window.location.search || '';
-                setSheetOpen(false);
-                navigate('/UserNoteWrite', { state: { draft, fromSearch } });
-              }}
-            >
-              유저노트 작성하기
-            </button>
+            className="sheet-cta"
+            type="button"
+            onClick={() => {
+              // characterId를 sessionStorage에 저장
+              if (characterId) {
+                sessionStorage.setItem('tempCharacterId', characterId);
+              }
+              
+              const draft: Draft = { personaChoice, personaText, name, gender, introduction, userNote };
+              const fromSearch = location.search || window.location.search || '';
+              setSheetOpen(false);
+              navigate('/UserNoteWrite', { state: { draft, fromSearch } });
+            }}
+          >
+            유저노트 작성하기
+          </button>
           </div>
         </BottomSheet>
       </div>

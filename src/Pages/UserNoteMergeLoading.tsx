@@ -142,28 +142,40 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
   };
 
   const handleSave = async () => {
-    if (!noteName.trim()) return;
-    const body = {
-      title: noteName.trim(),
-      prompt: mergedTextFromResult ?? "",
-      firstUserNoteImageUrl: firstImgUrl ?? "",
-      secondUserNoteImageUrl: secondImgUrl ?? "",
-    };
-    try {
-      const res = await fetch(`${API_BASE}/usernote/merge/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", accept: "*/*" },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      await res.json();
-      navigate("/ChattingUserNote" + (fromSearch ?? ""), {
-        state: { draft: incomingDraft, fromSearch },
-        replace: true,
-      });
-    } catch {}
+  if (!noteName.trim()) return;
+  const body = {
+    title: noteName.trim(),
+    prompt: mergedTextFromResult ?? "",
+    firstUserNoteImageUrl: firstImgUrl ?? "",
+    secondUserNoteImageUrl: secondImgUrl ?? "",
   };
+  try {
+    const res = await fetch(`${API_BASE}/usernote/merge/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", accept: "*/*" },
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await res.json();
+    
+    // sessionStorage에서 characterId 복원
+    const savedCharacterId = sessionStorage.getItem('tempCharacterId');
+    
+    // characterId가 있으면 쿼리 파라미터로, 없으면 기존 fromSearch 사용
+    const targetUrl = savedCharacterId 
+      ? `/ChattingUserNote?characterId=${savedCharacterId}`
+      : "/ChattingUserNote" + (fromSearch ?? "");
+      
+    // sessionStorage 정리
+    sessionStorage.removeItem('tempCharacterId');
+    
+    navigate(targetUrl, {
+      state: { draft: incomingDraft, fromSearch },
+      replace: true,
+    });
+  } catch {}
+};
 
   const isDone = progress >= 100;
 

@@ -216,9 +216,15 @@ const ChattingUserNote: React.FC = () => {
     setSelectedApply((prev) => (prev === makeKey(kind, id) ? null : makeKey(kind, id)));
 
   const handleSelectWrite = () => {
-    setSelectedOption('write');
-    setIsBottomSheetOpen(false);
-    navigate('/UserNoteWrite', { state: { draft: incomingDraft, fromSearch } });
+  // characterId를 sessionStorage에 저장 (혹시 이 경로로도 UserNoteWrite로 갈 수 있으므로)
+  const savedCharacterId = sessionStorage.getItem('tempCharacterId');
+  if (savedCharacterId) {
+    // 이미 저장되어 있다면 그대로 유지
+  }
+  
+  setSelectedOption('write');
+  setIsBottomSheetOpen(false);
+  navigate('/UserNoteWrite', { state: { draft: incomingDraft, fromSearch } });
   };
 
   // 선택 초기화 후 초기 화면으로 복귀
@@ -309,23 +315,35 @@ const ChattingUserNote: React.FC = () => {
   };
 
   const handleApply = async () => {
-    if (!selectedApply) return;
+  if (!selectedApply) return;
 
-    try {
-      const [kind, idStr] = selectedApply.split(':');
-      const id = parseInt(idStr, 10);
+  try {
+    const [kind, idStr] = selectedApply.split(':');
+    const id = parseInt(idStr, 10);
 
-      // API를 통해 유저노트 상세 정보 조회
-      const userNoteDetail = await fetchUserNoteDetail(id);
+    // API를 통해 유저노트 상세 정보 조회
+    const userNoteDetail = await fetchUserNoteDetail(id);
 
-      if (!userNoteDetail) {
+    // sessionStorage에서 characterId 복원
+    const savedCharacterId = sessionStorage.getItem('tempCharacterId');
+
+    if (!userNoteDetail) {
       // API 호출 실패 시 기존 로직 유지 (fallback)
       let description = '';
       if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
       else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
 
       const draft = { ...(incomingDraft || {}), userNote: description };
-      navigate(`/ChatSetting${fromSearch || ''}`, {
+      
+      // characterId가 있으면 쿼리 파라미터로, 없으면 기존 fromSearch 사용
+      const targetUrl = savedCharacterId 
+        ? `/ChatSetting?characterId=${savedCharacterId}` 
+        : `/ChatSetting${fromSearch || ''}`;
+        
+      // sessionStorage 정리
+      sessionStorage.removeItem('tempCharacterId');
+      
+      navigate(targetUrl, {
         state: { 
           selectedUserNoteDescription: description, 
           draft,
@@ -337,7 +355,15 @@ const ChattingUserNote: React.FC = () => {
 
     // API에서 가져온 prompt 데이터 사용
     const draft = { ...(incomingDraft || {}), userNote: userNoteDetail.prompt };
-    navigate(`/ChatSetting${fromSearch || ''}`, {
+    
+    const targetUrl = savedCharacterId 
+      ? `/ChatSetting?characterId=${savedCharacterId}` 
+      : `/ChatSetting${fromSearch || ''}`;
+      
+    // sessionStorage 정리
+    sessionStorage.removeItem('tempCharacterId');
+    
+    navigate(targetUrl, {
       state: {
         selectedUserNoteDescription: userNoteDetail.prompt,
         selectedUserNoteDetail: userNoteDetail,
@@ -348,7 +374,9 @@ const ChattingUserNote: React.FC = () => {
 
   } catch (error) {
     console.error('Error applying user note:', error);
+    
     // 에러 발생 시에도 기존 로직으로 fallback
+    const savedCharacterId = sessionStorage.getItem('tempCharacterId');
     const [kind, idStr] = selectedApply.split(':');
     const id = parseInt(idStr, 10);
     let description = '';
@@ -356,7 +384,15 @@ const ChattingUserNote: React.FC = () => {
     else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
 
     const draft = { ...(incomingDraft || {}), userNote: description };
-    navigate(`/ChatSetting${fromSearch || ''}`, {
+    
+    const targetUrl = savedCharacterId 
+      ? `/ChatSetting?characterId=${savedCharacterId}` 
+      : `/ChatSetting${fromSearch || ''}`;
+      
+    // sessionStorage 정리
+    sessionStorage.removeItem('tempCharacterId');
+    
+    navigate(targetUrl, {
       state: { 
         selectedUserNoteDescription: description, 
         draft,

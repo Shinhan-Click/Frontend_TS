@@ -4,7 +4,7 @@ import './UserNoteDetail.css';
 
 import {
     ArrowLeftIcon,
-    MoreHorizontalIcon,
+    MoreVerticalIcon,
     ChevronDownIcon,
 } from '../../components/icons';
 import Tag from '../../components/UserNoteDetailcomponents/Tag';
@@ -304,16 +304,16 @@ const UserNoteDetail: React.FC = () => {
     return (
         <div className="und-root">
             <div className="und-app">
-                <header className="und-header">
+                <header className="und-header absolute top-0 left-0 right-0 z-20">
                     <button
-                        className="und-iconbtn"
+                        className="und-iconbtn-round"
                         aria-label="뒤로가기"
                         onClick={handleGoBack}
                     >
                         <ArrowLeftIcon className="und-icon" />
                     </button>
-                    <button className="und-iconbtn1" aria-label="더보기">
-                        <MoreHorizontalIcon className="und-icon" />
+                    <button className="und-iconbtn-round" aria-label="더보기">
+                        <MoreVerticalIcon className="und-icon" />
                     </button>
                 </header>
 
@@ -322,14 +322,14 @@ const UserNoteDetail: React.FC = () => {
                         <img
                             src={userNoteData.userNoteImageUrl}
                             alt={userNoteData.title}
-                            className="und-banner brightness-75 contrast-110"
+                            className="und-banner"
                             style={{
-                                width: '100%',
-                                height: '240px',
-                                objectFit: 'cover'
+                                WebkitMaskImage:
+                                    "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)",
+                                maskImage:
+                                    "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)",
                             }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#0F1420]/40 to-[#0F1420]/90 pointer-events-none" />
                     </div>
 
                     <div className="und-sectionbox" style={{ marginTop: '20px' }}>
@@ -421,7 +421,7 @@ const UserNoteDetail: React.FC = () => {
                             <p className="und-date">게시일 {userNoteData.postDate}</p>
                         </section>
 
-                        <div className="w-full h-[6px] bg-[#222A39]"></div>
+                        <hr className="border-[#222A39] border-[4px] mt-5" />
 
                         <section className="und-section-comment">
                             <h2 className="und-subtitle">

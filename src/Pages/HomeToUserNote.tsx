@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+
+const API_BASE = '/api';
 
 type TrendingCardProps = {
     rank: number;
@@ -10,6 +12,21 @@ type TrendingCardProps = {
     applies: number;
     tag: string;
     comments: { user: string; text: string; avatar: string }[];
+};
+
+type UserNote = {
+    userNoteId: number;
+    userNoteImageUrl: string;
+    title: string;
+    description: string;
+    author: string;
+};
+
+type ApiResponse = {
+    isSuccess: boolean;
+    code: string;
+    message: string;
+    result: UserNote[];
 };
 
 const TrendingCard: React.FC<TrendingCardProps> = ({
@@ -22,7 +39,7 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
     comments,
 }) => {
     return (
-        <div className="relative ml-[10px] bg-[#141924] p-2">
+        <div className="w-[335px] relative ml-[10px] bg-[#141924] p-2">
             <div className="absolute top-[5px] -left-2 w-[25px] h-[25px] px-1 rounded-[8px] bg-[#6F4ACD] text-[#FFF] text-xs font-bold flex items-center justify-center shadow-md">
                 {rank}
             </div>
@@ -34,12 +51,12 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
                     className="w-[64px] h-[64px] rounded-[8px] object-cover mt-[20px]"
                 />
                 <div className="min-w-0 flex-1 rounded-[8px]">
-                    <p className="text-[15px] font-semibold text-[#FFF] truncate">{title}</p>
-                    <p className="text-[12px] text-[#FFF]/70 mt-[2px]">
+                    <p className="text-[#FFF] font-['Pretendard'] text-[14px] font-semibold leading-[142.9%] tracking-[0.203px] truncate">{title}</p>
+                    <p className="text-[rgba(190,193,203,0.48)] font-['Pretendard'] text-[12px] font-medium leading-[133.4%] tracking-[0.302px] mt-[-10px]">
                         저장 {saves.toLocaleString()} · 적용 {applies.toLocaleString()}
                     </p>
-                    <div className="mt-2">
-                        <span className="inline-block px-[5px] py-[2px] mb-[5px] rounded-[6px] text-[11px] text-[#DFE1EA]/63 bg-[#363A4352]">
+                    <div className="mt-[-5px]">
+                        <span className="inline-flex px-[6px] py-[3px] items-center gap-[4.638px] rounded-[6px] bg-[rgba(54,58,67,0.32)] backdrop-blur-[2px] mb-[10px] text-[rgba(223,225,234,0.61)] font-['Pretendard'] text-[12px] font-normal leading-[133.4%] tracking-[0.302px]">
                             #{tag}
                         </span>
                     </div>
@@ -48,17 +65,17 @@ const TrendingCard: React.FC<TrendingCardProps> = ({
 
             <div className="mt-2 flex flex-col gap-[6px]">
                 {comments.slice(0, 2).map((c, i) => (
-                    <div key={i} className="rounded-[8px] bg-[#283143] px-2 py-2 ml-[10px]">
-                        <p className="text-[13px] text-[#FFF]/90 ml-[8px] leading-[18px] line-clamp-2 break-words">
+                    <div key={i} className="flex px-[14px] py-2 flex-col justify-center items-start gap-[-5px] self-stretch rounded-[10px] bg-[#283143] ml-[10px]">
+                        <p className="text-[#F8F8FA] font-['Pretendard'] text-[14px] font-normal leading-[142.9%] tracking-[0.203px] text-center overflow-hidden text-ellipsis line-clamp-1 mt-[10px]">
                             {c.text}
                         </p>
-                        <div className="mt-2 flex items-center gap-[5px]">
+                        <div className="flex items-center gap-[5px] mt-[-17px]">
                             <img
                                 src={c.avatar}
                                 alt={c.user}
-                                className="w-[18px] h-[18px] ml-[5px] mb-[5px] rounded-full object-cover"
+                                className="w-[18px] h-[18px] rounded-full object-cover aspect-square"
                             />
-                            <span className="text-[11px] text-[#FFF]/70">
+                            <span className="text-[rgba(223,225,234,0.61)] font-['Pretendard'] text-[12px] font-medium leading-[133.4%] tracking-[0.302px] mt-[10px] mb-[10px]">
                                 {c.user} <span className="opacity-70">적용후기</span>
                             </span>
                         </div>
@@ -84,28 +101,41 @@ type NoteListItemProps = {
     title: string;
     desc: string;
     handle: string;
+    userNoteId?: number;
 };
-const NoteListItem: React.FC<NoteListItemProps> = ({ thumb, title, desc, handle }) => (
-    <button
-        type="button"
-        className="w-full text-left px-4 py-3 hover:bg-[#1A2130] transition-colors bg-[#141924] border-none -mt-[10px]"
-    >
-        <div className="flex gap-3">
-            <img
-                src={thumb}
-                alt={title}
-                className="w-[70px] h-[98px] rounded-[4px] object-cover bg-[#1F2636] flex-shrink-0 mt-[20px] ml-[10px]"
-            />
-            <div className="min-w-0 flex-1 ml-[15px]">
-                <p className="text-[16px] font-bold text-[#FFF] truncate">{title}</p>
-                <p className="text-[14px] leading-[18px] text-[#FFF]/60 line-clamp-2">{desc}</p>
-                <span className="inline-block mt-[4px] px-2 py-[6px] rounded-[6px] bg-[#222A39] text-[12px] text-[#FFF]/80">
-                    {handle.startsWith('@') ? handle : `@${handle}`}
-                </span>
+
+const NoteListItem: React.FC<NoteListItemProps> = ({ thumb, title, desc, handle, userNoteId }) => {
+    const navigate = useNavigate();
+    
+    const handleClick = () => {
+        if (userNoteId) {
+            navigate(`/UserNoteDetail/${userNoteId}`);
+        }
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={handleClick}
+            className="w-full text-left transition-colors bg-[#141924] border-none mt-[7px] hover:bg-[#1A2130]"
+        >
+            <div className="flex w-[334px] items-start gap-3 px-4 py-3 ml-[10px] hover:bg-[#1A2130]">
+                <img
+                    src={thumb}
+                    alt={title}
+                    className="w-[70px] h-[98px] flex-shrink-0 rounded-[4px] object-cover bg-[#1F2636]"
+                />
+                <div className="min-w-0 flex-1 flex flex-col gap-2 ml-[10px] pt-1">
+                    <p className="text-[#F8F8FA] font-['Pretendard'] text-[16px] font-semibold leading-[150%] tracking-[0.091px] truncate mt-[-1px]">{title}</p>
+                    <p className="overflow-hidden text-[rgba(223,225,234,0.61)] text-ellipsis font-['Pretendard'] text-[14px] font-normal leading-[142.9%] tracking-[0.203px] line-clamp-2 mt-[-15px]">{desc}</p>
+                    <span className="inline-flex px-[6px] py-[3px] items-center gap-[4.638px] rounded-[6px] bg-[rgba(69,74,85,0.32)] backdrop-blur-[2px] text-[rgba(223,225,234,0.61)] font-['Pretendard'] text-[12px] font-normal leading-[133.4%] tracking-[0.302px] self-start mt-[-2px]">
+                        {handle.startsWith('@') ? handle : `@${handle}`}
+                    </span>
+                </div>
             </div>
-        </div>
-    </button>
-);
+        </button>
+            );
+};
 
 const TopAppBar: React.FC<{ onSearch?: () => void }> = ({ onSearch }) => {
     const navigate = useNavigate();
@@ -156,6 +186,38 @@ const TopAppBar: React.FC<{ onSearch?: () => void }> = ({ onSearch }) => {
 
 const HomeToUserNote: React.FC = () => {
     const navigate = useNavigate();
+    const [userNotes, setUserNotes] = useState<UserNote[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchUserNotes = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            const response = await fetch(`${API_BASE}/usernote/preview`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch user notes');
+            }
+            
+            const data: ApiResponse = await response.json();
+            
+            if (data.isSuccess) {
+                setUserNotes(data.result);
+            } else {
+                throw new Error(data.message || 'API returned error');
+            }
+        } catch (err) {
+            console.error('Error fetching user notes:', err);
+            setError(err instanceof Error ? err.message : 'Unknown error occurred');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchUserNotes();
+    }, []);
 
     const makeCard = (rank: number, seed: string, title: string): TrendingCardProps => ({
         rank,
@@ -238,29 +300,6 @@ const HomeToUserNote: React.FC = () => {
     const FILTERS = ['전체', '출력규칙', '시스템', '세계관 확장', 'OOC', '퓨처노트', '기타'] as const;
     const [activeFilter, setActiveFilter] = useState<typeof FILTERS[number]>('전체');
 
-    const NOTE_LIST = [
-        {
-            thumb: '/절대고수.png',
-            title: '절대고수',
-            desc:
-                '현 무림은 정파,사파,마교로 삼분되어있고 그 어느곳에도 속하지 않은 정사지간의 고수들도 존재한다. 당신은 정파,마교,정사지간 중 세력을 선택해 ',
-            handle: '@tico',
-        },
-        {
-            thumb: '/수족관 소년들.png',
-            title: '수족관 소년들',
-            desc: '한때 인간의 잔혹한 탐욕에 유린당했던 수인들의 은밀한 안식처. 수인의 입양을 돕는 이곳..!!',
-            handle: '@whif_official',
-        },
-        {
-            thumb: '/무림생존기.png',
-            title: '무림생존기',
-            desc:
-                '무림에서 일반인으로 살아남는 법! 규칙 없는 강호에서 살아남기 위한 전투와 계략, 생존의 기술...',
-            handle: '@goldsu',
-        },
-    ];
-
     const handleSearch = () => {
         navigate('/search');
     };
@@ -281,7 +320,7 @@ const HomeToUserNote: React.FC = () => {
                     </div>
                     <div className="mt-[10px] ml-[16px]">
                         <button type="button" className="w-[345px] h-[52px] rounded-[12px] bg-[#6F4ACD] border-none">
-                            <span className="font-semibold text-[#FFF]">도혁이를 바꾼 유저노트 보러가기</span>
+                            <span className="text-[16px] text-[#F8F8FA] font-['Pretendard'] text-base font-semibold leading-[150%]">도혁이를 바꾼 유저노트 보러가기</span>
                         </button>
                     </div>
                 </section>
@@ -289,22 +328,21 @@ const HomeToUserNote: React.FC = () => {
                 <div className="h-6" />
 
                 <section id="trending">
-                    <div className="flex items-center justify-between mb-3 bg-[#141924]">
-                        <h2 className="text-[17px] text-[#FFF] font-bold ml-[15px]">후기가 증명하는 인기 유저노트</h2>
-                    </div>
-                    <div className="-mx-4 px-4 overflow-x-auto no-scrollbar bg-[#141924]">
-                        <div className="flex gap-2 min-w-max">
-                            {[1, 2, 3, 4].map((rank) => (
-                                <div key={rank} className="w-[335px] flex-shrink-0">
-                                    <div className="flex flex-col gap-2">
-                                        {RANK_COLUMNS[rank].map((card, i) => (
-                                            <TrendingCard key={`${rank}-${i}`} {...card} />
-                                        ))}
-                                    </div>
+                <div className="flex items-center justify-between mb-3 bg-[#141924]">
+                <h2 className="self-stretch text-[#FFFFFF] font-['Pretendard'] text-[17px] font-semibold leading-[141.2%] ml-[15px] mt-[30px]">후기가 증명하는 인기 유저노트</h2>                </div>
+                <div className="-mx-4 px-4 overflow-x-auto no-scrollbar bg-[#141924]">
+                    <div className="flex gap-2 min-w-max">
+                        {[1, 2, 3, 4].map((rank) => (
+                            <div key={rank} className="w-[335px] flex-shrink-0">
+                                <div className="flex flex-col gap-2">
+                                    {RANK_COLUMNS[rank].map((card, i) => (
+                                        <TrendingCard key={`${rank}-${i}`} {...card} />
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
+                </div>
                 </section>
 
                 <div className="h-6" />
@@ -384,8 +422,10 @@ const HomeToUserNote: React.FC = () => {
                                         aria-pressed={active}
                                         onClick={() => setActiveFilter(f)}
                                         className={[
-                                            'whitespace-nowrap px-4 h-9 rounded-full border text-[14px] transition-colors',
-                                            active ? 'bg-[#6F4ACD] border-[#6F4ACD] text-[#FFF]' : 'bg-transparent border-[#404E6A] text-[#FFF]/80 hover:bg-[#1A2130]',
+                                            'whitespace-nowrap flex px-3 py-[7px] justify-center items-center gap-2 rounded-full font-["Pretendard"] text-[14px] font-medium leading-[142.9%] tracking-[0.203px] transition-colors',
+                                            active 
+                                                ? 'bg-[#6F4ACD] text-[#F8F8FA] border-none' 
+                                                : 'bg-transparent border border-[#404E6A] text-[#FFF]/80 hover:bg-[#1A2130]',
                                         ].join(' ')}
                                     >
                                         {f}
@@ -396,16 +436,45 @@ const HomeToUserNote: React.FC = () => {
                     </div>
 
                     <div className="flex items-center justify-between px-4 mb-[15px]">
-                        <span className="text-[12px] text-[#FFF]/80 ml-[20px]">총 817 개</span>
+                        <span className="text-[12px] text-[#FFF]/80 ml-[20px] mt-[10px]">
+                            {loading ? '로딩 중...' : `총 817 개`}
+                        </span>
                         <button className="text-[12px] text-[#FFF]/60 mr-[15px] inline-flex items-center gap-1 border-none bg-[#141924]">
                             저장순 <span className="text-[10px] ml-[5px]">▼</span>
                         </button>
                     </div>
 
                     <div className="flex flex-col gap-[4px]">
-                        {NOTE_LIST.map((n, idx) => (
-                            <NoteListItem key={`${n.title}-${idx}`} thumb={n.thumb} title={n.title} desc={n.desc} handle={n.handle} />
-                        ))}
+                        {error ? (
+                            <div className="text-center py-8">
+                                <p className="text-[#FFF]/60 text-[14px] mb-4">데이터를 불러올 수 없습니다</p>
+                                <button 
+                                    onClick={fetchUserNotes}
+                                    className="px-4 py-2 bg-[#6F4ACD] text-[#FFF] rounded-[8px] text-[14px] border-none"
+                                >
+                                    다시 시도
+                                </button>
+                            </div>
+                        ) : loading ? (
+                            <div className="text-center py-8">
+                                <p className="text-[#FFF]/60 text-[14px]">로딩 중...</p>
+                            </div>
+                        ) : userNotes.length === 0 ? (
+                            <div className="text-center py-8">
+                                <p className="text-[#FFF]/60 text-[14px]">표시할 유저노트가 없습니다</p>
+                            </div>
+                        ) : (
+                            userNotes.map((note) => (
+                                <NoteListItem
+                                    key={note.userNoteId}
+                                    thumb={note.userNoteImageUrl}
+                                    title={note.title}
+                                    desc={note.description}
+                                    handle={note.author}
+                                    userNoteId={note.userNoteId}
+                                />
+                            ))
+                        )}
                     </div>
 
                     <div className="h-10" />

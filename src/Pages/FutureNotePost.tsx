@@ -112,70 +112,70 @@ const FutureNotePost: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-  try {
-    if (!incoming) {
-      alert("데이터가 없습니다. 이전 단계로 돌아가 주세요.");
-      return;
-    }
+    try {
+      if (!incoming) {
+        alert("데이터가 없습니다. 이전 단계로 돌아가 주세요.");
+        return;
+      }
 
-    // data / mileStones / endings 모두 JSON 문자열로 전송
-    const dataPayload = {
-      title: title.trim(),
-      description: desc.trim(),
-      tagNames: normalizeTags(tags),
-      playTurn: incoming.playTurn ?? null,            // "SHORT" | "NORMAL" | "LONG"
-      storyStructure: incoming.storyStructure ?? null, // "THREE_ACT" | "FIVE_ACT"
-      summary: incoming.summary ?? "",
-      prompt: incoming.prompt ?? "",                  // ← FutureNote에서 넘어온 prompt
-    };
+      // data / mileStones / endings 모두 JSON 문자열로 전송
+      const dataPayload = {
+        title: title.trim(),
+        description: desc.trim(),
+        tagNames: normalizeTags(tags),
+        playTurn: incoming.playTurn ?? null,            // "SHORT" | "NORMAL" | "LONG"
+        storyStructure: incoming.storyStructure ?? null, // "THREE_ACT" | "FIVE_ACT"
+        summary: incoming.summary ?? "",
+        prompt: incoming.prompt ?? "",                  // ← FutureNote에서 넘어온 prompt
+      };
 
-    const mileStonesPayload = (incoming.mileStones || []).map((m: any) => ({
-      title: m.title ?? "",
-      content: m.content ?? "",
-      startTurn: m.startTurn ?? null,
-      endTurn: m.endTurn ?? null,
-    }));
+      const mileStonesPayload = (incoming.mileStones || []).map((m: any) => ({
+        title: m.title ?? "",
+        content: m.content ?? "",
+        startTurn: m.startTurn ?? null,
+        endTurn: m.endTurn ?? null,
+      }));
 
-    const endingsPayload = toEndingObjects(incoming.endings || []);
+      const endingsPayload = toEndingObjects(incoming.endings || []);
 
-    const formData = new FormData();
-    formData.append("data", JSON.stringify(dataPayload));
-    formData.append("mileStones", JSON.stringify(mileStonesPayload));
-    formData.append("endings", JSON.stringify(endingsPayload));
-    if (coverFile) formData.append("thumbnail", coverFile);
-    galleryFiles.forEach((f) => formData.append("exampleImages", f));
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(dataPayload));
+      formData.append("mileStones", JSON.stringify(mileStonesPayload));
+      formData.append("endings", JSON.stringify(endingsPayload));
+      if (coverFile) formData.append("thumbnail", coverFile);
+      galleryFiles.forEach((f) => formData.append("exampleImages", f));
 
-    const resp = await fetch(`${API_BASE}/futurenote/create`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
-      throw new Error(`HTTP ${resp.status} ${text || ""}`);
-    }
-
-    // Parse the response
-    const responseData = await resp.json();
-    
-    if (responseData.isSuccess && responseData.result) {
-      alert("게시 완료");
-      
-      // Navigate to FutureNoteIntroduce with the response data
-      const futureNoteId = responseData.result.futureNoteId;
-       navigate(`/futureNoteIntroduce/${futureNoteId}`, {
-        state: { 
-          futureNoteData: responseData.result 
-        }
+      const resp = await fetch(`${API_BASE}/futurenote/create`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
-    } else {
-      throw new Error(responseData.message || "게시 실패");
-    }
+
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        throw new Error(`HTTP ${resp.status} ${text || ""}`);
+      }
+
+      // Parse the response
+      const responseData = await resp.json();
+
+      if (responseData.isSuccess && responseData.result) {
+        alert("게시 완료");
+
+        // Navigate to FutureNoteIntroduce with the response data
+        const futureNoteId = responseData.result.futureNoteId;
+        navigate(`/futureNoteIntroduce/${futureNoteId}`, {
+          state: {
+            futureNoteData: responseData.result
+          }
+        });
+      } else {
+        throw new Error(responseData.message || "게시 실패");
+      }
 
     } catch (err: any) {
-        console.error(err);
-        alert("게시 실패: " + (err?.message || "알 수 없는 오류"));
+      console.error(err);
+      alert("게시 실패: " + (err?.message || "알 수 없는 오류"));
     }
   };
 
@@ -296,7 +296,7 @@ const FutureNotePost: React.FC = () => {
                     <img
                       src={cover}
                       alt="표지"
-                      className="w-[96px] h-[96px] object-cover rounded-[12px] border border-[#2A3244]"
+                      className="w-[96px] h-[96px] ml-[8px] object-cover rounded-[12px] border border-[#2A3244]"
                     />
                     <button
                       type="button"
@@ -305,7 +305,7 @@ const FutureNotePost: React.FC = () => {
                         setCover(null);
                         setCoverFile(null);
                       }}
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#5B6E94] text-white flex items-center justify-center text-[12px]"
+                      className="absolute -top-2 -right-2 w-[18px] h-[18px] rounded-full border-none bg-[##F8F8FACC] flex items-center justify-center text-[12px] ml-[80px]"
                       aria-label="표지 삭제"
                     >
                       ×
@@ -356,12 +356,12 @@ const FutureNotePost: React.FC = () => {
                       <img
                         src={g}
                         alt={`첨부 ${i + 1}`}
-                        className="w-[96px] h-[96px] object-cover rounded-[12px] border border-[#2A3244]"
+                        className="w-[96px] h-[96px] ml-[8px] object-cover rounded-[12px] border border-[#2A3244]"
                       />
                       <button
                         type="button"
                         onClick={() => removeGalleryAt(i)}
-                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#5B6E94] text-white flex items-center justify-center text-[12px]"
+                        className="absolute -top-2 -right-2 w-[18px] h-[18px] rounded-full border-none bg-[##F8F8FACC] text-[#6F4ACD] flex items-center justify-center text-[12px] ml-[80px]"
                         aria-label="이미지 삭제"
                       >
                         ×

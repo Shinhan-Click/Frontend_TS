@@ -293,16 +293,16 @@ const FutureNoteIntroduce: React.FC = () => {
                         </div>
                     </section>
 
-                    <section className="px-[20px] space-y-5 mt-5">
+                    <section className="px-[20px] space-y-5 mt-[30px]">
                         <div>
-                            <h2 className="text-[17px] text-[#FFF] font-semibold mb-2">스토리 요약</h2>
+                            <h2 className="text-[17px] text-[#FFF] font-semibold -mb-[8px]">스토리 요약</h2>
                             <p className="text-[16px] text-[#FFF]/90 leading-[22px]">
                                 {data?.storySummary || "축제를 준비하며 시작된 미묘한 감정선. 때로는 갈등, 때로는 고백으로 이어지는 이야기. 선택에 따라 행복, 이별, 혹은 열린 결말이 펼쳐집니다."}
                             </p>
                         </div>
-                        <hr className="border-[#DFE1EA]/20" />
+                        <hr className="border-[#DFE1EA]/20 mt-[25px]" />
                         <div>
-                            <h2 className="text-[17px] text-[#FFF] font-semibold">소개글</h2>
+                            <h2 className="text-[17px] text-[#FFF] font-semibold -mb-[8px]">소개글</h2>
                             <p className="text-[16px] text-[#DFE1EA]/61 leading-[22px]">
                                 {data?.description || "이번엔 좀 재미있는 스토리를 잡아서 플레이하면 좋겠다는 생각이 들어서 만들어봤어요. ㅋㅋ 재밌게 한번 해보셈"}
                             </p>

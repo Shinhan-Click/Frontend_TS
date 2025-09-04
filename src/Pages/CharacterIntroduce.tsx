@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon, MoreVerticalIcon } from "../components/icons";
-import { BiLike, BiSolidLike } from "react-icons/bi";
 
 const API_BASE = '/api';
 
@@ -89,8 +88,8 @@ const CharacterIntroduce: React.FC = () => {
         desc: "푸른 여름, 학생일대만 느낄 수 있는 그 때의 분위기를...",
     };
 
-    const [liked, setLiked] = React.useState(false);
-    const [likeCount, setLikeCount] = React.useState(1298);
+    const [liked, setLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(1298);
     const handleLike = () => {
         if (liked) {
             setLikeCount((prev) => prev - 1);
@@ -364,8 +363,10 @@ const CharacterIntroduce: React.FC = () => {
                                 onClick={handleLike}
                                 className="flex flex-col items-center justify-center gap-1 h-[52px] w-[75px] rounded-[12px] bg-[#222A39] text-[#FFF] border-none"
                             >
-                                {liked ? <BiSolidLike size={24} /> : <BiLike size={24} />}
-                                <span className="text-[12px]">{likeCount}</span>
+                                <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
+                                    <path d="M6.05935 14.7101V7.94216M2.98303 9.17269V13.4795C2.98303 14.1591 3.53396 14.7101 4.21356 14.7101H12.4743C13.3853 14.7101 14.1601 14.0454 14.2986 13.1449L14.9612 8.8381C15.1332 7.71999 14.2681 6.71164 13.1368 6.71164H10.9815C10.6417 6.71164 10.3662 6.43617 10.3662 6.09637V3.92193C10.3662 3.08403 9.68696 2.40479 8.84906 2.40479C8.64921 2.40479 8.4681 2.52248 8.38693 2.70511L6.22175 7.57678C6.123 7.79897 5.90266 7.94216 5.65951 7.94216H4.21356C3.53396 7.94216 2.98303 8.49309 2.98303 9.17269Z" stroke={liked ? "#6F4ACD" : "white"} fill={liked ? "#6F4ACD" : "none"} strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                <span className="text-[12px]">{likeCount.toLocaleString()}</span>
                             </button>
 
                             <button

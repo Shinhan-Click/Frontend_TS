@@ -100,7 +100,7 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
     if (doneRef.current) return;
     ticking.current = window.setInterval(() => {
       setProgress((p) => (p < 95 ? Math.min(95, p + 3) : p));
-    }, 300);
+    }, 800);
     return () => { if (ticking.current) clearInterval(ticking.current); };
   }, []);
 

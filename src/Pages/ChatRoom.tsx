@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { ArrowLeftIcon, UserIcon, NoteIcon, EditIcon, HistoryIcon, TrashIcon } from "../components/icons";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { MdFormatQuote } from "react-icons/md";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 interface IconButtonProps {
     icon: React.ReactNode;
@@ -34,6 +34,14 @@ const ActionItem: React.FC<ActionItemProps> = ({ icon, label, isDestructive }) =
         </span>
     </button>
 );
+
+interface LocationState {
+    firstMessage?: string;
+    characterName?: string;
+    characterImageUrl?: string;
+    characterId?: number;
+    userNoteApplied?: boolean; // 유저노트 적용 여부
+}
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -126,6 +134,7 @@ const API_BASE = "/api";
 
 const ChatRoom: React.FC = () => {
     const { chatId = "" } = useParams<{ chatId: string }>();
+    const location = useLocation();
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
@@ -143,10 +152,23 @@ const ChatRoom: React.FC = () => {
 
     // === Toast: show once on first load, fade out over 4s ===
     const [showToast, setShowToast] = useState(true);
-    useEffect(() => {
-        const timer = setTimeout(() => setShowToast(false), 4000);
-        return () => clearTimeout(timer);
-    }, []);
+     useEffect(() => {
+        const state = location.state as LocationState;
+        
+        // 유저노트가 실제로 적용되었을 때만 토스트 표시
+        if (state?.userNoteApplied === true) {
+            setShowToast(true);
+            const timer = setTimeout(() => setShowToast(false), 4000);
+            
+            // 토스트 표시 후 state 정리 (뒤로가기 시 다시 표시되지 않도록)
+            window.history.replaceState({
+                ...state,
+                userNoteApplied: undefined
+            }, document.title);
+            
+            return () => clearTimeout(timer);
+        }
+    }, [location.state]);
     // =======================================================
 
     const endRef = useRef<HTMLDivElement | null>(null);
@@ -426,24 +448,46 @@ const ChatRoom: React.FC = () => {
                 </header>
 
                 <main className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden pt-[58px] bg-[#141924] [&::-webkit-scrollbar]:hidden">
-                    {showToast && (
-                        <div className="absolute left-1/2 -translate-x-1/2 top-[88px] z-50 animate-toast-fade ml-[110px]">
-                            <div className="px-[8px] py-[8px] rounded-[6px] shadow-lg5 w-[200px]"
-                                style={{
-                                    background: "linear-gradient(180deg, rgba(117,95,228,0.92) 0%, rgba(61,44,120,0.92) 100%)",
-                                    backdropFilter: "blur(6px)"
-                                }}>
-                                <div className="flex items-center gap-[5px]">
-                                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#A8FD68] text-[#745CFA]">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M20 6L9 17l-5-5" />
-                                        </svg>
-                                    </span>
-                                    <span className="text-[14px] font-semibold text-[#FFF]">선택한 노트가 적용되었습니다.</span>
-                                </div>
-                            </div>
+                    
+            {/* 새로운 토스트 */}
+            {showToast && (
+                <div className="absolute left-1/2 -translate-x-1/2 top-[88px] z-50 animate-toast-fade">
+                    <div 
+                        className="inline-flex h-[24px] w-[185px] items-center gap-[4px] flex-shrink-0 rounded-[6px] -mr-[105px]"
+                        style={{
+                            padding: "10px 16px 10px 10px",
+                            background: "linear-gradient(273deg, rgba(111, 74, 205, 0.30) 0%, rgba(116, 92, 250, 0.30) 100%)",
+                            boxShadow: "0 0 2px 0 rgba(255, 255, 255, 0.20) inset, 0 4px 50px 5px rgba(13, 24, 81, 0.05), 1px 3px 20px 0 rgba(13, 24, 81, 0.05), 0 10px 30px 0 rgba(13, 24, 81, 0.10)",
+                            backdropFilter: "blur(3px)"
+                        }}
+                    >
+                        <div className="w-[24px] h-[24px] flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                                <g clipPath="url(#clip0_2224_9315)">
+                                    <path d="M12.2048 5.40479C8.34083 5.40479 5.20483 8.54079 5.20483 12.4048C5.20483 16.2688 8.34083 19.4048 12.2048 19.4048C16.0688 19.4048 19.2048 16.2688 19.2048 12.4048C19.2048 8.54079 16.0688 5.40479 12.2048 5.40479ZM10.8048 15.9048L7.30483 12.4048L8.29183 11.4178L10.8048 13.9238L16.1178 8.61079L17.1048 9.60478L10.8048 15.9048Z" fill="#A8FD68"/>
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0_2224_9315">
+                                        <rect width="24" height="24" fill="white" transform="translate(0.204834 0.404785)"/>
+                                    </clipPath>
+                                </defs>
+                            </svg>
                         </div>
-                    )}
+                        <span 
+                            style={{
+                                color: "#FFF",
+                                fontFamily: "Pretendard",
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                lineHeight: "142.9%",
+                                letterSpacing: "0.203px"
+                            }}
+                        >
+                            유저노트가 적용되었습니다.
+                        </span>
+                    </div>
+                </div>
+            )}
 
                     <div className="w-[335px] mx-auto pt-3 pb-4">
                         <div className="w-full h-[60px] flex justify-center items-center mt-[12px] mb-[12px]">

@@ -214,12 +214,15 @@ const ChatSetting: React.FC = () => {
     const personaGender: 'MALE' | 'FEMALE' | 'NONE' =
       gender === 'male' ? 'MALE' : gender === 'female' ? 'FEMALE' : 'NONE';
 
+    // 유저노트 적용 여부 확인
+    const hasUserNote = userNote.trim().length > 0;
+
     try {
       // 직접 입력인 경우 페르소나 생성 API 호출
       if (personaChoice === 'custom') {
         const personaCreatePayload = {
           name: name.trim(),
-          gender: personaGender === 'NONE' ? 'MALE' : personaGender, // NONE일 경우 기본값 MALE
+          gender: personaGender === 'NONE' ? 'MALE' : personaGender,
           persona: introduction.trim()
         };
 
@@ -262,12 +265,14 @@ const ChatSetting: React.FC = () => {
 
       const { chatId, first_message } = data.result;
 
+      // 유저노트 적용 여부를 state로 전달
       navigate(`/ChatRoom/${chatId}`, {
         state: {
           firstMessage: first_message,
           characterName,
           characterImageUrl,
           characterId: Number(characterId),
+          userNoteApplied: hasUserNote, // 유저노트 적용 여부 추가
         },
       });
     } catch (error) {

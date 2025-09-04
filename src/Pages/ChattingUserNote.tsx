@@ -273,43 +273,52 @@ const ChattingUserNote: React.FC = () => {
       const userNoteDetail = await fetchUserNoteDetail(id);
 
       if (!userNoteDetail) {
-        // API 호출 실패 시 기존 로직 유지 (fallback)
-        let description = '';
-        if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
-        else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
-
-        const draft = { ...(incomingDraft || {}), userNote: description };
-        navigate(`/ChatSetting${fromSearch || ''}`, {
-          state: { selectedUserNoteDescription: description, draft }
-        });
-        return;
-      }
-
-      // API에서 가져온 prompt 데이터 사용
-      const draft = { ...(incomingDraft || {}), userNote: userNoteDetail.prompt };
-      navigate(`/ChatSetting${fromSearch || ''}`, {
-        state: {
-          selectedUserNoteDescription: userNoteDetail.prompt,
-          selectedUserNoteDetail: userNoteDetail, // 전체 상세 정보도 함께 전달
-          draft
-        }
-      });
-
-    } catch (error) {
-      console.error('Error applying user note:', error);
-      // 에러 발생 시에도 기존 로직으로 fallback
-      const [kind, idStr] = selectedApply.split(':');
-      const id = parseInt(idStr, 10);
+      // API 호출 실패 시 기존 로직 유지 (fallback)
       let description = '';
       if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
       else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
 
       const draft = { ...(incomingDraft || {}), userNote: description };
       navigate(`/ChatSetting${fromSearch || ''}`, {
-        state: { selectedUserNoteDescription: description, draft }
+        state: { 
+          selectedUserNoteDescription: description, 
+          draft,
+          userNoteSelected: true // 유저노트가 선택되었음을 표시
+        }
       });
+      return;
     }
-  };
+
+    // API에서 가져온 prompt 데이터 사용
+    const draft = { ...(incomingDraft || {}), userNote: userNoteDetail.prompt };
+    navigate(`/ChatSetting${fromSearch || ''}`, {
+      state: {
+        selectedUserNoteDescription: userNoteDetail.prompt,
+        selectedUserNoteDetail: userNoteDetail,
+        draft,
+        userNoteSelected: true // 유저노트가 선택되었음을 표시
+      }
+    });
+
+  } catch (error) {
+    console.error('Error applying user note:', error);
+    // 에러 발생 시에도 기존 로직으로 fallback
+    const [kind, idStr] = selectedApply.split(':');
+    const id = parseInt(idStr, 10);
+    let description = '';
+    if (kind === 'my') description = myNotes.find((n) => n.userNoteId === id)?.description || '';
+    else description = likedNotes.find((n) => n.userNoteId === id)?.description || '';
+
+    const draft = { ...(incomingDraft || {}), userNote: description };
+    navigate(`/ChatSetting${fromSearch || ''}`, {
+      state: { 
+        selectedUserNoteDescription: description, 
+        draft,
+        userNoteSelected: true // 유저노트가 선택되었음을 표시
+      }
+    });
+  }
+};
 
   if (loading) {
     return (

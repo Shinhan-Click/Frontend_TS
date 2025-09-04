@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { ArrowLeftIcon, UserIcon, NoteIcon, EditIcon, HistoryIcon, TrashIcon } from "../components/icons";
+import { ArrowLeftIcon, HistoryIcon, TrashIcon } from "../components/icons";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { MdFormatQuote } from "react-icons/md";
 import { useParams } from "react-router-dom";
@@ -67,12 +67,11 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose }) => {
                 <div className="w-[375px] h-[30px] bg-slate-500 rounded-full mx-auto mb-5" />
                 <h2 className="text-[18px] -mt-[15px] mb-[30px] font-bold text-[#FFF] px-2">채팅방 설정</h2>
 
-                <div className="grid grid-cols-3 gap-4 text-center text-[15px] mb-6">
-                    <IconButton icon={<UserIcon className="w-[33px] h-[33px] text-[#FFF]" />} label="유저 페르소나" />
-                    <IconButton icon={<NoteIcon className="w-[33px] h-[33px] text-[#FFF]" />} label="유저 노트" />
-                    <IconButton icon={<EditIcon className="w-[33px] h-[33px] text-[#FFF]" />} label="AI 모델 변경" />
+                <div className="grid grid-cols-3 gap-4 text-center text-[15px]">
+                    <IconButton icon={<img src="/userw.png" alt="유저 페르소나" className="w-[28px] h-[28px]" />} label="유저 페르소나" />
+                    <IconButton icon={<img src="/Vectorw.png" alt="유저 노트" className="w-[28px] h-[28px]" />} label="유저 노트" />
+                    <IconButton icon={<img src="/model.png" alt="AI 모델 변경" className="w-[28px] h-[28px]" />} label="AI 모델 변경" />
                 </div>
-
                 <hr className="border-[1px] border-[#3B4966] w-[320px] mt-[15px] mb-[15px]" />
 
                 <div className="flex flex-col gap-[10px] h-[100px]">

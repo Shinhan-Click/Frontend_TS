@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { FaCommentAlt, FaPlay, FaUser } from 'react-icons/fa';
 import { BsFilePerson } from 'react-icons/bs';
 import { MdNoteAlt } from 'react-icons/md';
-import { NoteIcon } from '../components/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './NavBar.css';
 
 type NavItem = {
     id: 'home' | 'popular' | 'continue' | 'mypage';
     label: string;
-    icon: React.ReactNode;
+    defaultIcon: string;
+    activeIcon: string;
 };
 
 const navItems: NavItem[] = [
-    { id: 'home', label: '홈', icon: <FaCommentAlt /> },
-    { id: 'popular', label: '유저노트', icon: <NoteIcon className="noteicon" /> },
-    { id: 'continue', label: '이어보기', icon: <FaPlay /> },
-    { id: 'mypage', label: '마이 페이지', icon: <FaUser /> },
+    { id: 'home', label: '홈', defaultIcon: '/Excludeg.png', activeIcon: '/Excludew.png' },
+    { id: 'popular', label: '유저노트', defaultIcon: '/Vectorg.png', activeIcon: '/Vectorw.png' },
+    { id: 'continue', label: '이어보기', defaultIcon: '/skipg.png', activeIcon: '/skipw.png' },
+    { id: 'mypage', label: '마이 페이지', defaultIcon: '/userg.png', activeIcon: '/userw.png' },
 ];
 
 const routeById: Record<NavItem['id'], string> = {
@@ -51,7 +50,7 @@ const NavBar: React.FC = () => {
     return (
         <div className="nav-row">
             <nav className="bottom-nav narrow">
-                {navItems.map(({ id, label, icon }) => (
+                {navItems.map(({ id, label, defaultIcon, activeIcon }) => (
                     <button
                         key={id}
                         className={`nav-button ${active === id ? 'active' : ''}`}
@@ -59,7 +58,13 @@ const NavBar: React.FC = () => {
                         type="button"
                         aria-pressed={active === id}
                     >
-                        <div className="icon">{icon}</div>
+                        <div className="icon">
+                            <img
+                                src={active === id ? activeIcon : defaultIcon}
+                                alt={label}
+                                className="nav-img"
+                            />
+                        </div>
                         <div className="label">{label}</div>
                     </button>
                 ))}
@@ -93,7 +98,7 @@ const NavBar: React.FC = () => {
                                 navigate('/UserNoteWrite');
                             }}
                         >
-                            <NoteIcon className="add-icon" />
+                            <img src="/Vectorw.png" alt="유저노트" className="add-icon" />
                         </button>
                     </div>
 

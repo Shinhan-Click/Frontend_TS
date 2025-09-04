@@ -16,6 +16,11 @@
     z-index: 1000;
 }
 
+.nav-img {
+    width: 20px;
+    height: 20px;
+}
+
 .bottom-nav {
     width: 335px;
     height: 64px;

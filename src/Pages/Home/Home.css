@@ -28,7 +28,6 @@
 .title {
     height: 34px;
     margin-top: 40px;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -44,7 +43,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-left: 22px;
+    margin-left: 15px;
+}
+
+.logo-image {
+    width: 65px;
+    height: 20px;
 }
 
 .searchIcon {
@@ -195,14 +199,17 @@
 
 .banner {
     position: relative;
-    width: 335px; 
-    height: 197px; 
+    width: 335px;
+    height: 197px;
     border-radius: 12px;
     overflow: hidden;
-    padding: 12px 16px 12px 16px; /* 스펙의 패딩: Top 12px, Right 16px, Bottom 12px, Left 16px */
+    padding: 12px 16px 12px 16px;
+    /* 스펙의 패딩: Top 12px, Right 16px, Bottom 12px, Left 16px */
     display: flex;
-    flex-direction: column; /* 스펙의 Flow: Vertical */
-    justify-content: space-between; /* 스펙의 Justify: space-between */
+    flex-direction: column;
+    /* 스펙의 Flow: Vertical */
+    justify-content: space-between;
+    /* 스펙의 Justify: space-between */
 }
 
 .banner-container {
@@ -248,10 +255,14 @@
     font-size: 12px;
     color: rgba(223, 225, 234, 0.61);
     margin-bottom: 4px;
-    background: rgba(69, 74, 85, 0.72); /* 스펙의 배경색 #454A55 */
-    backdrop-filter: blur(4px); /* 스펙의 Background blur 4 적용 */
-    padding: 4px 6px 4px 6px; /* 스펙의 패딩: Top 4px, Right 6px, Bottom 4px, Left 6px */
-    border-radius: 6px; /* 스펙의 Radius 6px */
+    background: rgba(69, 74, 85, 0.72);
+    /* 스펙의 배경색 #454A55 */
+    backdrop-filter: blur(4px);
+    /* 스펙의 Background blur 4 적용 */
+    padding: 4px 6px 4px 6px;
+    /* 스펙의 패딩: Top 4px, Right 6px, Bottom 4px, Left 6px */
+    border-radius: 6px;
+    /* 스펙의 Radius 6px */
     display: inline-block;
     width: fit-content;
     font-weight: 500;
@@ -316,11 +327,15 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    background: #141924; /* 스펙의 배경색 #141924 */
-    opacity: 0.56; /* 스펙의 56% 투명도 */
+    background: #141924;
+    /* 스펙의 배경색 #141924 */
+    opacity: 0.56;
+    /* 스펙의 56% 투명도 */
     color: white;
-    padding: 4px 8px 4px 8px; /* 스펙의 패딩: Top 4px, Right 8px, Bottom 4px, Left 8px */
-    border-radius: 100px; /* 스펙의 Radius 100px (완전한 둥근 모양) */
+    padding: 4px 8px 4px 8px;
+    /* 스펙의 패딩: Top 4px, Right 8px, Bottom 4px, Left 8px */
+    border-radius: 100px;
+    /* 스펙의 Radius 100px (완전한 둥근 모양) */
     font-size: 10px;
     font-weight: 500;
     z-index: 10;
@@ -464,8 +479,10 @@
 .novel-card {
     flex: 0 0 auto;
     width: 152px;
-    position: relative; /* 추가 */
-    height: 200px; /* 추가 */
+    position: relative;
+    /* 추가 */
+    height: 200px;
+    /* 추가 */
 }
 
 .novel-card-image {
@@ -511,7 +528,7 @@
     color: #DFE1EA;
     opacity: 0.61;
     margin: 0;
-    
+
     /* 추가할 스타일 */
     background: #454A55;
     opacity: 0.72;
@@ -523,13 +540,20 @@
 }
 
 .novel-card-body {
-    position: absolute; /* 추가 */
-    bottom: 0; /* 추가 */
-    left: 0; /* 추가 */
-    right: 0; /* 추가 */
-    padding: 12px; /* 추가 */
-    background: linear-gradient(transparent, rgba(0,0,0,0.8)); /* 추가 */
-    border-radius: 0 0 12px 12px; /* 추가 */
+    position: absolute;
+    /* 추가 */
+    bottom: 0;
+    /* 추가 */
+    left: 0;
+    /* 추가 */
+    right: 0;
+    /* 추가 */
+    padding: 12px;
+    /* 추가 */
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    /* 추가 */
+    border-radius: 0 0 12px 12px;
+    /* 추가 */
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -556,7 +580,8 @@
 
 .note-card {
     flex: 0 0 auto;
-    width: 152px; /* 스펙에 맞게 변경 */
+    width: 152px;
+    /* 스펙에 맞게 변경 */
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -564,40 +589,60 @@
 }
 
 .note-card-image {
-    width: 152px; /* 스펙에 맞게 변경 */
-    height: 110px; /* 스펙 유지 */
+    width: 152px;
+    /* 스펙에 맞게 변경 */
+    height: 110px;
+    /* 스펙 유지 */
     object-fit: cover;
-    border-radius: 12px; /* 스펙 유지 */
+    border-radius: 12px;
+    /* 스펙 유지 */
 }
 
 .note-card-title {
-    width: 152px; /* 스펙에 맞게 변경 */
-    height: 24px; /* 스펙에 맞게 변경 */
+    width: 152px;
+    /* 스펙에 맞게 변경 */
+    height: 24px;
+    /* 스펙에 맞게 변경 */
     font-family: 'Pretendard', sans-serif;
-    font-weight: 600; /* Bold -> 600 */
-    font-size: 16px; /* 스펙에 맞게 변경 */
-    line-height: 150%; /* 스펙에 맞게 변경 */
-    letter-spacing: 0.57%; /* 스펙에 맞게 변경 */
-    color: #F8F8FA; /* 스펙에 맞게 변경 */
+    font-weight: 600;
+    /* Bold -> 600 */
+    font-size: 16px;
+    /* 스펙에 맞게 변경 */
+    line-height: 150%;
+    /* 스펙에 맞게 변경 */
+    letter-spacing: 0.57%;
+    /* 스펙에 맞게 변경 */
+    color: #F8F8FA;
+    /* 스펙에 맞게 변경 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin: 0;
-    margin-bottom: 8px; /* 스펙의 list spacing */
+    margin-bottom: 8px;
+    /* 스펙의 list spacing */
 }
 
 .note-card-desc {
-    width: 152px; /* 스펙에 맞게 변경 */
-    height: 40px; /* 스펙에 맞게 변경 */
+    width: 152px;
+    /* 스펙에 맞게 변경 */
+    height: 40px;
+    /* 스펙에 맞게 변경 */
     font-family: 'Pretendard', sans-serif;
-    font-weight: 400; /* Regular */
-    font-size: 14px; /* 스펙에 맞게 변경 */
-    line-height: 143%; /* 스펙에 맞게 변경 */
-    letter-spacing: 1.45%; /* 스펙에 맞게 변경 */
-    color: #DFE1EA; /* 스펙 색상 */
-    opacity: 0.61; /* 스펙의 61% 투명도 */
+    font-weight: 400;
+    /* Regular */
+    font-size: 14px;
+    /* 스펙에 맞게 변경 */
+    line-height: 143%;
+    /* 스펙에 맞게 변경 */
+    letter-spacing: 1.45%;
+    /* 스펙에 맞게 변경 */
+    color: #DFE1EA;
+    /* 스펙 색상 */
+    opacity: 0.61;
+    /* 스펙의 61% 투명도 */
     margin: 0;
-    margin-bottom: 6px; /* 스펙의 list spacing */
+    margin-bottom: 6px;
+    /* 스펙의 list spacing */
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -613,17 +658,19 @@
     width: 73px;
     height: 24px;
     border-radius: 6px;
-    background: rgba(54, 58, 67, 0.32); /* #363A43 with 32% opacity */
+    background: rgba(54, 58, 67, 0.32);
+    /* #363A43 with 32% opacity */
     backdrop-filter: blur(4px);
     margin: 0;
-    
+
     /* 해시태그 텍스트 - 이미지 2 스펙 */
     font-family: 'Pretendard', sans-serif;
     font-weight: 500;
     font-size: 12px;
     line-height: 133%;
     letter-spacing: 2.52%;
-    color: rgba(223, 225, 234, 0.61); /* #DFE1EA with 61% opacity */
+    color: rgba(223, 225, 234, 0.61);
+    /* #DFE1EA with 61% opacity */
     white-space: nowrap;
 }
 
@@ -634,23 +681,28 @@
 
 .top-user.active {
     width: 88px;
-    height: 80px; /* 높이를 줄여서 이름 공간 제거 */
-    background: rgba(217, 200, 239, 0.07); /* #D9C8EF with 7% opacity */
+    height: 80px;
+    /* 높이를 줄여서 이름 공간 제거 */
+    background: rgba(217, 200, 239, 0.07);
+    /* #D9C8EF with 7% opacity */
     border-radius: 12px;
     padding: 4px 8px;
     gap: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* 중앙 정렬로 변경 */
+    justify-content: center;
+    /* 중앙 정렬로 변경 */
 }
 
 .top-user.active .avatar-name {
-    display: none; /* 완전히 숨김 */
+    display: none;
+    /* 완전히 숨김 */
 }
 
 .character-description {
-    color: rgba(223, 225, 234, 0.61); /* #DFE1EA with 61% opacity */
+    color: rgba(223, 225, 234, 0.61);
+    /* #DFE1EA with 61% opacity */
     font-family: 'Pretendard', sans-serif;
     font-weight: 400;
     font-size: 14px;
@@ -703,7 +755,7 @@
     opacity: 0;
     transform: translateY(10px);
     transition: all 0.5s ease 0.2s;
-    
+
     /* 말풍선 텍스트 스타일 */
     color: #F8F8FA;
     font-family: 'Pretendard', sans-serif;
@@ -737,7 +789,7 @@
     opacity: 0;
     transform: translateY(10px);
     transition: all 0.5s ease;
-    
+
     /* 태그 텍스트 스타일 */
     color: rgba(190, 193, 203, 0.48);
     font-family: 'Pretendard', sans-serif;
@@ -832,7 +884,8 @@
 }
 
 /* 로딩 및 빈 상태 스타일 */
-.loading-container, .empty-container {
+.loading-container,
+.empty-container {
     display: flex;
     justify-content: center;
     align-items: center;

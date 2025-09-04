@@ -98,8 +98,8 @@ const UserNoteSelectPriorityBeforeMerging: React.FC<Props> = ({ onClose, onConfi
         </header>
 
         <main className="flex-1 overflow-y-auto px-[15px] pb-36">
-          <h1 className="text-[16px] leading-6 text-[#FFF]">병합 시 우선 적용할 유저노트를 선택해주세요.</h1>
-          <p className="mt-2 text-[12px] text-[#DFE1EA]/60 leading-5">
+          <h1 className="text-[#F8F8FA] font-['Pretendard'] text-[17px] font-semibold leading-[141.2%]">병합 시 우선 적용할 유저노트를 선택해주세요.</h1>
+          <p className="mt-2 self-stretch text-[rgba(223,225,234,0.61)] font-['Pretendard'] text-[14px] font-normal leading-[142.9%] tracking-[0.203px]">
             병합 과정에서 일부 내용이 생략될 수 있습니다.
             <br />
             이때 더 중요하게 보존하고 싶은 유저노트를 선택해주세요.
@@ -116,30 +116,29 @@ const UserNoteSelectPriorityBeforeMerging: React.FC<Props> = ({ onClose, onConfi
                   aria-checked={selected}
                   onClick={() => setSelectedId(opt.id)}
                   className={[
-                    "w-full text-left rounded-[12px] px-4 py-4 mb-[20px] transition-colors",
-                    "bg-white/5",
-                    selected ? "ring-1 ring-[#6F4ACD]/80 bg-[#AE6FFF]/12 border-none"
-                             : "ring-white/10 bg-[#D9C8EF]/4 border-none",
+                    "flex px-4 py-[10px] items-start gap-2 self-stretch rounded-[12px] w-full text-left mb-[20px] transition-colors mt-[-10px]",
+                    selected 
+                      ? "border border-[rgba(111,74,205,0.80)] bg-[rgba(174,111,255,0.12)]"
+                      : "bg-[rgba(217,200,239,0.03)] border-none",
                   ].join(" ")}
                 >
-                  <div className="flex items-start gap-[10px]">
-                    <span
-                      aria-hidden
-                      className={[
-                        "mt-[2px] inline-flex items-center justify-center",
-                        "w-[22px] h-[22px] rounded-full",
-                        selected ? "bg-[#6F4ACD]" : "bg-white/10",
-                        selected ? "ring-1 ring-[#6F4ACD]" : "ring-1 ring-[#FFF]/80",
-                        "shrink-0",
-                      ].join(" ")}
-                    >
-                      {selected && <span className="block w-[10px] h-[10px] rounded-full bg-[#DADDE9]" />}
-                    </span>
+                  <div className="flex items-start gap-[10px] ml-[8px]">
+                   <span
+                    aria-hidden
+                    className={[
+                          "mt-[2px] flex justify-center items-center",
+                          "w-[20px] h-[20px] rounded-full",
+                          selected ? "bg-[#6F4ACD]" : "bg-[#DADDE9]",
+                          "shrink-0",
+                        ].join(" ")}
+                      >
+                        {selected && <span className="block w-[7.692px] h-[7.692px] rounded-full bg-[#DADDE9] flex-shrink-0 aspect-square" />}
+                        {!selected && <span className="block w-[7.692px] h-[7.692px] rounded-full bg-[#FFFFFF] flex-shrink-0 aspect-square" />}
+                      </span>
 
                     <div className="min-w-0">
-                      <div className="text-[15px] text-[#FFF] font-semibold">{opt.title}</div>
-                      <p className="mt-1 text-[12px] text-[#FFF]/65 leading-5 line-clamp-2">{opt.description}</p>
-                      <div className="mt-2 text-[11px] text-[#9CA3AF]">{opt.meta}</div>
+                      <div className="text-[#F8F8FA] font-['Pretendard'] text-[16px] font-semibold leading-[150%] tracking-[0.091px]">{opt.title}</div>
+                      <div className="flex h-10 flex-col justify-center self-stretch overflow-hidden text-[rgba(223,225,234,0.61)] text-ellipsis font-['Pretendard'] text-[14px] font-normal leading-[142.9%] tracking-[0.203px] mt-[6px] line-clamp-2">{opt.description}</div>
                     </div>
                   </div>
                 </button>
@@ -154,11 +153,13 @@ const UserNoteSelectPriorityBeforeMerging: React.FC<Props> = ({ onClose, onConfi
             onClick={handleConfirmInternal}
             disabled={!selectedId}
             className={[
-              "w-[359px] ml-[8.5px] mb-[10px] h-[52px] rounded-[12px] font-semibold border-none",
-              selectedId ? "bg-[#6F4ACD] text-[#FFF]" : "bg-[#6F4ACD] text-[#FFF] opacity-60 cursor-not-allowed",
+              "w-[359px] ml-[8.5px] mb-[10px] h-[52px] rounded-[12px] border-none",
+              selectedId ? "bg-[#6F4ACD]" : "bg-[#6F4ACD] opacity-60 cursor-not-allowed",
             ].join(" ")}
           >
-            병합하기
+            <span className="text-[#F8F8FA] font-feature-settings-['dlig'] font-['Pretendard'] text-[16px] font-semibold leading-[150%]">
+              병합하기
+            </span>
           </button>
         </footer>
       </div>

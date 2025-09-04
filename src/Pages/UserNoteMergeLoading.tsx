@@ -194,11 +194,11 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
         <main className={["flex-1 overflow-y-auto px-[20px]", "bg-[radial-gradient(60%_40%_at_50%_55%,rgba(111,74,205,0.15),transparent_70%)]"].join(" ")}>
           {isDone ? (
             <section className="mt-[12px] flex flex-col items-center text-center">
-              <h1 className="text-[20px] font-bold text-[#FFF]">유저노트 병합 완료</h1>
-              <p className="mt-3 text-[14px] leading-6 text-[#F8F8FA]">유저노트 병합이 완료되었습니다.<br />병합한 유저노트의 이름을 작성해주세요.</p>
+              <h1 className="self-stretch text-[#F8F8FA] text-center font-['Pretendard'] text-[20px] font-semibold leading-[140%] tracking-[-0.24px]">유저노트 병합 완료</h1>
+              <p className="mt-3 text-[#F8F8FA] text-center font-['Pretendard'] text-[14px] font-normal leading-[142.9%]">유저노트 병합이 완료되었습니다.<br />병합한 유저노트의 이름을 작성해주세요.</p>
               <div className="mt-[10px] flex items-center gap-2">
                 <FaRegCheckCircle className="w-[20px] h-[20px] mt-[2px] text-[#7C5CFF]" />
-                <span className="ml-[6px] text-[14px] text-[#B9A8FF]">100% 완료</span>
+                <span className="ml-[10px] text-[#B093F9] text-center font-['Pretendard'] text-[14px] font-medium leading-[142.9%] tracking-[0.203px]">100% 완료</span>
               </div>
               <div className="w-full max-w-[300px] mt-8">
                 <input
@@ -211,8 +211,8 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
             </section>
           ) : (
             <section className="mt-[12px] flex flex-col items-center text-center">
-              <h1 className="text-[20px] font-[500] text-[#FFF]">유저노트 병합 중...</h1>
-              <p className="mt-3 text-[14px] leading-6 text-[#F8F8FA]">두 개의 유저노트를 병합 중입니다.<br />완성된 유저노트는 내 유저노트에 추가됩니다.</p>
+              <h1 className="self-stretch text-[#F8F8FA] text-center font-['Pretendard'] text-[20px] font-semibold leading-[140%] tracking-[-0.24px]">유저노트 병합 중...</h1>
+              <p className="mt-3 text-[#F8F8FA] text-center font-['Pretendard'] text-[14px] font-normal leading-[142.9%]">두 개의 유저노트를 병합 중입니다.<br />완성된 유저노트는 내 유저노트에 추가됩니다.</p>
               <div className="mt-[5px] flex items-center gap-2">
                 <div className="relative w-6 h-6">
                   <svg viewBox="0 0 36 36" className="w-[20px] h-[20px] mt-[6px]">
@@ -220,7 +220,7 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
                     <path d="M18 2a16 16 0 1 1 0 32a16 16 0 1 1 0-32" fill="none" stroke="#7C5CFF" strokeWidth="4" strokeDasharray={`${(progress / 100) * 100} 100`} strokeLinecap="round" />
                   </svg>
                 </div>
-                <span className="ml-[10px] text-[14px] text-[#B9A8FF]">{progress}% 완료</span>
+                <span className="ml-[10px] text-[#B093F9] text-center font-['Pretendard'] text-[14px] font-medium leading-[142.9%] tracking-[0.203px]">{progress}% 완료</span>
               </div>
             </section>
           )}
@@ -268,7 +268,7 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
                     fallback={<div className="w-full h-full bg-[#0E1420]" />}
                   />
                 </div>
-                <div className="mt-[7px] text-center text-[14px] text-[#FFF] font-semibold line-clamp-1 max-w-[130px]">
+                <div className="mt-[7px] self-stretch text-[#F8F8FA] text-center font-['Pretendard'] text-[14px] font-semibold leading-[157.14%] tracking-[0.203px] line-clamp-1 max-w-[130px]">
                   {firstTitle ?? "선택 1"}
                 </div>
               </div>
@@ -279,8 +279,11 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
                   style={{ backgroundColor: "rgba(111,74,205,0.9)" }}
                   aria-label="병합 중"
                 >
-                  <svg className="w-6 h-6 text-[#FFF]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeWidth="2" d="M7 7h5v5H7zM12 12h5v5h-5z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                    <path d="M2.25171 5.47832C2.25171 4.35822 2.25171 3.79816 2.4697 3.37034C2.66144 2.99402 2.9674 2.68805 3.34373 2.49631C3.77155 2.27832 4.3316 2.27832 5.45171 2.27832H13.0517C14.1718 2.27832 14.7319 2.27832 15.1597 2.49631C15.536 2.68805 15.842 2.99402 16.0337 3.37034C16.2517 3.79816 16.2517 4.35822 16.2517 5.47832V13.0783C16.2517 14.1984 16.2517 14.7585 16.0337 15.1863C15.842 15.5626 15.536 15.8686 15.1597 16.0603C14.7319 16.2783 14.1718 16.2783 13.0517 16.2783H5.45171C4.3316 16.2783 3.77155 16.2783 3.34373 16.0603C2.9674 15.8686 2.66144 15.5626 2.4697 15.1863C2.25171 14.7585 2.25171 14.1984 2.25171 13.0783V5.47832Z" fill="white" fillOpacity="0.3"/>
+                    <path d="M8.25171 11.4783C8.25171 10.3582 8.25171 9.79816 8.4697 9.37034C8.66144 8.99402 8.9674 8.68805 9.34373 8.49631C9.77155 8.27832 10.3316 8.27832 11.4517 8.27832H19.0517C20.1718 8.27832 20.7319 8.27832 21.1597 8.49631C21.536 8.68805 21.842 8.99402 22.0337 9.37034C22.2517 9.79816 22.2517 10.3582 22.2517 11.4783V19.0783C22.2517 20.1984 22.2517 20.7585 22.0337 21.1863C21.842 21.5626 21.536 21.8686 21.1597 22.0603C20.7319 22.2783 20.1718 22.2783 19.0517 22.2783H11.4517C10.3316 22.2783 9.77155 22.2783 9.34373 22.0603C8.9674 21.8686 8.66144 21.5626 8.4697 21.1863C8.25171 20.7585 8.25171 20.1984 8.25171 19.0783V11.4783Z" fill="white" fillOpacity="0.3"/>
+                    <path d="M2.25171 5.47832C2.25171 4.35822 2.25171 3.79816 2.4697 3.37034C2.66144 2.99402 2.9674 2.68805 3.34373 2.49631C3.77155 2.27832 4.3316 2.27832 5.45171 2.27832H13.0517C14.1718 2.27832 14.7319 2.27832 15.1597 2.49631C15.536 2.68805 15.842 2.99402 16.0337 3.37034C16.2517 3.79816 16.2517 4.35822 16.2517 5.47832V13.0783C16.2517 14.1984 16.2517 14.7585 16.0337 15.1863C15.842 15.5626 15.536 15.8686 15.1597 16.0603C14.7319 16.2783 14.1718 16.2783 13.0517 16.2783H5.45171C4.3316 16.2783 3.77155 16.2783 3.34373 16.0603C2.9674 15.8686 2.66144 15.5626 2.4697 15.1863C2.25171 14.7585 2.25171 14.1984 2.25171 13.0783V5.47832Z" stroke="#F8F8FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M8.25171 11.4783C8.25171 10.3582 8.25171 9.79816 8.4697 9.37034C8.66144 8.99402 8.9674 8.68805 9.34373 8.49631C9.77155 8.27832 10.3316 8.27832 11.4517 8.27832H19.0517C20.1718 8.27832 20.7319 8.27832 21.1597 8.49631C21.536 8.68805 21.842 8.99402 22.0337 9.37034C22.2517 9.79816 22.2517 10.3582 22.2517 11.4783V19.0783C22.2517 20.1984 22.2517 20.7585 22.0337 21.1863C21.842 21.5626 21.536 21.8686 21.1597 22.0603C20.7319 22.2783 20.1718 22.2783 19.0517 22.2783H11.4517C10.3316 22.2783 9.77155 22.2783 9.34373 22.0603C8.9674 21.8686 8.66144 21.5626 8.4697 21.1863C8.25171 20.7585 8.25171 20.1984 8.25171 19.0783V11.4783Z" stroke="#F8F8FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
               </div>
@@ -294,7 +297,7 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
                     fallback={<div className="w-full h-full bg-[#1E2432]" />}
                   />
                 </div>
-                <div className="mt-[7px] text-center text-[14px] text-[#FFF] font-semibold line-clamp-1 max-w-[130px]">
+                <div className="mt-[7px] self-stretch text-[#F8F8FA] text-center font-['Pretendard'] text-[14px] font-semibold leading-[157.14%] tracking-[0.203px] line-clamp-1 max-w-[130px]">
                   {secondTitle ?? "선택 2"}
                 </div>
               </div>

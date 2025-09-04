@@ -15,19 +15,19 @@ function formatMergedPrompt(raw?: string): string {
   let s = raw.trim();
 
   // 1) "## 제목 - 불릿시작" 이 한 줄에 붙어있는 경우 분리
-  //    예) "## 금지사항 - 수련 완료 전 ..." -> "## 금지사항\n\n- 수련 완료 전 ..."
-  s = s.replace(/^(\s*##\s+[^\n-]+?)\s+-\s+/gm, (_m, heading) => `${heading}\n\n- `);
+  //    예) "## 금지사항 - 수련 완료 전 ..." -> "## 금지사항\n- 수련 완료 전 ..."
+  s = s.replace(/^(\s*##\s+[^\n-]+?)\s+-\s+/gm, (_m, heading) => `${heading}\n- `);
 
-  // 2) 첫 번째 '# '는 유지. 그 외 '## ' 앞에는 항상 빈 줄 2개 삽입
-  //    (문자열 어디서든 '## ' 이전의 공백/개행을 통일해 '\n\n## '로)
-  s = s.replace(/\s*##\s/g, '\n\n## ');
+  // 2) 첫 번째 '# '는 유지. 그 외 '## ' 앞에는 항상 빈 줄 1개 삽입
+  //    (문자열 어디서든 '## ' 이전의 공백/개행을 통일해 '\n## '로)
+  s = s.replace(/\s*##\s/g, '\n## ');
 
-  // 3) 불릿 시작 전에 빈 줄 1개(= 시각상 한 줄 비움) 보장
-  //    (이미 개행이 있어도 일관되게 '\n\n- '로 맞춤)
-  s = s.replace(/\s*-\s/g, '\n\n- ');
+  // 3) 불릿 시작 전에는 개행 없이 바로 이어지도록 
+  //    (기존 공백/개행을 제거하고 '\n- '로 맞춤)
+  s = s.replace(/\s*-\s/g, '\n- ');
 
-  // 4) 3개 이상 연속 개행은 최대 2개로 축약
-  s = s.replace(/\n{3,}/g, '\n\n');
+  // 4) 2개 이상 연속 개행은 최대 1개로 축약 (줄 띄움 한 번씩만)
+  s = s.replace(/\n{2,}/g, '\n');
 
   return s.trim();
 }
@@ -132,17 +132,17 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
         </header>
 
         <main className="flex-1 overflow-y-auto px-[15px] pb-36 bg-[#141924]">
-          <div className="flex items-start gap-2 px-3 py-3">
-            <svg className="w-[20px] h-[20px] flex-shrink-0 mt-[2px] text-[#22C55E]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          <div className="flex items-start gap-2 px-3 py-3 ml-[7px]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21" fill="none" className="flex-shrink-0 mt-[2px]">
+              <path d="M7.01241 10.859L9.51241 13.359L14.5124 8.35897M19.0957 10.859C19.0957 15.4613 15.3648 19.1923 10.7624 19.1923C6.16004 19.1923 2.42908 15.4613 2.42908 10.859C2.42908 6.25659 6.16004 2.52563 10.7624 2.52563C15.3648 2.52563 19.0957 6.25659 19.0957 10.859Z" stroke="#44CA48" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <div>
-              <div className="text-[17px] font-semibold text-[#22C55E]">병합이 완료되었습니다.</div>
-              <div className="mt-[2px] text-[14px] text-[#DFE1EA]/60">병합된 노트를 검토하고 수정이 필요한 부분을 수정해주세요.</div>
+              <div className="text-[#44CA48] font-['Pretendard'] text-[17px] font-semibold leading-[141.2%] ml-[7px]">병합이 완료되었습니다.</div>
+              <div className="mt-[2px] self-stretch text-[rgba(223,225,234,0.61)] font-['Pretendard'] text-[14px] font-normal leading-[142.9%] tracking-[0.203px] ml-[-20px]">병합된 노트를 검토하고 수정이 필요한 부분을 수정해주세요.</div>
             </div>
           </div>
 
-          <h2 className="mt-[30px] text-[17px] font-bold text-[#FFF]">병합결과</h2>
+          <h2 className="mt-[30px] text-[#F8F8FA] font-['Pretendard'] text-[17px] font-semibold leading-[141.2%]">병합결과</h2>
 
           <div className="relative mt-2 mr-[2px]">
             <textarea
@@ -151,9 +151,15 @@ const UserNoteMergeResult: React.FC<Props> = ({ onClose }) => {
               onChange={handleChange}
               onInput={handleInput}
               rows={1}
-              className="w-full resize-none rounded-[6px] bg-[#283143] text-[#F8F8FA] placeholder:text-white/40 px-4 py-3 text-[16px] leading-6 outline-none border border-[#404E6A] focus:border-[#6F4ACD] transition-all duration-150 overflow-hidden"
+              className="w-full resize-none rounded-[6px] bg-[#283143] text-[#F8F8FA] placeholder:text-white/40 px-4 py-3 font-['Pretendard'] text-[16px] font-normal leading-[150%] tracking-[0.091px] outline-none border border-[#404E6A] focus:border-[#6F4ACD] transition-all duration-150 overflow-hidden flex-1 self-stretch"
               placeholder="병합된 내용을 검토하고 수정해주세요"
-              style={{ boxSizing: "border-box", overflowY: "hidden" }}
+              style={{ 
+                boxSizing: "border-box", 
+                overflowY: "hidden",
+                scrollbarWidth: "none", // Firefox
+                msOverflowStyle: "none", // IE/Edge
+                WebkitAppearance: "none"
+              }}
             />
             <div className="flex justify-end mt-2">
               <span className="text-[12px] text-[#FFF]">

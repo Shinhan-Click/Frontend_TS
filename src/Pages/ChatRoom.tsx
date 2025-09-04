@@ -139,10 +139,8 @@ const ChatRoom: React.FC = () => {
     const [characterImageUrl, setCharacterImageUrl] = useState("");
     const [personaName, setPersonaName] = useState("");
 
-    // ✅ AI 입력중 인디케이터 상태
     const [aiTyping, setAiTyping] = useState(false);
 
-    // ✅ 맨 아래로 스크롤용 앵커
     const endRef = useRef<HTMLDivElement | null>(null);
     const scrollToBottom = useCallback((smooth = true) => {
         if (!endRef.current) return;
@@ -317,7 +315,6 @@ const ChatRoom: React.FC = () => {
         const quoted = extractQuoted(raw);
         const pieces = splitLines(quoted ?? t);
 
-        // 사용자 메시지 즉시 UI에 추가
         setMessages((prev) => [
             ...prev,
             ...pieces.map((text) => ({
@@ -330,7 +327,6 @@ const ChatRoom: React.FC = () => {
         setInput("");
         requestAnimationFrame(() => inputRef.current?.focus());
 
-        // ✅ AI "입력중..." 표시 시작
         setAiTyping(true);
 
         // API 호출해서 AI 응답 받기
@@ -359,14 +355,12 @@ const ChatRoom: React.FC = () => {
                 setMessages((prev) => [...prev, ...aiMessages]);
             }
         } catch (error) {
-            // 에러 메시지 표시
             setMessages((prev) => [...prev, {
                 id: crypto.randomUUID(),
                 role: "narration",
                 text: "메시지 전송에 실패했습니다. 다시 시도해주세요."
             }]);
         } finally {
-            // ✅ 응답 도착 또는 에러 시 인디케이터 종료
             setAiTyping(false);
         }
     };
@@ -394,9 +388,7 @@ const ChatRoom: React.FC = () => {
         });
     };
 
-    // ✅ 메시지/타이핑 상태 변경 시 항상 아래로 스크롤
     useEffect(() => {
-        // 첫 렌더 직후 튀는 현상 방지: 초기엔 auto, 그 뒤 smooth
         scrollToBottom(messages.length > 0);
     }, [messages, aiTyping, scrollToBottom]);
 
@@ -404,7 +396,7 @@ const ChatRoom: React.FC = () => {
         <div className="min-h-screen bg-white flex items-center justify-center pointer-events-auto">
             <div className="relative w-[375px] h-[896px] bg-[#141924] text-gray-200 flex flex-col overflow-hidden">
 
-                <header className="absolute top-0 left-0 right-0 z-50 mt-[5px] w-[335px] h-[58px] px-[20px] flex items-center justify-between bg-[#141924]">
+                <header className="absolute top-0 left-0 right-0 z-50 w-[335px] h-[58px] px-[20px] flex items-center justify-between bg-[#141924]">
                     <div className="flex items-center">
                         <button
                             className="w-[35px] h-[35px] p-2 ml-[4px] bg-[#141924] text-[#FFF] border-none"
@@ -474,7 +466,7 @@ const ChatRoom: React.FC = () => {
                             return (
                                 <div key={m.id} className={`${mt} flex justify-end`}>
                                     <div className="max-w-[78%]">
-                                        <div className="px-[10px] py-[6px] bg-[#6F4ACD] text-[#FFF] shadow rounded-[10px] rounded-tr-none">
+                                        <div className="px-[10px] py-[6px] bg-[#6F4ACD] text-[#FFF] shadow rounded-[10px] rounded-tr-none mt-[20px]">
                                             <div className="text-[14px] leading-[18px] whitespace-pre-wrap">{m.text}</div>
                                         </div>
                                     </div>
@@ -482,7 +474,6 @@ const ChatRoom: React.FC = () => {
                             );
                         })}
 
-                        {/* ✅ AI 입력중 인디케이터 */}
                         {aiTyping && (
                             <div className="mt-5 flex items-start gap-2">
                                 <div className="flex-shrink-0 w-[32px] h-[32px] rounded-full overflow-hidden bg-[#222A39]">
@@ -499,13 +490,17 @@ const ChatRoom: React.FC = () => {
                                         {characterName}
                                     </div>
                                     <div className="px-[12px] py-[6px] bg-[#2E3646] text-[#DFE1EA] rounded-[10px] rounded-tl-none">
-                                        <span className="text-[15px] tracking-widest">입력중&nbsp;...</span>
+
+                                        <span className="typing-dots">
+                                            <span className="typing-dot">º</span>
+                                            <span className="typing-dot">º</span>
+                                            <span className="typing-dot">º</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* ✅ 스크롤 앵커 */}
                         <div ref={endRef} />
                     </div>
                 </main>
@@ -558,6 +553,30 @@ const ChatRoom: React.FC = () => {
 
                 <BottomSheet isOpen={isSheetOpen} onClose={closeSheet} />
             </div>
+            -
+            <style>{`
+                @keyframes und-wave {
+                    0%   { transform: translateY(0);    opacity: .7; }
+                    25%  { transform: translateY(-3px); opacity: 1;  }
+                    50%  { transform: translateY(0);    opacity: .85;}
+                    75%  { transform: translateY(3px);  opacity: .7; }
+                    100% { transform: translateY(0);    opacity: .85;}
+                }
+                .typing-dots {
+                    display: inline-flex;
+                    gap: 8px;
+                    align-items: center;
+                    line-height: 1;
+                }
+                .typing-dot {
+                    display: inline-block;
+                    font-size: 18px;
+                    animation: und-wave 1.2s ease-in-out infinite;
+                }
+                .typing-dot:nth-child(1) { animation-delay: 0s; }
+                .typing-dot:nth-child(2) { animation-delay: .15s; }
+                .typing-dot:nth-child(3) { animation-delay: .30s; }
+            `}</style>
         </div>
     );
 };

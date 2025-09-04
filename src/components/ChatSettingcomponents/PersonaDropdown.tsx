@@ -66,7 +66,6 @@ const PersonaDropdown: React.FC<PersonaDropdownProps> = ({
 
     const handleSelect = (nextId: string) => {
         if (nextId === customId) {
-
             setOpen(false);
             setIsEditing(true);
             setDraft("");
@@ -125,7 +124,11 @@ const PersonaDropdown: React.FC<PersonaDropdownProps> = ({
                     <span className={`cs-dd-value ${selected || isFreeText ? "" : "is-placeholder"}`}>
                         {selected ? selected.label : (isFreeText ? value : placeholder)}
                     </span>
-                    <span className="cs-dd-caret" aria-hidden>▾</span>
+                    <span className={`cs-dd-caret ${open ? 'is-rotated' : ''}`} aria-hidden>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6,9 12,15 18,9"></polyline>
+                        </svg>
+                    </span>
                 </button>
             ) : (
                 <div className="cs-dd-trigger is-open" aria-expanded={true}>
@@ -143,7 +146,6 @@ const PersonaDropdown: React.FC<PersonaDropdownProps> = ({
                         onKeyDown={onInputKeyDown}
                         onBlur={commitOrCancel}
                     />
-                    <span className="cs-dd-caret" aria-hidden>▾</span>
                 </div>
             )}
 

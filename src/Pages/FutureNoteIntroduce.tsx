@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon, MoreVerticalIcon } from "../components/icons";
 import { BiLike } from "react-icons/bi";
-import FutureNoteBottomSheet from "./FutureNoteBottomSheetProps"; // 바텀시트 import
-
+import FutureNoteBottomSheet from "./FutureNoteBottomSheetProps";
 const API_BASE = "/api";
 
 const Collapsible: React.FC<{ open: boolean; className?: string; children: React.ReactNode }> = ({
@@ -56,7 +55,7 @@ type FutureNoteDTO = {
     exampleImageUrls: string[];
     authorProfileImageUrl: string | null;
     authorNickname: string;
-    postDate: string; // "YYYY-MM-DD"
+    postDate: string;
 };
 
 type ApiResponse<T> = {
@@ -85,7 +84,6 @@ const FutureNoteIntroduce: React.FC = () => {
     const [data, setData] = useState<FutureNoteDTO | null>(null);
     const [loading, setLoading] = useState(false);
 
-    // 바텀시트 상태 추가
     const [sheetOpen, setSheetOpen] = useState(false);
 
     useEffect(() => {
@@ -115,7 +113,6 @@ const FutureNoteIntroduce: React.FC = () => {
         return () => ac.abort();
     }, [futureNoteId]);
 
-    // 데모(그대로 유지)
     const recs = [
         {
             id: 1,
@@ -188,11 +185,11 @@ const FutureNoteIntroduce: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#FFF] flex items-center justify-center">
             <div className="w-[375px] h-[896px] bg-[#141924] text-white flex flex-col overflow-hidden">
-                <header className="w-full h-[56px] flex items-center justify-between px-3 bg-[#141924] border-b border-[#222A39]">
+                <header className="absolute top-0 left-0 right-0 z-20 h-[56px] flex items-center justify-between px-3 bg-transparent">
                     <button
                         type="button"
                         onClick={() => navigate("/FutureNotePost")}
-                        className="ml-[10px] border-none w-10 h-10 bg-[#141924] flex items-center justify-center"
+                        className="ml-[20px] w-[34px] h-[34px] rounded-full bg-[#404D68] border-none flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur-sm"
                         aria-label="뒤로가기"
                     >
                         <ArrowLeftIcon className="w-[24px] h-[24px] text-[#FFF]" />
@@ -200,14 +197,13 @@ const FutureNoteIntroduce: React.FC = () => {
                     <button
                         type="button"
                         aria-label="메뉴 설정"
-                        className="w-10 h-10 border-none bg-[#141924] mr-[10px]"
+                        className="ml-[260px] w-[34px] h-[34px] rounded-full bg-[#404D68] border-none flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur-sm"
                     >
-                        <MoreVerticalIcon className="w-[22px] h-[22px] text-[#FFF]" />
+                        <MoreVerticalIcon className="w-[24px] h-[24px] text-[#FFF]" />
                     </button>
                 </header>
 
                 <main className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mr-[1px] pb-[96px]">
-                    {/* 배너 */}
                     <section className="relative w-full h-[260px]">
                         <img
                             src={
@@ -215,14 +211,17 @@ const FutureNoteIntroduce: React.FC = () => {
                                 "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1500&auto=format&fit=crop"
                             }
                             alt="banner"
-                            className="absolute inset-0 w-full h-full object-cover blur-sm"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            style={{
+                                WebkitMaskImage:
+                                    "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)",
+                                maskImage:
+                                    "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)",
+                            }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#141924]/40 via-[#141924]/35 to-[#141924]" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#141924]" />
                     </section>
 
-                    {/* 제목/태그/지표 */}
-                    <section className="px-[8px] relative -mt-[140px] z-10">
+                    <section className="px-[8px] relative -mt-[95px] z-10">
                         <h1 className="text-[20px] font-[500] text-[#FFF] ml-[8px]">
                             {loading && !data ? " " : (data?.title || "축제의 불빛 아래")}
                         </h1>
@@ -271,7 +270,6 @@ const FutureNoteIntroduce: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 턴/마일스톤/엔딩 */}
                     <section className="px-4 relative z-10">
                         <div
                             className="
@@ -295,7 +293,6 @@ const FutureNoteIntroduce: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 요약/소개글 */}
                     <section className="px-[20px] space-y-5 mt-5">
                         <div>
                             <h2 className="text-[17px] text-[#FFF] font-semibold mb-2">스토리 요약</h2>
@@ -312,7 +309,6 @@ const FutureNoteIntroduce: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 적용 예시 */}
                     <section className="px-4 mt-[10px] text-[#FFF]">
                         <button
                             type="button"
@@ -371,7 +367,6 @@ const FutureNoteIntroduce: React.FC = () => {
                         </Collapsible>
                     </section>
 
-                    {/* 작가 추천 유저노트(데모 유지) */}
                     <section className="px-4 mt-[8px]">
                         <div className="rounded-[10px] bg-[#141924] p-[20px] space-y-4">
                             <h3 className="text-[17px] text-[#FFF] font-semibold">
@@ -431,9 +426,8 @@ const FutureNoteIntroduce: React.FC = () => {
                         </div>
                     </section>
 
-                    <hr className="border-[#222A39] mt-5" />
+                    <hr className="border-[#222A39] border-[4px] mt-5" />
 
-                    {/* 댓글(데모 유지) */}
                     <section className="px-[20px] mt-[10px]">
                         <h2 className="text-[17px] text-[#FFF] font-semibold mb-3">댓글 245</h2>
 
@@ -508,7 +502,6 @@ const FutureNoteIntroduce: React.FC = () => {
                         </button>
                     </section>
 
-                    {/* 인기 캐릭터(데모 유지) */}
                     <section className="px-4 mt-5">
                         <h3 className="text-[17px] font-semibold mb-3 ml-[15px] text-[#FFF]">사용자들이 많이 적용한 캐릭터</h3>
 
@@ -543,14 +536,12 @@ const FutureNoteIntroduce: React.FC = () => {
                     <div className="h-6" />
                 </main>
 
-                {/* 바텀시트 */}
                 <FutureNoteBottomSheet
                     open={sheetOpen}
                     onClose={() => setSheetOpen(false)}
                     futureNoteId={futureNoteId}
                 />
 
-                {/* 하단 고정 버튼(바텀시트 연결) */}
                 <div className="sticky bottom-0 w-full">
                     <div className="bg-gradient-to-t from-[#141924] via-[#141924] to-transparent pt-3 pb-4">
                         <div className="w-[335px] mx-auto mb-[8px] flex items-center gap-[8px]">

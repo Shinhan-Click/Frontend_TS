@@ -141,6 +141,14 @@ const ChatRoom: React.FC = () => {
 
     const [aiTyping, setAiTyping] = useState(false);
 
+    // === Toast: show once on first load, fade out over 4s ===
+    const [showToast, setShowToast] = useState(true);
+    useEffect(() => {
+        const timer = setTimeout(() => setShowToast(false), 4000);
+        return () => clearTimeout(timer);
+    }, []);
+    // =======================================================
+
     const endRef = useRef<HTMLDivElement | null>(null);
     const scrollToBottom = useCallback((smooth = true) => {
         if (!endRef.current) return;
@@ -418,6 +426,25 @@ const ChatRoom: React.FC = () => {
                 </header>
 
                 <main className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden pt-[58px] bg-[#141924] [&::-webkit-scrollbar]:hidden">
+                    {showToast && (
+                        <div className="absolute left-1/2 -translate-x-1/2 top-[88px] z-50 animate-toast-fade ml-[110px]">
+                            <div className="px-[8px] py-[8px] rounded-[6px] shadow-lg5 w-[200px]"
+                                style={{
+                                    background: "linear-gradient(180deg, rgba(117,95,228,0.92) 0%, rgba(61,44,120,0.92) 100%)",
+                                    backdropFilter: "blur(6px)"
+                                }}>
+                                <div className="flex items-center gap-[5px]">
+                                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#A8FD68] text-[#745CFA]">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M20 6L9 17l-5-5" />
+                                        </svg>
+                                    </span>
+                                    <span className="text-[14px] font-semibold text-[#FFF]">선택한 노트가 적용되었습니다.</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="w-[335px] mx-auto pt-3 pb-4">
                         <div className="w-full h-[60px] flex justify-center items-center mt-[12px] mb-[12px]">
                             <span className="w-[290px] h-[34px] flex justify-center items-center text-[12px] rounded-[55px] bg-[#283143] text-[#DFE1EA]/70">
@@ -576,6 +603,15 @@ const ChatRoom: React.FC = () => {
                 .typing-dot:nth-child(1) { animation-delay: 0s; }
                 .typing-dot:nth-child(2) { animation-delay: .15s; }
                 .typing-dot:nth-child(3) { animation-delay: .30s; }
+
+                /* Toast fade-out over 4s */
+                @keyframes toast-fade {
+                    0%   { opacity: 1; transform: translate(-50%, 0); }
+                    100% { opacity: 0; transform: translate(-50%, -6px); }
+                }
+                .animate-toast-fade {
+                    animation: toast-fade 4s ease forwards;
+                }
             `}</style>
         </div>
     );

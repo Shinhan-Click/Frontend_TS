@@ -138,7 +138,7 @@ const ChatRoom: React.FC = () => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const toggleSheet = () => setIsSheetOpen((v) => !v);
@@ -151,7 +151,7 @@ const ChatRoom: React.FC = () => {
     const [aiTyping, setAiTyping] = useState(false);
 
     // === Toast: show once on first load, fade out over 4s ===
-    const [showToast, setShowToast] = useState(true);
+    const [showToast, setShowToast] = useState(false);
      useEffect(() => {
         const state = location.state as LocationState;
         
@@ -351,10 +351,13 @@ const ChatRoom: React.FC = () => {
                 id: crypto.randomUUID(),
                 role: quoted !== null ? ("narration" as const) : ("user" as const),
                 text,
-            })),
+            }))
         ]);
 
         setInput("");
+        if (inputRef.current) {
+        inputRef.current.style.height = '18px';
+        }   
         requestAnimationFrame(() => inputRef.current?.focus());
 
         setAiTyping(true);
@@ -594,14 +597,35 @@ const ChatRoom: React.FC = () => {
                             </button>
 
                             <div className="relative flex-1">
-                                <input
+                                <textarea
                                     ref={inputRef}
-                                    type="text"
                                     value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    className="px-[10px] w-[270px] h-[44px] rounded-[30px] bg-[#222A39] text-[#FFF] placeholder:text-[#BFC6D4]/60 pl-4 pr-12 outline-none border-none"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            send(); // 폼 제출
+                                        }
+                                        // Shift+Enter는 줄바꿈
+                                    }}
+                                    onChange={(e) => {
+                                        setInput(e.target.value);
+                                        // 높이 자동 조절
+                                        const target = e.target as HTMLTextAreaElement;
+                                        target.style.height = '18px';
+                                        
+                                        if (target.scrollHeight > target.clientHeight) {
+                                            target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+                                        }
+                                    }}
+                                    className="px-[10px] w-[240px] h-[18px] rounded-[30px] bg-[#222A39] text-[#FFF] placeholder:text-[#BFC6D4]/60 pl-4 pr-12 outline-none border-none resize-none py-[11px] leading-5"
                                     placeholder="&quot; &quot; 사이에 대사 지문을 넣어보세요"
-                                    autoComplete="off"
+                                    rows={0}
+                                    style={{
+                                        wordWrap: 'break-word',
+                                        whiteSpace: 'pre-wrap',
+                                        scrollbarWidth: 'none',
+                                        msOverflowStyle: 'none'
+                                    }}
                                 />
                                 <button
                                     type="submit"
@@ -624,7 +648,7 @@ const ChatRoom: React.FC = () => {
 
                 <BottomSheet isOpen={isSheetOpen} onClose={closeSheet} />
             </div>
-            -
+            
             <style>{`
                 @keyframes und-wave {
                     0%   { transform: translateY(0);    opacity: .7; }
@@ -647,6 +671,9 @@ const ChatRoom: React.FC = () => {
                 .typing-dot:nth-child(1) { animation-delay: 0s; }
                 .typing-dot:nth-child(2) { animation-delay: .15s; }
                 .typing-dot:nth-child(3) { animation-delay: .30s; }
+                                .typing-dot:nth-child(1) { animation-delay: 0s; }
+                .typing-dot:nth-child(2) { animation-delay: .15s; }
+                .typing-dot:nth-child(3) { animation-delay: .30s; }
 
                 /* Toast fade-out over 4s */
                 @keyframes toast-fade {
@@ -655,6 +682,11 @@ const ChatRoom: React.FC = () => {
                 }
                 .animate-toast-fade {
                     animation: toast-fade 4s ease forwards;
+                }
+
+                /* Hide scrollbar for textarea */
+                textarea::-webkit-scrollbar {
+                    display: none;
                 }
             `}</style>
         </div>

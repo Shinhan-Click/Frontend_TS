@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Home.css';
 import { SearchIcon } from '../../components/icons';
+import { IoIosArrowForward } from "react-icons/io";
 import NavBar from '../../components/NavBar';
 import type { ApiResponse } from '../../types/api';
 import type { Character, Story, UserNote } from '../../types';
@@ -186,53 +187,53 @@ const Home: React.FC = () => {
   const [userNotes, setUserNotes] = useState<CardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingCharacter, setIsLoadingCharacter] = useState(false);
-  
+
   // 배너 슬라이드 관련 상태
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  
+
   // 터치 이벤트 관련 상태
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
-  
+
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   // 캐릭터 클릭 핸들러 - API 호출
   const handleCharacterClick = async (characterId: string) => {
- // 기존 애니메이션 초기화
- const panel = document.querySelector('.character-panel');
- if (panel) panel.classList.remove('show');
+    // 기존 애니메이션 초기화
+    const panel = document.querySelector('.character-panel');
+    if (panel) panel.classList.remove('show');
 
- if (activeCharacterId === characterId) {
-   setActiveCharacterId(null);
-   setSelectedCharacterDetail(null);
-   return;
- }
+    if (activeCharacterId === characterId) {
+      setActiveCharacterId(null);
+      setSelectedCharacterDetail(null);
+      return;
+    }
 
- setActiveCharacterId(characterId);
- setIsLoadingCharacter(true);
- 
- try {
-   const characterDetail = await fetchCharacterDetail(characterId);
-   setSelectedCharacterDetail(characterDetail);
-   
-   // 애니메이션 트리거
-   if (characterDetail) {
-     setTimeout(() => {
-       const characterPanel = document.querySelector('.character-panel');
-       if (characterPanel) {
-         characterPanel.classList.add('show');
-       }
-     }, 100);
-   }
- } catch (error) {
-   console.error('캐릭터 상세 정보 로딩 실패:', error);
-   setSelectedCharacterDetail(null);
- } finally {
-   setIsLoadingCharacter(false);
- }
-};
+    setActiveCharacterId(characterId);
+    setIsLoadingCharacter(true);
+
+    try {
+      const characterDetail = await fetchCharacterDetail(characterId);
+      setSelectedCharacterDetail(characterDetail);
+
+      // 애니메이션 트리거
+      if (characterDetail) {
+        setTimeout(() => {
+          const characterPanel = document.querySelector('.character-panel');
+          if (characterPanel) {
+            characterPanel.classList.add('show');
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error('캐릭터 상세 정보 로딩 실패:', error);
+      setSelectedCharacterDetail(null);
+    } finally {
+      setIsLoadingCharacter(false);
+    }
+  };
 
   // 터치 스와이프 핸들러
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -246,7 +247,7 @@ const Home: React.FC = () => {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
@@ -262,9 +263,9 @@ const Home: React.FC = () => {
   // 배너 자동 슬라이드 효과
   useEffect(() => {
     if (isPaused) return;
-    
+
     const interval = setInterval(() => {
-      setCurrentBannerIndex((prevIndex) => 
+      setCurrentBannerIndex((prevIndex) =>
         (prevIndex + 1) % bannerData.length
       );
     }, 4000);
@@ -287,8 +288,8 @@ const Home: React.FC = () => {
 
   const goToChatSetting = () => {
     if (!selectedCharacterDetail) return;
-    navigate(`/CharacterIntroduce/${selectedCharacterDetail.characterId}`, { 
-      state: { character: selectedCharacterDetail } 
+    navigate(`/CharacterIntroduce/${selectedCharacterDetail.characterId}`, {
+      state: { character: selectedCharacterDetail }
     });
   };
 
@@ -306,10 +307,31 @@ const Home: React.FC = () => {
 
   const renderAuthButton = () =>
     !isLoggedIn ? (
-      <button className="login-btn" onClick={handleLogin}>
-        로그인
+      <button
+        type="button"
+        className="appTitle logo-button"
+        onClick={handleLogin}
+        aria-label="로그인"
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
+          로그인하기
+          <IoIosArrowForward size={24} />
+        </span>
       </button>
-    ) : null;
+    ) : (
+      <button
+        type="button"
+        className="appTitle logo-button"
+        onClick={() => navigate('/')}
+        aria-label="홈으로 이동"
+      >
+        <img
+          src="/위프 로고.png"
+          alt="위프 로고"
+          className="logo-image"
+        />
+      </button>
+    );
 
   useEffect(() => {
     let mounted = true;
@@ -399,7 +421,7 @@ const Home: React.FC = () => {
       content = (
         <div>
           {/* 자동 페이드 배너 섹션 */}
-          <section 
+          <section
             className="section banner"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
@@ -425,7 +447,7 @@ const Home: React.FC = () => {
                   </div>
                 </div>
               ))}
-              
+
               {/* 배너 카운터 */}
               <div className="banner-counter">
                 {currentBannerIndex + 1}/{bannerData.length}
@@ -459,35 +481,30 @@ const Home: React.FC = () => {
               </div>
             )}
 
-            {/* 캐릭터 상세 패널 */}
             {activeCharacterId && (
               <div className="character-panel">
                 {isLoadingCharacter ? (
                   <div className="loading-container"></div>
                 ) : selectedCharacterDetail ? (
                   <>
-                    {/* 전체 설명 (맨 위) - 따옴표 부분 제거 */}
                     <div className="character-description">
                       {removeQuotesFromDescription(selectedCharacterDetail.description)}
                     </div>
-                    
-                    {/* 캐릭터 이름 */}
+
                     <div className="character-name">{selectedCharacterDetail.name}</div>
-                    
-                    {/* 따옴표 부분 (말풍선) */}
+
                     {extractSpeechBubble(selectedCharacterDetail.description) && (
                       <div className="speech-bubble">
                         {extractSpeechBubble(selectedCharacterDetail.description)}
                       </div>
                     )}
-                    
-                    {/* 태그들 */}
+
                     <div className="tag-row">
                       {selectedCharacterDetail.tags.map((tag) => (
                         <span key={tag.tagId} className="tag-chip">#{tag.name}</span>
                       ))}
                     </div>
-                    
+
                     <button className="primary-btn" onClick={goToChatSetting}>
                       무슨 일인지 알아보러 가기
                     </button>
@@ -532,19 +549,6 @@ const Home: React.FC = () => {
       <div className="scroll-area">
         <section className="section title">
           {renderAuthButton()}
-
-          <button
-            type="button"
-            className="appTitle logo-button"
-            onClick={() => navigate('/')}
-            aria-label="홈으로 이동"
-          >
-            <img
-              src="/위프 로고.png"
-              alt="위프 로고"
-              className="logo-image"
-            />
-          </button>
 
           <div ref={searchRef} className="search-container">
             {showSearch ? (

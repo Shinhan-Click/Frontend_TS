@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FaRegCheckCircle } from "react-icons/fa";
 
 interface Props { onClose?: () => void; }
 
@@ -170,14 +169,18 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
-      <div
-        className={[
-          "relative w-[375px] h-[896px] bg-[#141924] text-white rounded-sm overflow-hidden",
-          "flex flex-col",
-          "transform transition-transform duration-300 ease-out will-change-transform",
-          open && !closing ? "translate-y-0" : "translate-y-full",
-        ].join(" ")}
-      >
+    <div
+      className={[
+        "relative w-[375px] h-[896px] bg-[#141924] text-white rounded-sm overflow-hidden",
+        "flex flex-col", // 여기에 scrollbar-hide 추가
+        "transform transition-transform duration-300 ease-out will-change-transform",
+        open && !closing ? "translate-y-0" : "translate-y-full",
+      ].join(" ")}
+      style={{
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
+      }}
+    >
         <header className="flex items-center h-[56px] px-[13px] py-[15px]">
           <button
             type="button"
@@ -191,20 +194,48 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
           </button>
         </header>
 
-        <main className={["flex-1 overflow-y-auto px-[20px]", "bg-[radial-gradient(60%_40%_at_50%_55%,rgba(111,74,205,0.15),transparent_70%)]"].join(" ")}>
+        <main 
+            className={[
+              "flex-1 overflow-hidden", // 여기가 현재 코드
+              "bg-[radial-gradient(60%_40%_at_50%_55%,rgba(111,74,205,0.15),transparent_70%)]"
+            ].join(" ")}
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+          >
           {isDone ? (
             <section className="mt-[12px] flex flex-col items-center text-center">
               <h1 className="self-stretch text-[#F8F8FA] text-center font-['Pretendard'] text-[20px] font-semibold leading-[140%] tracking-[-0.24px]">유저노트 병합 완료</h1>
-              <p className="mt-3 text-[#F8F8FA] text-center font-['Pretendard'] text-[14px] font-normal leading-[142.9%]">유저노트 병합이 완료되었습니다.<br />병합한 유저노트의 이름을 작성해주세요.</p>
+              <p className="mt-3 text-[#F8F8FA] text-center font-['Pretendard'] text-[14px] font-normal leading-[142.9%] mt-[10px]">유저노트 병합이 완료되었습니다.<br />병합한 유저노트의 이름을 작성해주세요.</p>
               <div className="mt-[10px] flex items-center gap-2">
-                <FaRegCheckCircle className="w-[20px] h-[20px] mt-[2px] text-[#7C5CFF]" />
-                <span className="ml-[10px] text-[#B093F9] text-center font-['Pretendard'] text-[14px] font-medium leading-[142.9%] tracking-[0.203px]">100% 완료</span>
+              <div className="relative mt-[-10px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21" fill="none" className="mt-[-33px]">
+                  <path d="M10.7415 0.446045C16.2643 0.446045 20.7415 4.9232 20.7415 10.446C20.7415 15.9689 16.2643 20.446 10.7415 20.446C5.21861 20.446 0.741455 15.9689 0.741455 10.446C0.741455 4.9232 5.21861 0.446045 10.7415 0.446045ZM10.7415 2.44604C6.32318 2.44604 2.74146 6.02777 2.74146 10.446C2.74146 14.8643 6.32318 18.446 10.7415 18.446C15.1597 18.446 18.7415 14.8643 18.7415 10.446C18.7415 6.02777 15.1597 2.44604 10.7415 2.44604Z" fill="#B093F9"/>
+                </svg>
+    
+                  {/* 추가이미지3 (체크 아이콘) - 원형 아이콘 중앙에 겹침 */}
+                  <div className="absolute w-[10px] h-[10px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-[-10px]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 11 11" fill="none" className="w-full h-full">
+                      <g clipPath="url(#clip0_2224_17134)">
+                        <path d="M9.07487 2.94604L4.49154 7.52938L2.4082 5.44605" stroke="#B093F9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </g>
+                      <defs>
+                        <clipPath id="clip0_2224_17134">
+                          <rect width="10" height="10" fill="white" transform="translate(0.741455 0.446045)"/>
+                        </clipPath>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+                <span className="ml-[10px] text-[#B093F9] text-center font-['Pretendard'] text-[14px] font-medium leading-[142.9%] tracking-[0.203px] mt-[-20px]">100% 완료</span>
               </div>
-              <div className="w-full max-w-[300px] mt-8">
+              <div className="w-full max-w-[300px] mt-">
                 <input
                   value={noteName}
                   onChange={(e) => setNoteName(e.target.value)}
-                  className="w-full h-[44px] bg-transparent text-[#FFF] placeholder:text-[#8C93A3] text-center outline-none box-border border-0 border-b border-b-[#5E6576] focus:ring-0"
+                  maxLength={20}
+                  className="w-full h-[44px] bg-transparent text-[#FFF] text-center outline-none box-border border-0 border-b border-b-[#5E6576] focus:ring-0 placeholder:text-[rgba(223,225,234,0.61)] placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:font-normal placeholder:leading-[142.9%] placeholder:tracking-[0.203px] mt-[70px]"
                   placeholder="이름을 작성해주세요"
                 />
               </div>
@@ -226,38 +257,85 @@ const UserNoteMergeLoading: React.FC<Props> = ({ onClose }) => {
           )}
 
           {isDone ? (
-            <section className="mt-[56px] relative h-[220px] flex items-center justify-center">
-              <div
-                className={[
-                  "absolute w-[160px] h-[190px] rounded-[14px] overflow-hidden",
-                  "shadow-[0_20px_60px_rgba(0,0,0,0.35)]",
-                  "left-1/2 -translate-x-[88%] rotate-[-5deg] z-20",
-                ].join(" ")}
-              >
-                <UserNoteImage
-                  userNoteId={firstUserNoteId}
-                  alt={firstTitle ?? "선택 1"}
-                  className="w-full h-full object-cover"
-                  fallback={<div className="w-full h-full bg-[#0E1420]" />}
-                />
-              </div>
+              <section className="mt-[-7px] relative h-[220px] flex items-center justify-center">
+                {/* 배경 이미지 1 (맨 뒤) */}
+                <div className="absolute w-[200px] h-[138.272px] z-0"
+                    style={{ 
+                      position: "absolute",
+                      bottom: "1.133px",
+                      borderRadius: "8.588px 8.588px 14.314px 14.314px",
+                      background: "linear-gradient(180deg, #34415E -18.04%, #141924 105.72%)",
+                      boxShadow: "0 5.726px 5.726px 0 rgba(0, 0, 0, 0.03)"
+                    }}>
+                </div>
+                
+                {/* 선택1 이미지 */}
+                <div className="absolute w-[98.765px] h-[118.519px] flex-shrink-0 rounded-[8.588px] overflow-hidden z-20 ml-[-25px] mt-[-8px]"
+                    style={{ 
+                      transform: "rotate(-3.037deg)",
+                      boxShadow: "4.294px 5.726px 5.726px 0 rgba(0, 0, 0, 0.25)",
+                      left: "calc(50% - 60px)"
+                    }}>
+                  <UserNoteImage
+                    userNoteId={firstUserNoteId}
+                    alt={firstTitle ?? "선택 1"}
+                    className="w-full h-full object-cover"
+                    fallback={<div className="w-full h-full bg-[#0E1420]" />}
+                  />
+                </div>
 
-              <div
-                className={[
-                  "absolute w-[160px] h-[190px] rounded-[14px] overflow-hidden",
-                  "shadow-[0_20px_60px_rgba(0,0,0,0.25)]",
-                  "left-1/2 -translate-x-[8%] rotate-[5deg] z-10",
-                ].join(" ")}
-              >
-                <UserNoteImage
-                  userNoteId={secondUserNoteId}
-                  alt={secondTitle ?? "선택 2"}
-                  className="w-full h-full object-cover"
-                  fallback={<div className="w-full h-full bg-[#1E2432]" />}
-                />
+                {/* 선택2 이미지 */}
+                <div className="absolute w-[98.765px] h-[118.519px] flex-shrink-0 rounded-[8.588px] overflow-hidden z-10 mt-[15px] mr-[-27px]"
+                    style={{ 
+                      transform: "rotate(5.061deg)",
+                      boxShadow: "0 5.726px 5.726px 0 rgba(0, 0, 0, 0.25)",
+                      right: "calc(50% - 60px)"
+                    }}>
+                  <UserNoteImage
+                    userNoteId={secondUserNoteId}
+                    alt={secondTitle ?? "선택 2"}
+                    className="w-full h-full object-cover"
+                    fallback={<div className="w-full h-full bg-[#1E2432]" />}
+                  />
+                </div>
+
+                {/* 추가 이미지2 (맨 앞) */}
+                <div className="absolute bottom-0 w-[430px] h-[150px] z-30 mt-[120px] ml-[200px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="103.704" viewBox="0 0 430 133" fill="none" className="w-full h-full" preserveAspectRatio="none">
+                  <foreignObject x="0.689832" y="0.136432" width="228.628" height="137.52">
+                    <div style={{
+                      backdropFilter: "blur(6.17px)",
+                      clipPath: "url(#bgblur_0_2757_1602_clip_path)",
+                      height: "100%",
+                      width: "100%"
+                    }}></div>
+                  </foreignObject>
+                  <g filter="url(#filter0_d_2757_1602)">
+                    <path d="M15.0037 43.8402C15.0037 40.6781 17.5671 38.1147 20.7292 38.1147H48.7469C55.2049 38.1147 61.2164 34.8195 64.6903 29.3754V29.3754C67.7781 24.5363 73.1217 21.6072 78.8622 21.6072L209.278 21.6072C212.44 21.6072 215.004 24.1706 215.004 27.3327V110.997C215.004 118.902 208.595 125.311 200.69 125.311H29.3175C21.4122 125.311 15.0037 118.902 15.0037 110.997V43.8402Z" fill="url(#paint0_linear_2757_1602)" fillOpacity="0.25" />
+                  </g>
+                  <defs>
+                    <filter id="filter0_d_2757_1602" x="0.689832" y="0.136432" width="228.628" height="137.52" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                      <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset dy="-7.15692"/>
+                      <feGaussianBlur stdDeviation="7.15692"/>
+                      <feComposite in2="hardAlpha" operator="out"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
+                      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2757_1602"/>
+                      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2757_1602" result="shape"/>
+                    </filter>
+                    <clipPath id="bgblur_0_2757_1602_clip_path" transform="translate(-0.689832 -0.136432)">
+                      <path d="M15.0037 43.8402C15.0037 40.6781 17.5671 38.1147 20.7292 38.1147H48.7469C55.2049 38.1147 61.2164 34.8195 64.6903 29.3754V29.3754C67.7781 24.5363 73.1217 21.6072 78.8622 21.6072L209.278 21.6072C212.44 21.6072 215.004 24.1706 215.004 27.3327V110.997C215.004 118.902 208.595 125.311 200.69 125.311H29.3175C21.4122 125.311 15.0037 118.902 15.0037 110.997V438402Z"/>
+                    </clipPath>
+                    <linearGradient id="paint0_linear_2757_1602" x1="115.004" y1="21.6072" x2="115.004" y2="123.063" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#263B69"/>
+                      <stop offset="1" stopColor="#273450"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
               </div>
-            </section>
-          ) : (
+              </section>
+            ) : (
             <section className="mt-[56px] flex items-end justify-center gap-[12px] relative">
               <div className="relative">
                 <div className="w-[130px] h-[160px] rounded-[11px] overflow-hidden shadow-xl">

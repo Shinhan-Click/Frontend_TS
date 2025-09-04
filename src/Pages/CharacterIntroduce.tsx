@@ -370,7 +370,7 @@ const CharacterIntroduce: React.FC = () => {
 
                             <button
                                 type="button"
-                                onClick={() => alert("적용하기 기능은 준비 중입니다.")}
+                                onClick={() => navigate(`/ChatSetting?characterId=${characterId}`)}
                                 className="flex-1 h-[52px] rounded-[12px] bg-[#6F4ACD] text-[#FFF] text-[16px] font-semibold border-none"
                             >
                                 적용하기

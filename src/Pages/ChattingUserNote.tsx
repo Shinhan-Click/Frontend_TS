@@ -639,7 +639,7 @@ const ChattingUserNote: React.FC = () => {
                         >
                           병합하기
                         </div>
-                        {/* 설명 - 선택된 노트를 참고해 새 노트를 생성합니다 */}
+                        {/* 설명 - 선택된 노트를 합쳐 새 노트를 생성합니다 */}
                         <div 
                           className="text-[14px] leading-[142.9%] tracking-[0.203px] mt-0.5 whitespace-nowrap"
                           style={{ 
@@ -648,7 +648,7 @@ const ChattingUserNote: React.FC = () => {
                             color: 'rgba(223, 225, 234, 0.61)'
                           }}
                         >
-                          선택된 노트를 참고해 새 노트를 생성합니다
+                          선택된 노트를 합쳐 새 노트를 생성합니다
                         </div>
                     </div>
                   </div>

@@ -474,7 +474,7 @@ const ChatRoom: React.FC = () => {
             {showToast && (
             <div className="absolute left-1/2 -translate-x-1/2 top-[88px] z-50 animate-toast-fade">
                 <div 
-                    className="inline-flex h-[24px] w-[185px] items-center gap-[4px] flex-shrink-0 rounded-[6px] -mr-[105px]"
+                    className="inline-flex h-[24px] w-[210px] items-center gap-[4px] flex-shrink-0 rounded-[6px] -mr-[105px]"
                     style={{
                         padding: "10px 16px 10px 10px",
                         background: "linear-gradient(273deg, rgba(111, 74, 205, 0.30) 0%, rgba(116, 92, 250, 0.30) 100%)",

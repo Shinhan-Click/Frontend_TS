@@ -243,6 +243,9 @@ const FutureNote: React.FC = () => {
                     <MdOutlineLocalMovies className="w-[20px] h-[20px]" />
                     에필로그(엔딩)
                   </span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className={`transition-transform duration-300 ${openEpilogue ? "rotate-180" : ""}`}>
+                    <path d="M6 9l6 6 6-6" stroke="#C9D0E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </button>
 
                 <Collapsible open={openEpilogue} className="mt-2">

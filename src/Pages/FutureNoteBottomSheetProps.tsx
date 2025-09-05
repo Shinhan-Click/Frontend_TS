@@ -85,57 +85,66 @@ const FutureNoteBottomSheet: React.FC<FutureNoteBottomSheetProps> = ({ open, onC
         }
     };
 
-    // FutureNote 적용 API
-    const applyFutureNote = async (chatId: number, futureNoteId: string) => {
-        try {
-            const response = await fetch(`/api/chat/${chatId}/future-note?futureNoteId=${futureNoteId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-            
-            const data: ApiResponse = await response.json();
-            
-            if (data.isSuccess) {
-                return true;
-            }
-            throw new Error('FutureNote 적용 실패');
-        } catch (error) {
-            console.error('FutureNote 적용 API 에러:', error);
-            return false;
-        }
-    };
-
-    // 적용하기 버튼 핸들러
-    const handleApply = async () => {
-        if (!selectedId || !futureNoteId || applying) return;
+    // FutureNote 적용 API - 새로운 chatId를 반환받도록 수정
+const applyFutureNote = async (chatId: number, futureNoteId: string) => {
+    try {
+        const response = await fetch(`/api/chat/${chatId}/future-note?futureNoteId=${futureNoteId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
         
-        setApplying(true);
-        try {
-            const success = await applyFutureNote(selectedId, futureNoteId);
-            
-            if (success) {
-                console.log(`FutureNote ${futureNoteId}가 채팅 ${selectedId}에 적용되었습니다.`);
-                onClose();
-                // ChatRoom으로 이동하면서 퓨처노트 적용 상태 전달
-                navigate(`/ChatRoom/${selectedId}`, {
-                    state: {
-                        futureNoteApplied: true // 퓨처노트 적용 플래그 추가
-                    }
-                });
-            } else {
-                console.error('FutureNote 적용에 실패했습니다.');
-                // 필요시 에러 토스트 표시
-            }
-        } catch (error) {
-            console.error('적용하기 처리 중 에러:', error);
-        } finally {
-            setApplying(false);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
+
+        const data: {
+            isSuccess: boolean;
+            code: string;
+            message: string;
+            result: number; // 새로운 chatId
+        } = await response.json();
+        
+        if (data.isSuccess) {
+            return data.result; // 새로운 chatId 반환
+        }
+        throw new Error(data.message || 'FutureNote 적용 실패');
+    } catch (error) {
+        console.error('FutureNote 적용 API 에러:', error);
+        throw error;
+    }
+};
+
+// 적용하기 버튼 핸들러 - 새로운 chatId로 네비게이션하도록 수정
+const handleApply = async () => {
+    if (!selectedId || !futureNoteId || applying) return;
+    
+    setApplying(true);
+    try {
+        const newChatId = await applyFutureNote(selectedId, futureNoteId);
+        
+        console.log(`FutureNote ${futureNoteId}가 적용된 새로운 채팅 ID: ${newChatId}`);
+        onClose();
+        
+        // 새로운 채팅으로 이동
+        navigate(`/ChatRoom/${newChatId}`, {
+            state: {
+                futureNoteApplied: true,
+                isNewChat: true // 새 채팅임을 표시
+            }
+        });
+        
+    } catch (error: any) {
+        console.error('FutureNote 적용에 실패했습니다:', error);
+        alert(error.message || 'FutureNote 적용에 실패했습니다.');
+    } finally {
+        setApplying(false);
+    }
     };
 
+    
     return (
         <div
             aria-hidden={!open}

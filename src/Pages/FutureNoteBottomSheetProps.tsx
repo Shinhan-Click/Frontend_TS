@@ -144,7 +144,7 @@ const handleApply = async () => {
     }
     };
 
-    
+
     return (
         <div
             aria-hidden={!open}
@@ -241,7 +241,7 @@ const handleApply = async () => {
                 <div className="px-4 pb-4 flex justify-center">
                     <button
                         type="button"
-                        className="w-[327px] h-[44px] mb-[10px] bg-[#6F4ACD] text-[#FFF] font-semibold rounded-[12px] border-none disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-[327px] h-[44px] mb-[100px] bg-[#6F4ACD] text-[#FFF] font-semibold rounded-[12px] border-none disabled:opacity-60 disabled:cursor-not-allowed"
                         onClick={handleApply}
                         disabled={!selectedId || applying}
                     >
